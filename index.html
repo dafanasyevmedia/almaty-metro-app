@@ -230,6 +230,7 @@
   <div class="lang-toggle" id="langToggle">
     <button class="lang-btn" data-lang="ru">RU</button>
     <button class="lang-btn" data-lang="kk">ҚАЗ</button>
+    <button class="lang-btn" data-lang="en">EN</button>
   </div>
 </header>
 
@@ -389,16 +390,53 @@
       noDepartures: 'Рейстер жоқ (соңғы бекет немесе деректер жоқ).',
       footerUpdated: function (date) { return 'Метро деректері жаңартылды: ' + date + ' · дереккөзі metroalmaty.kz'; },
       footerStatic: 'Кесте статикалық (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай'
+    },
+    en: {
+      pageTitle: 'Almaty Metro — Schedule',
+      appTitle: 'Almaty Metro',
+      appSubtitle: 'Live schedule — how long until the next train',
+      tabNearest: 'Nearest train',
+      tabFull: 'Full schedule',
+      locating: 'Locating you…',
+      nearestStationMsg: function (name, dist) {
+        return 'Nearest station: <b>' + name + '</b> (≈' + dist + ' m)';
+      },
+      notInAlmaty: function (name, distKm) {
+        return "Looks like you're not in Almaty… 😔 Too bad. The nearest station from here is «" + name + '», ' + distKm + ' km away. You can pick a station manually.';
+      },
+      geoFailed: function (reason) {
+        return 'Could not determine your location' + (reason ? ' (' + reason + ')' : '') + '. Please pick a station manually.';
+      },
+      loadFailed: 'Could not load the schedule.',
+      loadError: function (msg) { return 'Failed to load data: ' + msg; },
+      reasonPermissionDenied: 'permission denied',
+      reasonUnsupported: 'geolocation is not supported by this browser',
+      manualStationBtn: 'Pick a station',
+      distFromYou: function (m) { return '≈ ' + m + ' m away'; },
+      terminusNote: 'Terminus station — no trains in this direction',
+      noData: 'no data',
+      metroClosed: function (hhmm) { return 'metro closed<br>first train at ' + hhmm; },
+      thenIn: function (t) { return 'then in ' + t; },
+      estimatedNote: '⚠️ This station has no weekend schedule on the metro server — showing weekday intervals as an estimate.',
+      fullEstimatedNote: '⚠️ Weekend data for this station is unavailable on the metro server — showing weekday intervals.',
+      weekday: 'Weekdays',
+      weekend: 'Weekends',
+      noDepartures: 'No departures (terminus station or no data).',
+      footerUpdated: function (date) { return 'Metro data updated: ' + date + ' · source metroalmaty.kz'; },
+      footerStatic: 'Static schedule (not live GPS train tracking), same as on the official site'
     }
   };
+
+  var SUPPORTED_LANGS = ['ru', 'kk', 'en'];
 
   function detectDefaultLang() {
     try {
       var stored = localStorage.getItem(LANG_STORAGE_KEY);
-      if (stored === 'ru' || stored === 'kk') return stored;
+      if (SUPPORTED_LANGS.indexOf(stored) !== -1) return stored;
     } catch (e) { /* localStorage недоступен (приватный режим и т.п.) */ }
     try {
-      if (insideTelegram && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code === 'kk') return 'kk';
+      var code = insideTelegram && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code;
+      if (code && SUPPORTED_LANGS.indexOf(code) !== -1) return code;
     } catch (e) { /* игнорируем */ }
     return 'ru';
   }

@@ -22,6 +22,23 @@ OUTPUT_FILE = ROOT / "data" / "schedule.json"
 ALMATY_TZ = timezone(timedelta(hours=5))
 MAX_ATTEMPTS = 5
 
+# API не отдаёт английские названия станций (только ru/kk через current_station_locales),
+# поэтому держим их здесь вручную. Источник — англоязычная Википедия
+# (https://en.wikipedia.org/wiki/Almaty_Metro), написания скопированы как есть.
+EN_NAMES = {
+    "RMBK": "Raiymbek batyr",
+    "ZZ": "Zhibek Joly",
+    "ALM": "Almaly",
+    "ABA": "Abay",
+    "BKNR": "Baikonur",
+    "TEATR": "Auezov Theater",
+    "ALA": "Alatau",
+    "SRN": "Sayran",
+    "MSK": "Moskva",
+    "SA": "Saryarqa",
+    "BM": "Bauyrjan Momyshuly",
+}
+
 
 def fetch_json(url: str) -> dict:
     req = urllib.request.Request(url, headers={"User-Agent": "almaty-metro-schedule-app/1.0"})
@@ -96,9 +113,11 @@ def main() -> int:
         # который целиком перезаписывается в конце main().
         locales = payload.get("current_station_locales") or {}
         existing_name = st.get("name")
-        name_ru = locales.get("ru") or (existing_name if isinstance(existing_name, str) else None) or slug
+        existing_name_ru = existing_name.get("ru") if isinstance(existing_name, dict) else existing_name
+        name_ru = locales.get("ru") or existing_name_ru or slug
         name_kk = locales.get("kk") or name_ru
-        st["name"] = {"ru": name_ru, "kk": name_kk}
+        name_en = EN_NAMES.get(slug) or name_ru
+        st["name"] = {"ru": name_ru, "kk": name_kk, "en": name_en}
 
         entry = {
             "weekday": {
