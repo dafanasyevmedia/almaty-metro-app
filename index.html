@@ -90,6 +90,7 @@
   }
   .locate-row .dot.ok{ background:var(--success); box-shadow:0 0 0 4px color-mix(in srgb, var(--success) 18%, transparent); }
   .locate-row .dot.err{ background:var(--danger); box-shadow:0 0 0 4px color-mix(in srgb, var(--danger) 15%, transparent); }
+  .locate-row .dot.far{ background:var(--warn); box-shadow:0 0 0 4px color-mix(in srgb, var(--warn) 18%, transparent); }
   .locate-text{ flex:1; font-size:13.5px; color:var(--muted); line-height:1.4; }
   .locate-text b{ color:var(--text); font-weight:700; }
   .btn{
@@ -394,8 +395,12 @@
 
   function fmtCountdown(minutesFromNow) {
     var totalSec = Math.max(0, Math.round(minutesFromNow * 60));
-    var m = Math.floor(totalSec / 60);
+    var h = Math.floor(totalSec / 3600);
+    var m = Math.floor((totalSec % 3600) / 60);
     var s = totalSec % 60;
+    if (h > 0) {
+      return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
     return m + ':' + String(s).padStart(2,'0');
   }
 
@@ -413,7 +418,7 @@
   function setLocateStatus(kind, html) {
     locateSpinner.style.display = kind === 'loading' ? '' : 'none';
     locateDot.style.display = kind === 'loading' ? 'none' : '';
-    locateDot.className = 'dot' + (kind === 'ok' ? ' ok' : kind === 'err' ? ' err' : '');
+    locateDot.className = 'dot' + (kind === 'ok' ? ' ok' : kind === 'err' ? ' err' : kind === 'far' ? ' far' : '');
     locateText.innerHTML = html;
   }
 
@@ -442,8 +447,18 @@
     renderDirections();
   }
 
+  var FAR_FROM_ALMATY_METERS = 30000; // за пределами города и ближних пригородов — точно не Алматы
+
   function onGeoSuccess(lat, lon) {
     var res = nearestStation(lat, lon, STATIONS);
+    if (res.distance > FAR_FROM_ALMATY_METERS) {
+      setLocateStatus('far', 'Кажется, вы не в Алматы… 😔 Печально. Ближайшая станция отсюда — «' +
+        res.station.name + '», это ' + Math.round(res.distance / 1000) + ' км. Можно выбрать станцию вручную.');
+      locateBtn.style.display = 'none';
+      stationSelect.style.display = '';
+      if (!selectedSlug) selectStation(STATIONS[0].slug, false);
+      return;
+    }
     setLocateStatus('ok', 'Ближайшая станция: <b>' + res.station.name + '</b> (≈' + Math.round(res.distance) + ' м)');
     locateBtn.style.display = '';
     selectStation(res.station.slug, true, res.distance);
