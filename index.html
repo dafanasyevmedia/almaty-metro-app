@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Метро Алматы — расписание</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2effa; --bg-blob1:#ffd9ee; --bg-blob2:#e4d6ff;
+    --card:rgba(255,255,255,.72); --card-solid:#ffffff;
+    --text:#171826; --muted:#6f7285;
+    --accent:#8b5cf6; --accent2:#ec4899;
+    --accent-soft:#efe9fd; --border:rgba(23,24,38,.09);
+    --success:#16a34a; --danger:#e0245e; --warn:#b8720a;
+    --shadow:0 10px 30px -14px rgba(90,50,150,.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0a0a10; --bg-blob1:rgba(139,92,246,.28); --bg-blob2:rgba(236,72,153,.18);
+      --card:rgba(255,255,255,.05); --card-solid:#15151f; --text:#f2f1f8; --muted:#9c9db0;
+      --accent:#a78bfa; --accent2:#f472b6; --accent-soft:rgba(167,139,250,.16);
+      --border:rgba(255,255,255,.09); --success:#4ade80; --danger:#ff6b8b; --warn:#f2b84f;
+      --shadow:0 10px 34px -14px rgba(0,0,0,.55); }
+  }
+  html[data-tg-theme="light"]{ --bg:#f2effa; --bg-blob1:#ffd9ee; --bg-blob2:#e4d6ff;
+    --card:rgba(255,255,255,.72); --card-solid:#ffffff; --text:#171826; --muted:#6f7285;
+    --accent:#8b5cf6; --accent2:#ec4899; --accent-soft:#efe9fd; --border:rgba(23,24,38,.09); }
+  html[data-tg-theme="dark"]{ --bg:#0a0a10; --bg-blob1:rgba(139,92,246,.28); --bg-blob2:rgba(236,72,153,.18);
+    --card:rgba(255,255,255,.05); --card-solid:#15151f; --text:#f2f1f8; --muted:#9c9db0;
+    --accent:#a78bfa; --accent2:#f472b6; --accent-soft:rgba(167,139,250,.16); --border:rgba(255,255,255,.09); }
+
+  *{box-sizing:border-box;}
+  html{ -webkit-tap-highlight-color:transparent; }
+  body{
+    margin:0; color:var(--text); min-height:100vh;
+    font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding-bottom:64px;
+    background-color:var(--bg);
+    background-image:
+      radial-gradient(circle at 12% -8%, var(--bg-blob1) 0%, transparent 42%),
+      radial-gradient(circle at 105% 6%, var(--bg-blob2) 0%, transparent 40%);
+    background-attachment:fixed;
+    transition:background-color .3s;
+  }
+
+  header{ padding:22px 16px 6px; text-align:center; }
+  .brand{ display:flex; align-items:center; justify-content:center; gap:9px; }
+  .brand svg{ width:26px; height:26px; flex:none; }
+  header h1{
+    font-size:19px; margin:0; font-weight:800; letter-spacing:-.2px;
+    background:linear-gradient(120deg, var(--accent), var(--accent2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  header p{ margin:5px 0 0; color:var(--muted); font-size:13px; font-weight:500; }
+
+  .tabs{
+    display:flex; gap:4px; width:calc(100% - 32px); max-width:640px; margin:18px auto 4px;
+    background:var(--card); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--border); border-radius:14px; padding:4px;
+    box-shadow:var(--shadow);
+  }
+  .tab-btn{
+    flex:1; padding:10px 6px; border:none; background:transparent; color:var(--muted);
+    font-family:inherit; font-size:13.5px; font-weight:700; border-radius:11px; cursor:pointer;
+    transition:all .25s ease;
+  }
+  .tab-btn.active{
+    background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff;
+    box-shadow:0 6px 16px -6px rgba(139,92,246,.55);
+  }
+
+  main{ padding:12px 16px 24px; max-width:640px; margin:0 auto; }
+  .view{ display:none; }
+  .view.active{ display:block; animation:fadeIn .35s ease; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none;} }
+
+  .card{
+    background:var(--card); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--border); border-radius:20px;
+    padding:18px; margin-bottom:12px; box-shadow:var(--shadow);
+  }
+
+  .locate-row{ display:flex; align-items:center; gap:10px; }
+  .locate-row .dot{
+    width:9px; height:9px; border-radius:50%; background:var(--muted); flex:none;
+    box-shadow:0 0 0 4px transparent;
+  }
+  .locate-row .dot.ok{ background:var(--success); box-shadow:0 0 0 4px color-mix(in srgb, var(--success) 18%, transparent); }
+  .locate-row .dot.err{ background:var(--danger); box-shadow:0 0 0 4px color-mix(in srgb, var(--danger) 15%, transparent); }
+  .locate-text{ flex:1; font-size:13.5px; color:var(--muted); line-height:1.4; }
+  .locate-text b{ color:var(--text); font-weight:700; }
+  .btn{
+    appearance:none; border:1px solid var(--border); background:var(--accent-soft);
+    color:var(--accent); font-weight:700; font-size:13px; padding:9px 13px; font-family:inherit;
+    border-radius:11px; cursor:pointer; white-space:nowrap; transition:transform .15s, opacity .15s;
+  }
+  .btn:active{ transform:scale(.96); opacity:.85; }
+  .btn.primary{ background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff; border-color:transparent; }
+
+  select{
+    width:100%; padding:12px 36px 12px 14px; border-radius:13px; border:1px solid var(--border);
+    background:var(--card-solid) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%239c9db0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>') no-repeat right 12px center;
+    color:var(--text); font-size:15px; font-weight:600; font-family:inherit; margin-top:10px;
+    appearance:none; -webkit-appearance:none;
+  }
+
+  .station-title{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:14px;}
+  .station-title h2{ font-size:21px; margin:0; font-weight:800; letter-spacing:-.2px; }
+  .station-title .dist{ font-size:12px; color:var(--muted); white-space:nowrap; font-weight:600; }
+
+  /* линия метро — визуализация позиции станции */
+  .line-wrap{ margin:2px 4px 20px; }
+  .line-track{ position:relative; display:flex; justify-content:space-between; align-items:center; padding:0 6px; height:16px; }
+  .line-track::before{
+    content:''; position:absolute; left:6px; right:6px; top:50%; height:2px; margin-top:-1px;
+    background:linear-gradient(90deg, var(--accent), var(--accent2)); opacity:.35; border-radius:2px;
+  }
+  .line-dot{
+    position:relative; width:7px; height:7px; border-radius:50%; background:var(--muted); opacity:.4;
+    transition:all .2s;
+  }
+  .line-dot.active{
+    width:15px; height:15px; opacity:1; background:linear-gradient(120deg, var(--accent), var(--accent2));
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent), 0 0 14px -2px var(--accent);
+  }
+  .line-ends{ display:flex; justify-content:space-between; margin:6px 2px 0; font-size:10.5px; color:var(--muted); font-weight:600; }
+  .line-ends span{ max-width:44%; }
+  .line-ends span:last-child{ text-align:right; }
+
+  .directions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:400px){ .directions{ grid-template-columns:1fr; } }
+
+  .dir-card{
+    position:relative; overflow:hidden; background:var(--accent-soft);
+    border-radius:16px; padding:16px 14px; text-align:center;
+  }
+  .dir-card::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .dir-card .dir-label{
+    font-size:12px; color:var(--muted); margin-bottom:10px; line-height:1.3; min-height:32px;
+    display:flex; align-items:center; justify-content:center; font-weight:700;
+  }
+  .dir-card .countdown{
+    font-size:32px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.5px;
+    background:linear-gradient(120deg, var(--accent), var(--accent2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .dir-card .countdown small{ font-size:13px; font-weight:700; -webkit-text-fill-color:var(--muted); }
+  .dir-card .next-after{ font-size:12px; color:var(--muted); margin-top:7px; font-weight:600; }
+  .dir-card .closed{ font-size:13px; color:var(--muted); line-height:1.4; font-weight:600; }
+  .dir-card.unavailable{ opacity:.45; }
+  .dir-card.unavailable::before{ opacity:.3; }
+
+  .note{ font-size:12px; color:var(--muted); margin-top:12px; line-height:1.5; }
+  .note.warn{ color:var(--warn); }
+
+  footer.meta{
+    text-align:center; color:var(--muted); font-size:11px; padding:10px 16px 22px; line-height:1.7; font-weight:500;
+  }
+
+  /* full schedule view */
+  .sched-controls{ display:flex; gap:8px; margin-bottom:12px; }
+  .sched-controls select{ margin-top:0; }
+  .daytype-toggle{ display:flex; gap:6px; }
+  .daytype-toggle .btn{ flex:1; }
+  .daytype-toggle .btn.active{ background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff; border-color:transparent; }
+
+  .sched-cols{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:400px){ .sched-cols{ grid-template-columns:1fr; } }
+  .sched-col h3{ font-size:12.5px; color:var(--muted); margin:0 0 10px; font-weight:700; }
+  .hour-block{ margin-bottom:12px; }
+  .hour-block .hour{ font-size:11px; color:var(--muted); margin-bottom:5px; font-weight:700; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:5px; }
+  .chip{
+    font-size:12px; font-variant-numeric:tabular-nums; font-weight:600; padding:4px 8px;
+    border-radius:9px; background:var(--card-solid); border:1px solid var(--border);
+  }
+  .chip.past{ opacity:.32; }
+  .chip.next{
+    background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff;
+    border-color:transparent; font-weight:800; box-shadow:0 4px 12px -4px rgba(139,92,246,.6);
+  }
+
+  .spinner{
+    width:18px;height:18px;border-radius:50%;border:2.5px solid var(--border);
+    border-top-color:var(--accent); animation:spin .8s linear infinite; flex:none;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="trainGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8b5cf6"/>
+          <stop offset="1" stop-color="#ec4899"/>
+        </linearGradient>
+      </defs>
+      <rect x="4" y="3" width="16" height="13" rx="5" fill="url(#trainGrad)"/>
+      <rect x="7" y="6" width="4.2" height="4.2" rx="1.1" fill="#fff" fill-opacity=".92"/>
+      <rect x="12.8" y="6" width="4.2" height="4.2" rx="1.1" fill="#fff" fill-opacity=".92"/>
+      <circle cx="8" cy="19.5" r="1.6" fill="url(#trainGrad)"/>
+      <circle cx="16" cy="19.5" r="1.6" fill="url(#trainGrad)"/>
+      <path d="M5 16.5L3.3 20M19 16.5l1.7 3.5" stroke="url(#trainGrad)" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    <h1>Метро Алматы</h1>
+  </div>
+  <p>Онлайн-расписание — сколько ждать до поезда</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="nearest">Ближайший поезд</button>
+  <button class="tab-btn" data-tab="full">Всё расписание</button>
+</div>
+
+<main>
+
+  <!-- ===== ВКЛАДКА: БЛИЖАЙШИЙ ПОЕЗД ===== -->
+  <section class="view active" id="view-nearest">
+
+    <div class="card">
+      <div class="locate-row" id="locateRow">
+        <div class="spinner" id="locateSpinner"></div>
+        <div class="dot" id="locateDot" style="display:none"></div>
+        <div class="locate-text" id="locateText">Определяем ваше местоположение…</div>
+        <button class="btn" id="locateBtn" style="display:none">Станция вручную</button>
+      </div>
+      <select id="stationSelect" style="display:none"></select>
+    </div>
+
+    <div class="card" id="stationCard" style="display:none">
+      <div class="station-title">
+        <h2 id="stationName">—</h2>
+        <span class="dist" id="stationDist"></span>
+      </div>
+      <div class="line-wrap">
+        <div class="line-track" id="lineTrack"><!-- заполняется JS --></div>
+        <div class="line-ends" id="lineEnds"><span></span><span></span></div>
+      </div>
+      <div class="directions" id="directions"><!-- заполняется JS --></div>
+      <div class="note warn" id="estimatedNote" style="display:none">
+        ⚠️ Для этой станции на сервере метро нет расписания на выходные — показаны будние интервалы как оценка.
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ===== ВКЛАДКА: ВСЁ РАСПИСАНИЕ ===== -->
+  <section class="view" id="view-full">
+    <div class="card">
+      <div class="sched-controls">
+        <select id="fullStationSelect" style="flex:1"></select>
+      </div>
+      <div class="daytype-toggle">
+        <button class="btn" data-daytype="weekday">Будни</button>
+        <button class="btn" data-daytype="weekend">Выходные</button>
+      </div>
+      <div class="note" id="fullEstimatedNote" style="display:none">
+        ⚠️ Данные на выходные для этой станции недоступны на сервере метро — показаны будние интервалы.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sched-cols" id="fullScheduleCols"><!-- заполняется JS --></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="meta" id="metaFooter">Загрузка данных…</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Telegram Mini App bootstrap ---------- */
+  var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  // Вне настоящего Telegram-клиента telegram-web-app.js подставляет заглушку
+  // (platform === 'unknown', пустой initData), которая всегда отдаёт colorScheme
+  // "light" — из-за этого страница игнорировала бы системную тёмную тему при
+  // обычном открытии в браузере. Применяем тему Telegram только внутри Telegram.
+  var insideTelegram = !!(tg && tg.platform && tg.platform !== 'unknown');
+  if (tg) {
+    try {
+      tg.ready();
+      tg.expand();
+      if (insideTelegram) {
+        document.documentElement.setAttribute('data-tg-theme', tg.colorScheme || 'light');
+        tg.onEvent && tg.onEvent('themeChanged', function(){
+          document.documentElement.setAttribute('data-tg-theme', tg.colorScheme || 'light');
+        });
+      }
+    } catch (e) { /* работаем как обычная веб-страница */ }
+  }
+
+  /* ---------- Время Алматы (UTC+5, без перехода на летнее) ---------- */
+  var ALMATY_OFFSET_MS = 5 * 3600 * 1000;
+  function almatyNow() {
+    return new Date(Date.now() + ALMATY_OFFSET_MS); // "псевдо-UTC" дата = время Алматы
+  }
+  function serviceDayStart(almatyDate) {
+    var d = new Date(Date.UTC(almatyDate.getUTCFullYear(), almatyDate.getUTCMonth(), almatyDate.getUTCDate()));
+    if (almatyDate.getUTCHours() < 3) d.setUTCDate(d.getUTCDate() - 1);
+    return d;
+  }
+  function dayTypeOf(midnightDate) {
+    var wd = midnightDate.getUTCDay();
+    return (wd === 0 || wd === 6) ? 'weekend' : 'weekday';
+  }
+  function fmtHHMM(date) {
+    var h = String(date.getUTCHours()).padStart(2, '0');
+    var m = String(date.getUTCMinutes()).padStart(2, '0');
+    return h + ':' + m;
+  }
+  var WEEKDAY_NAMES = ['вс','пн','вт','ср','чт','пт','сб'];
+
+  /* ---------- Геометрия ---------- */
+  function haversine(lat1, lon1, lat2, lon2) {
+    var R = 6371000, toRad = function(d){ return d * Math.PI / 180; };
+    var dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    var a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+  function nearestStation(lat, lon, stations) {
+    var best = null, bestDist = Infinity;
+    stations.forEach(function(s){
+      var d = haversine(lat, lon, s.lat, s.lon);
+      if (d < bestDist) { bestDist = d; best = s; }
+    });
+    return { station: best, distance: bestDist };
+  }
+
+  /* ---------- Данные ---------- */
+  var STATIONS = [];        // data/stations.json
+  var SCHEDULE = null;      // data/schedule.json
+  var STATIONS_BY_SLUG = {};
+
+  function timeStrToMinutes(t) {
+    var p = t.split(':');
+    var h = +p[0], m = +p[1], s = +p[2] || 0;
+    var mins = h * 60 + m + s / 60;
+    if (h < 3) mins += 24 * 60; // "00:06:00" и т.п. = хвост предыдущих суток
+    return mins;
+  }
+
+  // Собирает единую временную шкалу (в минутах от начала текущих "транспортных суток")
+  // для станции+направления, включая начало следующих суток — чтобы после закрытия
+  // корректно показать первый поезд следующего дня.
+  function buildTimeline(slug, direction, serviceStart) {
+    var st = SCHEDULE.stations[slug];
+    if (!st) return [];
+    var todayType = dayTypeOf(serviceStart);
+    var tomorrowStart = new Date(serviceStart.getTime() + 24*3600*1000);
+    var tomorrowType = dayTypeOf(tomorrowStart);
+
+    var todayArr = (st[todayType] && st[todayType][direction]) || [];
+    var tomorrowArr = (st[tomorrowType] && st[tomorrowType][direction]) || [];
+
+    var timeline = [];
+    todayArr.forEach(function(t){
+      timeline.push({ minutes: timeStrToMinutes(t), raw: t, dayOffset: 0 });
+    });
+    tomorrowArr.forEach(function(t){
+      var m = timeStrToMinutes(t);
+      if (m >= 24*60) m -= 24*60; // на случай хвоста "тройных" суток — не должно происходить, но подстрахуемся
+      timeline.push({ minutes: m + 24*60, raw: t, dayOffset: 1 });
+    });
+    timeline.sort(function(a,b){ return a.minutes - b.minutes; });
+    return timeline;
+  }
+
+  function nextTrains(slug, direction, count) {
+    var now = almatyNow();
+    var start = serviceDayStart(now);
+    var nowMinutes = (now - start) / 60000;
+    var timeline = buildTimeline(slug, direction, start);
+    var upcoming = timeline.filter(function(e){ return e.minutes >= nowMinutes - 0.001; });
+    return {
+      nowMinutes: nowMinutes,
+      serviceStart: start,
+      trains: upcoming.slice(0, count)
+    };
+  }
+
+  function fmtCountdown(minutesFromNow) {
+    var totalSec = Math.max(0, Math.round(minutesFromNow * 60));
+    var m = Math.floor(totalSec / 60);
+    var s = totalSec % 60;
+    return m + ':' + String(s).padStart(2,'0');
+  }
+
+  var DIR_LABEL = { forward: null, backward: null }; // заполнится после загрузки станций
+
+  /* ---------- Определение геопозиции ---------- */
+  var locateDot = document.getElementById('locateDot');
+  var locateSpinner = document.getElementById('locateSpinner');
+  var locateText = document.getElementById('locateText');
+  var locateBtn = document.getElementById('locateBtn');
+  var stationSelect = document.getElementById('stationSelect');
+
+  var selectedSlug = null;
+
+  function setLocateStatus(kind, html) {
+    locateSpinner.style.display = kind === 'loading' ? '' : 'none';
+    locateDot.style.display = kind === 'loading' ? 'none' : '';
+    locateDot.className = 'dot' + (kind === 'ok' ? ' ok' : kind === 'err' ? ' err' : '');
+    locateText.innerHTML = html;
+  }
+
+  function renderLineStrip(slug) {
+    var track = document.getElementById('lineTrack');
+    track.innerHTML = '';
+    STATIONS.forEach(function (s) {
+      var dot = document.createElement('div');
+      dot.className = 'line-dot' + (s.slug === slug ? ' active' : '');
+      track.appendChild(dot);
+    });
+    var ends = document.querySelectorAll('#lineEnds span');
+    ends[0].textContent = STATIONS[0].name;
+    ends[1].textContent = STATIONS[STATIONS.length - 1].name;
+  }
+
+  function selectStation(slug, viaGeo, distanceMeters) {
+    selectedSlug = slug;
+    stationSelect.value = slug;
+    var st = STATIONS_BY_SLUG[slug];
+    document.getElementById('stationCard').style.display = '';
+    document.getElementById('stationName').textContent = st.name;
+    document.getElementById('stationDist').textContent =
+      viaGeo && distanceMeters != null ? '≈ ' + Math.round(distanceMeters) + ' м от вас' : '';
+    renderLineStrip(slug);
+    renderDirections();
+  }
+
+  function onGeoSuccess(lat, lon) {
+    var res = nearestStation(lat, lon, STATIONS);
+    setLocateStatus('ok', 'Ближайшая станция: <b>' + res.station.name + '</b> (≈' + Math.round(res.distance) + ' м)');
+    locateBtn.style.display = '';
+    selectStation(res.station.slug, true, res.distance);
+  }
+
+  function onGeoFail(reason) {
+    setLocateStatus('err', 'Не удалось определить местоположение' + (reason ? ' (' + reason + ')' : '') + '. Выберите станцию вручную.');
+    locateBtn.style.display = 'none';
+    stationSelect.style.display = '';
+    if (!selectedSlug) selectStation(STATIONS[0].slug, false);
+  }
+
+  function tryTelegramLocation() {
+    if (tg && tg.LocationManager && typeof tg.LocationManager.init === 'function') {
+      var settled = false;
+      // Вне настоящего Telegram-клиента (или в старых версиях) LocationManager —
+      // безмолвная заглушка: init/getLocation могут никогда не вызвать колбэк.
+      // Подстраховываемся таймером и уходим на браузерную геолокацию.
+      var fallbackTimer = setTimeout(function () {
+        if (!settled) { settled = true; tryBrowserGeolocation(); }
+      }, 2500);
+      try {
+        tg.LocationManager.init(function () {
+          if (settled) return;
+          if (!tg.LocationManager.isLocationAvailable) {
+            settled = true; clearTimeout(fallbackTimer); tryBrowserGeolocation(); return;
+          }
+          tg.LocationManager.getLocation(function (data) {
+            if (settled) return;
+            settled = true; clearTimeout(fallbackTimer);
+            if (data && typeof data.latitude === 'number') {
+              onGeoSuccess(data.latitude, data.longitude);
+            } else {
+              tryBrowserGeolocation();
+            }
+          });
+        });
+        return true;
+      } catch (e) {
+        clearTimeout(fallbackTimer);
+        return false;
+      }
+    }
+    return false;
+  }
+
+  function tryBrowserGeolocation() {
+    if (!navigator.geolocation) { onGeoFail('геолокация не поддерживается браузером'); return; }
+    navigator.geolocation.getCurrentPosition(
+      function (pos) { onGeoSuccess(pos.coords.latitude, pos.coords.longitude); },
+      function (err) {
+        var reason = err && err.code === 1 ? 'нет разрешения' : (err && err.message) || 'ошибка';
+        onGeoFail(reason);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  }
+
+  locateBtn.addEventListener('click', function () {
+    stationSelect.style.display = stationSelect.style.display === 'none' ? '' : 'none';
+  });
+  stationSelect.addEventListener('change', function () {
+    selectStation(stationSelect.value, false);
+  });
+
+  /* ---------- Отрисовка карточек направлений ---------- */
+  function renderDirections() {
+    if (!selectedSlug || !SCHEDULE) return;
+    var st = SCHEDULE.stations[selectedSlug];
+    var container = document.getElementById('directions');
+    container.innerHTML = '';
+
+    var order = STATIONS_BY_SLUG[selectedSlug].order;
+    var toBM = STATIONS_BY_SLUG['BM'];
+    var toRMBK = STATIONS_BY_SLUG['RMBK'];
+
+    var dirs = [
+      { key: 'forward',  label: '→ ' + toBM.name },
+      { key: 'backward', label: '→ ' + toRMBK.name }
+    ];
+
+    dirs.forEach(function (d) {
+      var wrap = document.createElement('div');
+      wrap.className = 'dir-card';
+      var hasAny = (st.weekday[d.key] && st.weekday[d.key].length) || (st.weekend[d.key] && st.weekend[d.key].length);
+      if (!hasAny) {
+        wrap.classList.add('unavailable');
+        wrap.innerHTML = '<div class="dir-label">' + d.label + '</div><div class="closed">Конечная станция — поездов в эту сторону нет</div>';
+        container.appendChild(wrap);
+        return;
+      }
+      wrap.innerHTML =
+        '<div class="dir-label">' + d.label + '</div>' +
+        '<div class="countdown" data-dir="' + d.key + '">—</div>' +
+        '<div class="next-after" data-dir-after="' + d.key + '"></div>';
+      container.appendChild(wrap);
+    });
+
+    var estimated = !!st.weekend_estimated;
+    var now = almatyNow();
+    var isWeekendNow = dayTypeOf(serviceDayStart(now)) === 'weekend';
+    document.getElementById('estimatedNote').style.display = (estimated && isWeekendNow) ? '' : 'none';
+
+    tickCountdowns();
+  }
+
+  var tickTimer = null;
+  function tickCountdowns() {
+    if (tickTimer) clearTimeout(tickTimer);
+    if (!selectedSlug) return;
+    ['forward', 'backward'].forEach(function (dirKey) {
+      var el = document.querySelector('.countdown[data-dir="' + dirKey + '"]');
+      var elAfter = document.querySelector('[data-dir-after="' + dirKey + '"]');
+      if (!el) return;
+      var res = nextTrains(selectedSlug, dirKey, 2);
+      if (res.trains.length === 0) {
+        el.innerHTML = '<small>нет данных</small>';
+        if (elAfter) elAfter.textContent = '';
+        return;
+      }
+      var first = res.trains[0];
+      var mins = first.minutes - res.nowMinutes;
+      if (first.dayOffset === 1 || mins > 6 * 60) {
+        // метро закрыто — следующий поезд относится к следующему дню (или очень нескоро)
+        var arrivalClock = new Date(res.serviceStart.getTime() + first.minutes * 60000);
+        el.innerHTML = '<small>метро закрыто<br>первый поезд в ' + fmtHHMM(arrivalClock) + '</small>';
+      } else {
+        el.textContent = fmtCountdown(mins);
+      }
+      if (elAfter) {
+        if (res.trains[1]) {
+          var mins2 = res.trains[1].minutes - res.nowMinutes;
+          elAfter.textContent = 'затем через ' + fmtCountdown(mins2);
+        } else {
+          elAfter.textContent = '';
+        }
+      }
+    });
+    tickTimer = setTimeout(tickCountdowns, 1000);
+  }
+
+  /* ---------- Вкладки ---------- */
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('view-' + btn.dataset.tab).classList.add('active');
+      if (btn.dataset.tab === 'full') renderFullSchedule();
+    });
+  });
+
+  /* ---------- Полное расписание ---------- */
+  var fullStationSelect = document.getElementById('fullStationSelect');
+  var fullDayType = null; // выставится после загрузки данных
+
+  document.querySelectorAll('.daytype-toggle .btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      fullDayType = btn.dataset.daytype;
+      document.querySelectorAll('.daytype-toggle .btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      renderFullSchedule();
+    });
+  });
+  fullStationSelect.addEventListener('change', renderFullSchedule);
+
+  function groupByHour(times) {
+    var groups = {};
+    times.forEach(function (t) {
+      var hour = t.slice(0, 2);
+      (groups[hour] = groups[hour] || []).push(t);
+    });
+    return groups;
+  }
+
+  function renderFullSchedule() {
+    if (!SCHEDULE) return;
+    var slug = fullStationSelect.value;
+    var st = SCHEDULE.stations[slug];
+    if (!st) return;
+
+    var estimated = !!st.weekend_estimated;
+    document.getElementById('fullEstimatedNote').style.display = (estimated && fullDayType === 'weekend') ? '' : 'none';
+
+    var cols = document.getElementById('fullScheduleCols');
+    cols.innerHTML = '';
+
+    var toBM = STATIONS_BY_SLUG['BM'], toRMBK = STATIONS_BY_SLUG['RMBK'];
+    var dirs = [
+      { key: 'forward', title: '→ ' + toBM.name },
+      { key: 'backward', title: '→ ' + toRMBK.name }
+    ];
+
+    var now = almatyNow();
+    var todayServiceStart = serviceDayStart(now);
+    var nowMinutes = (now - todayServiceStart) / 60000;
+    var viewingCurrentDayType = dayTypeOf(todayServiceStart) === fullDayType;
+
+    dirs.forEach(function (d) {
+      var times = (st[fullDayType] && st[fullDayType][d.key]) || [];
+      var nextRaw = viewingCurrentDayType ? (nextTrains(slug, d.key, 1).trains[0] || {}).raw : null;
+      var col = document.createElement('div');
+      col.className = 'sched-col';
+      var h3 = document.createElement('h3');
+      h3.textContent = d.title;
+      col.appendChild(h3);
+
+      if (times.length === 0) {
+        var p = document.createElement('div');
+        p.className = 'note';
+        p.textContent = 'Нет отправлений (конечная станция или нет данных).';
+        col.appendChild(p);
+        cols.appendChild(col);
+        return;
+      }
+
+      var groups = groupByHour(times);
+      // часы 00-02 — хвост текущих суток (после полуночи), должны идти в конце, а не в начале
+      Object.keys(groups).sort(function (a, b) {
+        var ka = (+a < 3) ? +a + 24 : +a;
+        var kb = (+b < 3) ? +b + 24 : +b;
+        return ka - kb;
+      }).forEach(function (hour) {
+        var block = document.createElement('div');
+        block.className = 'hour-block';
+        var hourLabel = document.createElement('div');
+        hourLabel.className = 'hour';
+        hourLabel.textContent = hour + ':00';
+        block.appendChild(hourLabel);
+        var row = document.createElement('div');
+        row.className = 'chip-row';
+        groups[hour].forEach(function (t) {
+          var chip = document.createElement('span');
+          var mins = timeStrToMinutes(t);
+          var isPast = viewingCurrentDayType && mins < nowMinutes - 0.001;
+          var isNext = viewingCurrentDayType && t === nextRaw;
+          chip.className = 'chip' + (isPast ? ' past' : '') + (isNext ? ' next' : '');
+          chip.textContent = t.slice(0, 5);
+          row.appendChild(chip);
+        });
+        block.appendChild(row);
+        col.appendChild(block);
+      });
+      cols.appendChild(col);
+    });
+  }
+
+  /* ---------- Загрузка данных ---------- */
+  Promise.all([
+    fetch('data/stations.json').then(function (r) { return r.json(); }),
+    fetch('data/schedule.json').then(function (r) { return r.json(); })
+  ]).then(function (results) {
+    STATIONS = results[0].slice().sort(function (a,b) { return a.order - b.order; });
+    SCHEDULE = results[1];
+    STATIONS.forEach(function (s) { STATIONS_BY_SLUG[s.slug] = s; });
+
+    // селекторы станций
+    [stationSelect, fullStationSelect].forEach(function (sel) {
+      STATIONS.forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = s.slug;
+        opt.textContent = s.name;
+        sel.appendChild(opt);
+      });
+    });
+
+    var now = almatyNow();
+    fullDayType = dayTypeOf(serviceDayStart(now));
+    document.querySelectorAll('.daytype-toggle .btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.daytype === fullDayType);
+    });
+    fullStationSelect.value = 'RMBK';
+
+    var genDate = new Date(SCHEDULE.generated_at);
+    document.getElementById('metaFooter').innerHTML =
+      'Данные метро обновлены: ' + genDate.toLocaleDateString('ru-RU') + ' · источник metroalmaty.kz' +
+      '<br>Расписание статическое (не GPS-трекинг поездов), как и на официальном сайте';
+
+    // геолокация
+    if (!tryTelegramLocation()) tryBrowserGeolocation();
+  }).catch(function (err) {
+    document.getElementById('metaFooter').textContent = 'Ошибка загрузки данных: ' + err.message;
+    setLocateStatus('err', 'Не удалось загрузить расписание.');
+  });
+
+})();
+</script>
+</body>
+</html>
