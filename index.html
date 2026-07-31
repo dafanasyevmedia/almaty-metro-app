@@ -46,7 +46,7 @@
     transition:background-color .3s;
   }
 
-  header{ padding:22px 16px 6px; text-align:center; }
+  header{ position:relative; padding:22px 16px 6px; text-align:center; }
   .brand{ display:flex; align-items:center; justify-content:center; gap:9px; }
   .brand svg{ width:26px; height:26px; flex:none; }
   header h1{
@@ -55,6 +55,18 @@
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   header p{ margin:5px 0 0; color:var(--muted); font-size:13px; font-weight:500; }
+
+  .lang-toggle{
+    display:inline-flex; gap:2px; margin-top:12px;
+    background:var(--card); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--border); border-radius:10px; padding:3px; box-shadow:var(--shadow);
+  }
+  .lang-btn{
+    appearance:none; border:none; background:transparent; color:var(--muted);
+    font-family:inherit; font-size:11px; font-weight:800; padding:5px 8px;
+    border-radius:7px; cursor:pointer; transition:all .2s;
+  }
+  .lang-btn.active{ background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff; }
 
   .tabs{
     display:flex; gap:4px; width:calc(100% - 32px); max-width:640px; margin:18px auto 4px;
@@ -212,9 +224,13 @@
       <circle cx="16" cy="19.5" r="1.6" fill="url(#trainGrad)"/>
       <path d="M5 16.5L3.3 20M19 16.5l1.7 3.5" stroke="url(#trainGrad)" stroke-width="1.4" stroke-linecap="round"/>
     </svg>
-    <h1>Метро Алматы</h1>
+    <h1 id="appTitle">Метро Алматы</h1>
   </div>
-  <p>Онлайн-расписание — сколько ждать до поезда</p>
+  <p id="appSubtitle">Онлайн-расписание — сколько ждать до поезда</p>
+  <div class="lang-toggle" id="langToggle">
+    <button class="lang-btn" data-lang="ru">RU</button>
+    <button class="lang-btn" data-lang="kk">ҚАЗ</button>
+  </div>
 </header>
 
 <div class="tabs">
@@ -300,6 +316,106 @@
         });
       }
     } catch (e) { /* работаем как обычная веб-страница */ }
+  }
+
+  /* ---------- Локализация (ru / kk) ---------- */
+  var LANG_STORAGE_KEY = 'almatyMetroLang';
+
+  var I18N = {
+    ru: {
+      pageTitle: 'Метро Алматы — расписание',
+      appTitle: 'Метро Алматы',
+      appSubtitle: 'Онлайн-расписание — сколько ждать до поезда',
+      tabNearest: 'Ближайший поезд',
+      tabFull: 'Всё расписание',
+      locating: 'Определяем ваше местоположение…',
+      nearestStationMsg: function (name, dist) {
+        return 'Ближайшая станция: <b>' + name + '</b> (≈' + dist + ' м)';
+      },
+      notInAlmaty: function (name, distKm) {
+        return 'Кажется, вы не в Алматы… 😔 Печально. Ближайшая станция отсюда — «' + name + '», это ' + distKm + ' км. Можно выбрать станцию вручную.';
+      },
+      geoFailed: function (reason) {
+        return 'Не удалось определить местоположение' + (reason ? ' (' + reason + ')' : '') + '. Выберите станцию вручную.';
+      },
+      loadFailed: 'Не удалось загрузить расписание.',
+      loadError: function (msg) { return 'Ошибка загрузки данных: ' + msg; },
+      reasonPermissionDenied: 'нет разрешения',
+      reasonUnsupported: 'геолокация не поддерживается браузером',
+      manualStationBtn: 'Станция вручную',
+      distFromYou: function (m) { return '≈ ' + m + ' м от вас'; },
+      terminusNote: 'Конечная станция — поездов в эту сторону нет',
+      noData: 'нет данных',
+      metroClosed: function (hhmm) { return 'метро закрыто<br>первый поезд в ' + hhmm; },
+      thenIn: function (t) { return 'затем через ' + t; },
+      estimatedNote: '⚠️ Для этой станции на сервере метро нет расписания на выходные — показаны будние интервалы как оценка.',
+      fullEstimatedNote: '⚠️ Данные на выходные для этой станции недоступны на сервере метро — показаны будние интервалы.',
+      weekday: 'Будни',
+      weekend: 'Выходные',
+      noDepartures: 'Нет отправлений (конечная станция или нет данных).',
+      footerUpdated: function (date) { return 'Данные метро обновлены: ' + date + ' · источник metroalmaty.kz'; },
+      footerStatic: 'Расписание статическое (не GPS-трекинг поездов), как и на официальном сайте'
+    },
+    kk: {
+      pageTitle: 'Алматы метросы — кесте',
+      appTitle: 'Алматы метросы',
+      appSubtitle: 'Онлайн-кесте — пойызды қанша күту керек',
+      tabNearest: 'Жақын пойыз',
+      tabFull: 'Толық кесте',
+      locating: 'Орналасқан жеріңізді анықтап жатырмыз…',
+      nearestStationMsg: function (name, dist) {
+        return 'Ең жақын бекет: <b>' + name + '</b> (≈' + dist + ' м)';
+      },
+      notInAlmaty: function (name, distKm) {
+        return 'Сіз, көрінеді, Алматыда емессіз… 😔 Өкінішті. Осы жерден ең жақын бекет — «' + name + '», қашықтығы ' + distKm + ' км. Бекетті қолмен таңдауға болады.';
+      },
+      geoFailed: function (reason) {
+        return 'Орналасқан жеріңізді анықтау мүмкін болмады' + (reason ? ' (' + reason + ')' : '') + '. Бекетті қолмен таңдаңыз.';
+      },
+      loadFailed: 'Кестені жүктеу мүмкін болмады.',
+      loadError: function (msg) { return 'Деректерді жүктеу қатесі: ' + msg; },
+      reasonPermissionDenied: 'рұқсат жоқ',
+      reasonUnsupported: 'браузер геолокацияны қолдамайды',
+      manualStationBtn: 'Бекетті қолмен таңдау',
+      distFromYou: function (m) { return '≈ ' + m + ' м сізден'; },
+      terminusNote: 'Соңғы бекет — бұл бағытта пойыз жоқ',
+      noData: 'деректер жоқ',
+      metroClosed: function (hhmm) { return 'метро жабық<br>бірінші пойыз: ' + hhmm; },
+      thenIn: function (t) { return 'содан кейін ' + t; },
+      estimatedNote: '⚠️ Бұл бекет үшін метро серверінде демалыс күндеріне арналған кесте жоқ — бағалау ретінде жұмыс күндерінің аралығы көрсетілген.',
+      fullEstimatedNote: '⚠️ Бұл бекет үшін демалыс күндерінің деректері метро серверінде жоқ — жұмыс күндерінің аралығы көрсетілген.',
+      weekday: 'Жұмыс күндері',
+      weekend: 'Демалыс күндері',
+      noDepartures: 'Рейстер жоқ (соңғы бекет немесе деректер жоқ).',
+      footerUpdated: function (date) { return 'Метро деректері жаңартылды: ' + date + ' · дереккөзі metroalmaty.kz'; },
+      footerStatic: 'Кесте статикалық (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай'
+    }
+  };
+
+  function detectDefaultLang() {
+    try {
+      var stored = localStorage.getItem(LANG_STORAGE_KEY);
+      if (stored === 'ru' || stored === 'kk') return stored;
+    } catch (e) { /* localStorage недоступен (приватный режим и т.п.) */ }
+    try {
+      if (insideTelegram && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code === 'kk') return 'kk';
+    } catch (e) { /* игнорируем */ }
+    return 'ru';
+  }
+
+  var currentLang = detectDefaultLang();
+
+  function t(key) {
+    var v = I18N[currentLang][key];
+    if (typeof v === 'function') {
+      return v.apply(null, Array.prototype.slice.call(arguments, 1));
+    }
+    return v;
+  }
+
+  function stationName(s) {
+    if (!s || !s.name) return '';
+    return s.name[currentLang] || s.name.ru || '';
   }
 
   /* ---------- Время Алматы (UTC+5, без перехода на летнее) ---------- */
@@ -415,11 +531,34 @@
 
   var selectedSlug = null;
 
-  function setLocateStatus(kind, html) {
+  function setLocateStatusDOM(kind, html) {
     locateSpinner.style.display = kind === 'loading' ? '' : 'none';
     locateDot.style.display = kind === 'loading' ? 'none' : '';
     locateDot.className = 'dot' + (kind === 'ok' ? ' ok' : kind === 'err' ? ' err' : kind === 'far' ? ' far' : '');
     locateText.innerHTML = html;
+  }
+
+  // Состояние строки геолокации хранится отдельно от DOM, чтобы при смене языка
+  // (renderLocateStatus) можно было перерисовать тот же статус на другом языке,
+  // а не терять его (станцию/расстояние/причину ошибки) при переключении.
+  var locateState = { kind: 'loading' };
+
+  function renderLocateStatus() {
+    var st = locateState;
+    if (st.kind === 'ok') {
+      setLocateStatusDOM('ok', t('nearestStationMsg', stationName(st.station), Math.round(st.distance)));
+    } else if (st.kind === 'far') {
+      setLocateStatusDOM('far', t('notInAlmaty', stationName(st.station), Math.round(st.distance / 1000)));
+    } else if (st.kind === 'err') {
+      var reasonText = st.reasonKey === 'permissionDenied' ? t('reasonPermissionDenied')
+        : st.reasonKey === 'unsupported' ? t('reasonUnsupported')
+        : (st.rawMessage || null);
+      setLocateStatusDOM('err', t('geoFailed', reasonText));
+    } else if (st.kind === 'loadError') {
+      setLocateStatusDOM('err', t('loadFailed'));
+    } else {
+      setLocateStatusDOM('loading', t('locating'));
+    }
   }
 
   function renderLineStrip(slug) {
@@ -431,8 +570,8 @@
       track.appendChild(dot);
     });
     var ends = document.querySelectorAll('#lineEnds span');
-    ends[0].textContent = STATIONS[0].name;
-    ends[1].textContent = STATIONS[STATIONS.length - 1].name;
+    ends[0].textContent = stationName(STATIONS[0]);
+    ends[1].textContent = stationName(STATIONS[STATIONS.length - 1]);
   }
 
   function selectStation(slug, viaGeo, distanceMeters) {
@@ -440,9 +579,9 @@
     stationSelect.value = slug;
     var st = STATIONS_BY_SLUG[slug];
     document.getElementById('stationCard').style.display = '';
-    document.getElementById('stationName').textContent = st.name;
+    document.getElementById('stationName').textContent = stationName(st);
     document.getElementById('stationDist').textContent =
-      viaGeo && distanceMeters != null ? '≈ ' + Math.round(distanceMeters) + ' м от вас' : '';
+      viaGeo && distanceMeters != null ? t('distFromYou', Math.round(distanceMeters)) : '';
     renderLineStrip(slug);
     renderDirections();
   }
@@ -452,20 +591,22 @@
   function onGeoSuccess(lat, lon) {
     var res = nearestStation(lat, lon, STATIONS);
     if (res.distance > FAR_FROM_ALMATY_METERS) {
-      setLocateStatus('far', 'Кажется, вы не в Алматы… 😔 Печально. Ближайшая станция отсюда — «' +
-        res.station.name + '», это ' + Math.round(res.distance / 1000) + ' км. Можно выбрать станцию вручную.');
+      locateState = { kind: 'far', station: res.station, distance: res.distance };
+      renderLocateStatus();
       locateBtn.style.display = 'none';
       stationSelect.style.display = '';
       if (!selectedSlug) selectStation(STATIONS[0].slug, false);
       return;
     }
-    setLocateStatus('ok', 'Ближайшая станция: <b>' + res.station.name + '</b> (≈' + Math.round(res.distance) + ' м)');
+    locateState = { kind: 'ok', station: res.station, distance: res.distance };
+    renderLocateStatus();
     locateBtn.style.display = '';
     selectStation(res.station.slug, true, res.distance);
   }
 
-  function onGeoFail(reason) {
-    setLocateStatus('err', 'Не удалось определить местоположение' + (reason ? ' (' + reason + ')' : '') + '. Выберите станцию вручную.');
+  function onGeoFail(reasonKey, rawMessage) {
+    locateState = { kind: 'err', reasonKey: reasonKey, rawMessage: rawMessage };
+    renderLocateStatus();
     locateBtn.style.display = 'none';
     stationSelect.style.display = '';
     if (!selectedSlug) selectStation(STATIONS[0].slug, false);
@@ -506,12 +647,12 @@
   }
 
   function tryBrowserGeolocation() {
-    if (!navigator.geolocation) { onGeoFail('геолокация не поддерживается браузером'); return; }
+    if (!navigator.geolocation) { onGeoFail('unsupported'); return; }
     navigator.geolocation.getCurrentPosition(
       function (pos) { onGeoSuccess(pos.coords.latitude, pos.coords.longitude); },
       function (err) {
-        var reason = err && err.code === 1 ? 'нет разрешения' : (err && err.message) || 'ошибка';
-        onGeoFail(reason);
+        var reasonKey = err && err.code === 1 ? 'permissionDenied' : null;
+        onGeoFail(reasonKey, err && err.message);
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
@@ -536,8 +677,8 @@
     var toRMBK = STATIONS_BY_SLUG['RMBK'];
 
     var dirs = [
-      { key: 'forward',  label: '→ ' + toBM.name },
-      { key: 'backward', label: '→ ' + toRMBK.name }
+      { key: 'forward',  label: '→ ' + stationName(toBM) },
+      { key: 'backward', label: '→ ' + stationName(toRMBK) }
     ];
 
     dirs.forEach(function (d) {
@@ -546,7 +687,7 @@
       var hasAny = (st.weekday[d.key] && st.weekday[d.key].length) || (st.weekend[d.key] && st.weekend[d.key].length);
       if (!hasAny) {
         wrap.classList.add('unavailable');
-        wrap.innerHTML = '<div class="dir-label">' + d.label + '</div><div class="closed">Конечная станция — поездов в эту сторону нет</div>';
+        wrap.innerHTML = '<div class="dir-label">' + d.label + '</div><div class="closed">' + t('terminusNote') + '</div>';
         container.appendChild(wrap);
         return;
       }
@@ -575,7 +716,7 @@
       if (!el) return;
       var res = nextTrains(selectedSlug, dirKey, 2);
       if (res.trains.length === 0) {
-        el.innerHTML = '<small>нет данных</small>';
+        el.innerHTML = '<small>' + t('noData') + '</small>';
         if (elAfter) elAfter.textContent = '';
         return;
       }
@@ -584,14 +725,14 @@
       if (first.dayOffset === 1 || mins > 6 * 60) {
         // метро закрыто — следующий поезд относится к следующему дню (или очень нескоро)
         var arrivalClock = new Date(res.serviceStart.getTime() + first.minutes * 60000);
-        el.innerHTML = '<small>метро закрыто<br>первый поезд в ' + fmtHHMM(arrivalClock) + '</small>';
+        el.innerHTML = '<small>' + t('metroClosed', fmtHHMM(arrivalClock)) + '</small>';
       } else {
         el.textContent = fmtCountdown(mins);
       }
       if (elAfter) {
         if (res.trains[1]) {
           var mins2 = res.trains[1].minutes - res.nowMinutes;
-          elAfter.textContent = 'затем через ' + fmtCountdown(mins2);
+          elAfter.textContent = t('thenIn', fmtCountdown(mins2));
         } else {
           elAfter.textContent = '';
         }
@@ -648,8 +789,8 @@
 
     var toBM = STATIONS_BY_SLUG['BM'], toRMBK = STATIONS_BY_SLUG['RMBK'];
     var dirs = [
-      { key: 'forward', title: '→ ' + toBM.name },
-      { key: 'backward', title: '→ ' + toRMBK.name }
+      { key: 'forward', title: '→ ' + stationName(toBM) },
+      { key: 'backward', title: '→ ' + stationName(toRMBK) }
     ];
 
     var now = almatyNow();
@@ -669,7 +810,7 @@
       if (times.length === 0) {
         var p = document.createElement('div');
         p.className = 'note';
-        p.textContent = 'Нет отправлений (конечная станция или нет данных).';
+        p.textContent = t('noDepartures');
         col.appendChild(p);
         cols.appendChild(col);
         return;
@@ -706,6 +847,84 @@
     });
   }
 
+  /* ---------- Переключение языка ---------- */
+  function populateStationSelects() {
+    [stationSelect, fullStationSelect].forEach(function (sel) {
+      var prevValue = sel.value;
+      sel.innerHTML = '';
+      STATIONS.forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = s.slug;
+        opt.textContent = stationName(s);
+        sel.appendChild(opt);
+      });
+      if (prevValue) sel.value = prevValue;
+    });
+  }
+
+  function fmtDate(date) {
+    // Не полагаемся на Intl/toLocaleDateString: в некоторых WebView (в т.ч. внутри
+    // Telegram) нет полных данных локали "kk", и дата откатывается к ISO-виду
+    // ("2026-08-01") вместо человеческого формата. Форматируем вручную.
+    var d = String(date.getDate()).padStart(2, '0');
+    var m = String(date.getMonth() + 1).padStart(2, '0');
+    return d + '.' + m + '.' + date.getFullYear();
+  }
+
+  function renderFooter() {
+    if (!SCHEDULE) return;
+    var genDate = new Date(SCHEDULE.generated_at);
+    document.getElementById('metaFooter').innerHTML =
+      t('footerUpdated', fmtDate(genDate)) + '<br>' + t('footerStatic');
+  }
+
+  function applyLanguage(lang) {
+    currentLang = lang;
+    try { localStorage.setItem(LANG_STORAGE_KEY, lang); } catch (e) { /* приватный режим и т.п. */ }
+
+    document.documentElement.lang = lang;
+    document.title = t('pageTitle');
+    document.getElementById('appTitle').textContent = t('appTitle');
+    document.getElementById('appSubtitle').textContent = t('appSubtitle');
+    document.querySelector('[data-tab="nearest"]').textContent = t('tabNearest');
+    document.querySelector('[data-tab="full"]').textContent = t('tabFull');
+    locateBtn.textContent = t('manualStationBtn');
+    document.querySelector('[data-daytype="weekday"]').textContent = t('weekday');
+    document.querySelector('[data-daytype="weekend"]').textContent = t('weekend');
+    document.getElementById('estimatedNote').textContent = t('estimatedNote');
+    document.getElementById('fullEstimatedNote').textContent = t('fullEstimatedNote');
+    document.querySelectorAll('.lang-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+
+    if (STATIONS.length) {
+      populateStationSelects();
+      if (selectedSlug) {
+        document.getElementById('stationName').textContent = stationName(STATIONS_BY_SLUG[selectedSlug]);
+        if (locateState.kind === 'ok' && locateState.station.slug === selectedSlug) {
+          document.getElementById('stationDist').textContent = t('distFromYou', Math.round(locateState.distance));
+        }
+        renderLineStrip(selectedSlug);
+        renderDirections();
+      }
+      if (document.getElementById('view-full').classList.contains('active')) {
+        renderFullSchedule();
+      }
+      renderFooter();
+    }
+    renderLocateStatus();
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.dataset.lang !== currentLang) applyLanguage(btn.dataset.lang);
+    });
+  });
+
+  // Применяем язык сразу (ещё до загрузки данных), чтобы статичный текст интерфейса
+  // был на нужном языке с первого кадра, а не только после ответа сети.
+  applyLanguage(currentLang);
+
   /* ---------- Загрузка данных ---------- */
   Promise.all([
     fetch('data/stations.json').then(function (r) { return r.json(); }),
@@ -715,15 +934,7 @@
     SCHEDULE = results[1];
     STATIONS.forEach(function (s) { STATIONS_BY_SLUG[s.slug] = s; });
 
-    // селекторы станций
-    [stationSelect, fullStationSelect].forEach(function (sel) {
-      STATIONS.forEach(function (s) {
-        var opt = document.createElement('option');
-        opt.value = s.slug;
-        opt.textContent = s.name;
-        sel.appendChild(opt);
-      });
-    });
+    populateStationSelects();
 
     var now = almatyNow();
     fullDayType = dayTypeOf(serviceDayStart(now));
@@ -732,16 +943,14 @@
     });
     fullStationSelect.value = 'RMBK';
 
-    var genDate = new Date(SCHEDULE.generated_at);
-    document.getElementById('metaFooter').innerHTML =
-      'Данные метро обновлены: ' + genDate.toLocaleDateString('ru-RU') + ' · источник metroalmaty.kz' +
-      '<br>Расписание статическое (не GPS-трекинг поездов), как и на официальном сайте';
+    renderFooter();
 
     // геолокация
     if (!tryTelegramLocation()) tryBrowserGeolocation();
   }).catch(function (err) {
-    document.getElementById('metaFooter').textContent = 'Ошибка загрузки данных: ' + err.message;
-    setLocateStatus('err', 'Не удалось загрузить расписание.');
+    document.getElementById('metaFooter').textContent = t('loadError', err.message);
+    locateState = { kind: 'loadError' };
+    renderLocateStatus();
   });
 
 })();

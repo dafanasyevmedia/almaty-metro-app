@@ -90,6 +90,16 @@ def main() -> int:
         if weekend_missing:
             print(f"    !! {slug}: на сервере нет расписания на выходные — используем будни как оценку", file=sys.stderr)
 
+        # API отдаёт название станции на русском и казахском в current_station_locales —
+        # используем это, чтобы data/stations.json содержал оба варианта для переключения
+        # языка в приложении. st["name"] мутируется прямо в загруженном списке station,
+        # который целиком перезаписывается в конце main().
+        locales = payload.get("current_station_locales") or {}
+        existing_name = st.get("name")
+        name_ru = locales.get("ru") or (existing_name if isinstance(existing_name, str) else None) or slug
+        name_kk = locales.get("kk") or name_ru
+        st["name"] = {"ru": name_ru, "kk": name_kk}
+
         entry = {
             "weekday": {
                 "forward": times("non_weekend", fwd_key),
@@ -107,7 +117,10 @@ def main() -> int:
     OUTPUT_FILE.write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    print(f"Готово: {OUTPUT_FILE}", file=sys.stderr)
+    STATIONS_FILE.write_text(
+        json.dumps(stations, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"Готово: {OUTPUT_FILE}, {STATIONS_FILE}", file=sys.stderr)
     return 0
 
 
