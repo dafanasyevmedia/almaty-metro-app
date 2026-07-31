@@ -369,9 +369,11 @@
       timeline.push({ minutes: timeStrToMinutes(t), raw: t, dayOffset: 0 });
     });
     tomorrowArr.forEach(function(t){
-      var m = timeStrToMinutes(t);
-      if (m >= 24*60) m -= 24*60; // на случай хвоста "тройных" суток — не должно происходить, но подстрахуемся
-      timeline.push({ minutes: m + 24*60, raw: t, dayOffset: 1 });
+      // timeStrToMinutes уже добавляет +24ч хвостовым поездам (после полуночи) —
+      // здесь это часть "завтрашних" суток, поэтому просто сдвигаем весь день целиком
+      // ещё на +24ч. Вычитать обратно ничего не нужно: хвостовой поезд "завтра"
+      // корректно окажется на третьи сутки от начала текущих "транспортных суток".
+      timeline.push({ minutes: timeStrToMinutes(t) + 24*60, raw: t, dayOffset: 1 });
     });
     timeline.sort(function(a,b){ return a.minutes - b.minutes; });
     return timeline;

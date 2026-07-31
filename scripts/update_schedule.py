@@ -53,6 +53,8 @@ def main() -> int:
         "stations": {},
     }
 
+    max_order = max(s["order"] for s in stations)
+
     for st in sorted(stations, key=lambda s: s["order"]):
         slug = st["slug"]
         print(f"  {slug:6s} -> {API_BASE}/schedule/{slug}", file=sys.stderr)
@@ -67,18 +69,35 @@ def main() -> int:
             entries = day.get(dir_key) or []
             return [e["arrival_time"] for e in entries]
 
+        # По умолчанию API отдаёт direction1 = в сторону Б.Момышулы (forward),
+        # direction2 = в сторону Райымбек батыра (backward). Но у конечных станций
+        # физически возможно только одно направление, и на практике API иногда
+        # (подтверждено для Б.Момышулы) кладёт реальные рейсы не в тот индекс —
+        # station1/station2 говорят одно, а данные лежат в другом direction.
+        # Поэтому для конечных станций направление определяем не по номеру
+        # direction, а по тому, где реально есть рейсы.
+        fwd_key, bwd_key = "direction1", "direction2"
+        if st["order"] in (1, max_order):
+            d1_has_data = bool((payload.get("non_weekend") or {}).get("direction1"))
+            only_dir_key = "direction1" if d1_has_data else "direction2"
+            empty_dir_key = "direction2" if d1_has_data else "direction1"
+            if st["order"] == 1:
+                fwd_key, bwd_key = only_dir_key, empty_dir_key
+            else:
+                bwd_key, fwd_key = only_dir_key, empty_dir_key
+
         weekend_missing = not isinstance(payload.get("weekend"), dict)
         if weekend_missing:
             print(f"    !! {slug}: на сервере нет расписания на выходные — используем будни как оценку", file=sys.stderr)
 
         entry = {
             "weekday": {
-                "forward": times("non_weekend", "direction1"),
-                "backward": times("non_weekend", "direction2"),
+                "forward": times("non_weekend", fwd_key),
+                "backward": times("non_weekend", bwd_key),
             },
             "weekend": {
-                "forward": times("weekend", "direction1") if not weekend_missing else times("non_weekend", "direction1"),
-                "backward": times("weekend", "direction2") if not weekend_missing else times("non_weekend", "direction2"),
+                "forward": times("weekend", fwd_key) if not weekend_missing else times("non_weekend", fwd_key),
+                "backward": times("weekend", bwd_key) if not weekend_missing else times("non_weekend", bwd_key),
             },
         }
         if weekend_missing:
