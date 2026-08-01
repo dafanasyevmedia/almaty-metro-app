@@ -181,6 +181,17 @@
 
   .note{ font-size:12px; color:var(--muted); margin-top:12px; line-height:1.5; }
   .note.warn{ color:var(--warn); }
+  .note.holiday{ color:var(--accent); font-weight:600; }
+
+  /* вкладка "О метро" */
+  .about-h2{ font-size:15px; font-weight:800; margin:0 0 10px; letter-spacing:-.2px; }
+  .about-text{ font-size:13.5px; color:var(--muted); line-height:1.6; margin:0; }
+  .about-list{ margin:0; padding:0 0 0 18px; }
+  .about-list li{ font-size:13.5px; color:var(--muted); line-height:1.6; margin-bottom:8px; }
+  .about-list li:last-child{ margin-bottom:0; }
+  .about-scheme-link{
+    display:block; text-align:center; text-decoration:none; margin:0 0 12px; font-size:14px;
+  }
 
   footer.meta{
     text-align:center; color:var(--muted); font-size:11px; padding:10px 16px 22px; line-height:1.7; font-weight:500;
@@ -258,6 +269,7 @@
 <div class="tabs">
   <button class="tab-btn active" data-tab="nearest">Ближайший поезд</button>
   <button class="tab-btn" data-tab="full">Всё расписание</button>
+  <button class="tab-btn" data-tab="about">О метро</button>
 </div>
 
 <main>
@@ -285,6 +297,8 @@
         <div class="line-ends" id="lineEnds"><span></span><span></span></div>
       </div>
       <div class="directions" id="directions"><!-- заполняется JS --></div>
+      <div class="note holiday" id="holidayNote" style="display:none"></div>
+      <div class="note holiday" id="workdayNote" style="display:none"></div>
       <div class="note warn" id="estimatedNote" style="display:none">
         ⚠️ Для этой станции на сервере метро нет расписания на выходные — показаны будние интервалы как оценка.
       </div>
@@ -302,6 +316,8 @@
         <button class="btn" data-daytype="weekday">Будни</button>
         <button class="btn" data-daytype="weekend">Выходные</button>
       </div>
+      <div class="note holiday" id="fullHolidayNote" style="display:none"></div>
+      <div class="note holiday" id="fullWorkdayNote" style="display:none"></div>
       <div class="note" id="fullEstimatedNote" style="display:none">
         ⚠️ Данные на выходные для этой станции недоступны на сервере метро — показаны будние интервалы.
       </div>
@@ -312,6 +328,28 @@
     </div>
   </section>
 
+  <!-- ===== ВКЛАДКА: О МЕТРО ===== -->
+  <section class="view" id="view-about">
+    <div class="card">
+      <h2 class="about-h2" id="aboutHistoryTitle">История</h2>
+      <p class="about-text" id="aboutHistoryText"></p>
+    </div>
+
+    <div class="card">
+      <h2 class="about-h2" id="aboutPaymentTitle">Способы оплаты</h2>
+      <ul class="about-list" id="aboutPaymentList"><!-- заполняется JS --></ul>
+    </div>
+
+    <div class="card">
+      <h2 class="about-h2" id="aboutHoursTitle">Режим работы</h2>
+      <p class="about-text" id="aboutHoursText"></p>
+    </div>
+
+    <a class="btn primary about-scheme-link" id="aboutSchemeLink"
+       href="https://metroalmaty.kz/ru/metro-scheme" target="_blank" rel="noopener">
+      Официальная схема линии →
+    </a>
+  </section>
 </main>
 
 <footer class="meta" id="metaFooter">Загрузка данных…</footer>
@@ -376,7 +414,23 @@
       weekend: 'Выходные',
       noDepartures: 'Нет отправлений (конечная станция или нет данных).',
       footerUpdated: function (date) { return 'Данные метро обновлены: ' + date + ' · источник metroalmaty.kz'; },
-      footerStatic: 'Расписание статическое (не GPS-трекинг поездов), как и на официальном сайте'
+      footerStatic: 'Расписание статическое (не GPS-трекинг поездов), как и на официальном сайте',
+      aboutTab: 'О метро',
+      aboutHistoryTitle: 'История',
+      aboutHistoryText: 'Метро в Алматы работает с декабря 2011 года — первую очередь линии (7 станций) открыли после многолетней паузы, вызванной распадом СССР. Сеть расширяли постепенно: в 2015 году добавили «Сайран» и «Москву», в 2022-м — «Сарыарку» и «Б. Момышулы». Сейчас в системе 11 станций на одной линии, строительство продолжается в сторону будущей станции «Калкаман».',
+      aboutPaymentTitle: 'Способы оплаты',
+      aboutPaymentItems: [
+        'Смарт-жетон — разовая поездка: 120 ₸ (взрослый), 60 ₸ (ребёнок 7–15 лет, нужен документ)',
+        'Смарт-карта — 180 ₸ за карту + 120 ₸ за поездку, пополняется на кассах и в автоматах, до 60 поездок',
+        'Банковская карта (Visa, MasterCard, UnionPay) — оплата на турникете через POS-терминал',
+        'Транспортное приложение Onay'
+      ],
+      aboutHoursTitle: 'Режим работы',
+      aboutHoursText: 'Метро работает с 06:20 до 00:00 (время Алматы).',
+      aboutSchemeLinkText: 'Официальная схема линии →',
+      aboutSchemeUrl: 'https://metroalmaty.kz/ru/metro-scheme',
+      holidayNote: '🎉 Сегодня праздничный день — метро работает по графику выходных.',
+      workdayNote: '📅 Сегодня рабочий день (объявлен вместо выходного) — метро работает по будничному расписанию.'
     },
     kk: {
       pageTitle: 'Алматы метросы — кесте',
@@ -410,7 +464,23 @@
       weekend: 'Демалыс күндері',
       noDepartures: 'Рейстер жоқ (соңғы бекет немесе деректер жоқ).',
       footerUpdated: function (date) { return 'Метро деректері жаңартылды: ' + date + ' · дереккөзі metroalmaty.kz'; },
-      footerStatic: 'Статикалық кесте (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай'
+      footerStatic: 'Статикалық кесте (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай',
+      aboutTab: 'Метро туралы',
+      aboutHistoryTitle: 'Тарихы',
+      aboutHistoryText: 'Алматы метросы 2011 жылдың желтоқсанынан бері жұмыс істейді — желінің бірінші кезегі (7 бекет) КСРО ыдырауынан кейінгі көпжылдық үзілістен соң ашылды. Желі бірте-бірте кеңейтілді: 2015 жылы «Сайран» мен «Мәскеу» қосылды, 2022 жылы — «Сарыарқа» мен «Б. Момышұлы». Қазір жүйеде бір желіде 11 бекет бар, құрылыс болашақтағы «Қалқаман» бекетіне қарай жалғасуда.',
+      aboutPaymentTitle: 'Төлем түрлері',
+      aboutPaymentItems: [
+        'Смарт-жетон — бір жолғы сапар: 120 ₸ (ересек), 60 ₸ (7–15 жас аралығындағы бала, құжат керек)',
+        'Смарт-карта — карта үшін 180 ₸ + сапар үшін 120 ₸, кассалар мен автоматтарда толтырылады, 60 сапарға дейін',
+        'Банк картасы (Visa, MasterCard, UnionPay) — айналма қақпадағы POS-терминал арқылы төлем',
+        'Onay көлік қосымшасы'
+      ],
+      aboutHoursTitle: 'Жұмыс режимі',
+      aboutHoursText: 'Метро сағат 06:20-ден 00:00-ге дейін жұмыс істейді (Алматы уақыты).',
+      aboutSchemeLinkText: 'Желінің ресми схемасы →',
+      aboutSchemeUrl: 'https://metroalmaty.kz/kk/metro-scheme',
+      holidayNote: '🎉 Бүгін мереке күні — метро демалыс күндерінің кестесі бойынша жұмыс істейді.',
+      workdayNote: '📅 Бүгін жұмыс күні (демалыс орнына жарияланған) — метро жұмыс күндерінің кестесі бойынша жұмыс істейді.'
     },
     en: {
       pageTitle: 'Almaty Metro — Schedule',
@@ -444,7 +514,23 @@
       weekend: 'Weekends',
       noDepartures: 'No departures (terminus station or no data).',
       footerUpdated: function (date) { return 'Metro data updated: ' + date + ' · source metroalmaty.kz'; },
-      footerStatic: 'Static schedule (not live GPS train tracking), same as on the official site'
+      footerStatic: 'Static schedule (not live GPS train tracking), same as on the official site',
+      aboutTab: 'About',
+      aboutHistoryTitle: 'History',
+      aboutHistoryText: 'Almaty Metro has been running since December 2011, when the first stretch of the line (7 stations) opened after decades of delay caused by the collapse of the USSR. The network has grown gradually: Sayran and Moskva stations were added in 2015, and Saryarqa and Bauyrjan Momyshuly in 2022. The system currently has 11 stations on a single line, with construction continuing toward the future Qalqaman station.',
+      aboutPaymentTitle: 'Payment methods',
+      aboutPaymentItems: [
+        'Smart token — single ride: 120 ₸ (adult), 60 ₸ (child 7–15, ID required)',
+        'Smart card — 180 ₸ for the card + 120 ₸ per ride, top up at ticket offices and machines, up to 60 rides',
+        'Bank card (Visa, MasterCard, UnionPay) — tap at the turnstile\'s POS terminal',
+        'Onay transit app'
+      ],
+      aboutHoursTitle: 'Operating hours',
+      aboutHoursText: 'The metro runs from 06:20 to 00:00 (Almaty time).',
+      aboutSchemeLinkText: 'Official line map →',
+      aboutSchemeUrl: 'https://metroalmaty.kz/ru/metro-scheme',
+      holidayNote: '🎉 Today is a public holiday — the metro runs on the weekend schedule.',
+      workdayNote: '📅 Today is a working day (declared instead of a day off) — the metro runs on the weekday schedule.'
     }
   };
 
@@ -487,9 +573,46 @@
     if (almatyDate.getUTCHours() < 3) d.setUTCDate(d.getUTCDate() - 1);
     return d;
   }
+  // Государственные праздники Казахстана — метро в эти дни работает по графику
+  // выходных, даже если день будний. Список дат грузится из data/holidays.json
+  // (обновляется вручную раз в год — см. CLAUDE.md).
+  //
+  // Календарь работает в ОБЕ стороны (по ст. 85 ТК РК власти могут не только
+  // сделать будний день выходным, но и наоборот — объявить субботу рабочей,
+  // чтобы "занять" её выходной статус и слепить длинный блок выходных вокруг
+  // праздника). HOLIDAYS переводит будни в выходные, WORKING_WEEKENDS —
+  // выходные в будни; при конфликте WORKING_WEEKENDS в приоритете.
+  var HOLIDAYS = [];
+  var WORKING_WEEKENDS = [];
+  function dateKey(d) {
+    var y = d.getUTCFullYear();
+    var m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    var day = String(d.getUTCDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+  function isHolidayDate(d) {
+    return HOLIDAYS.indexOf(dateKey(d)) !== -1;
+  }
+  function isWorkingWeekendDate(d) {
+    return WORKING_WEEKENDS.indexOf(dateKey(d)) !== -1;
+  }
+  // Праздник, который выпал на будний день (а не на и так уже выходной) —
+  // именно в этом случае стоит показать пояснение, почему расписание "не как обычно".
+  function isHolidayForcedWeekend(d) {
+    var wd = d.getUTCDay();
+    return !isWorkingWeekendDate(d) && isHolidayDate(d) && wd !== 0 && wd !== 6;
+  }
+  // Обратный случай: суббота/воскресенье объявлены рабочим днём.
+  function isWeekendForcedWorkday(d) {
+    var wd = d.getUTCDay();
+    return (wd === 0 || wd === 6) && isWorkingWeekendDate(d);
+  }
   function dayTypeOf(midnightDate) {
+    if (isWorkingWeekendDate(midnightDate)) return 'weekday';
     var wd = midnightDate.getUTCDay();
-    return (wd === 0 || wd === 6) ? 'weekend' : 'weekday';
+    if (wd === 0 || wd === 6) return 'weekend';
+    if (isHolidayDate(midnightDate)) return 'weekend';
+    return 'weekday';
   }
   function fmtHHMM(date) {
     var h = String(date.getUTCHours()).padStart(2, '0');
@@ -759,8 +882,11 @@
 
     var estimated = !!st.weekend_estimated;
     var now = almatyNow();
-    var isWeekendNow = dayTypeOf(serviceDayStart(now)) === 'weekend';
+    var todayStart = serviceDayStart(now);
+    var isWeekendNow = dayTypeOf(todayStart) === 'weekend';
     document.getElementById('estimatedNote').style.display = (estimated && isWeekendNow) ? '' : 'none';
+    document.getElementById('holidayNote').style.display = isHolidayForcedWeekend(todayStart) ? '' : 'none';
+    document.getElementById('workdayNote').style.display = isWeekendForcedWorkday(todayStart) ? '' : 'none';
 
     tickCountdowns();
   }
@@ -876,6 +1002,10 @@
     var todayServiceStart = serviceDayStart(now);
     var nowMinutes = (now - todayServiceStart) / 60000;
     var viewingCurrentDayType = dayTypeOf(todayServiceStart) === fullDayType;
+    document.getElementById('fullHolidayNote').style.display =
+      (viewingCurrentDayType && isHolidayForcedWeekend(todayServiceStart)) ? '' : 'none';
+    document.getElementById('fullWorkdayNote').style.display =
+      (viewingCurrentDayType && isWeekendForcedWorkday(todayServiceStart)) ? '' : 'none';
 
     dirs.forEach(function (d) {
       var times = (st[fullDayType] && st[fullDayType][d.key]) || [];
@@ -977,14 +1107,35 @@
     document.getElementById('appSubtitle').textContent = t('appSubtitle');
     document.querySelector('[data-tab="nearest"]').textContent = t('tabNearest');
     document.querySelector('[data-tab="full"]').textContent = t('tabFull');
+    document.querySelector('[data-tab="about"]').textContent = t('aboutTab');
     locateBtn.textContent = t('manualStationBtn');
     document.querySelector('[data-daytype="weekday"]').textContent = t('weekday');
     document.querySelector('[data-daytype="weekend"]').textContent = t('weekend');
     document.getElementById('estimatedNote').textContent = t('estimatedNote');
     document.getElementById('fullEstimatedNote').textContent = t('fullEstimatedNote');
+    document.getElementById('holidayNote').textContent = t('holidayNote');
+    document.getElementById('fullHolidayNote').textContent = t('holidayNote');
+    document.getElementById('workdayNote').textContent = t('workdayNote');
+    document.getElementById('fullWorkdayNote').textContent = t('workdayNote');
     document.querySelectorAll('.lang-btn').forEach(function (b) {
       b.classList.toggle('active', b.dataset.lang === lang);
     });
+
+    document.getElementById('aboutHistoryTitle').textContent = t('aboutHistoryTitle');
+    document.getElementById('aboutHistoryText').textContent = t('aboutHistoryText');
+    document.getElementById('aboutPaymentTitle').textContent = t('aboutPaymentTitle');
+    var paymentList = document.getElementById('aboutPaymentList');
+    paymentList.innerHTML = '';
+    t('aboutPaymentItems').forEach(function (item) {
+      var li = document.createElement('li');
+      li.textContent = item;
+      paymentList.appendChild(li);
+    });
+    document.getElementById('aboutHoursTitle').textContent = t('aboutHoursTitle');
+    document.getElementById('aboutHoursText').textContent = t('aboutHoursText');
+    var schemeLink = document.getElementById('aboutSchemeLink');
+    schemeLink.textContent = t('aboutSchemeLinkText');
+    schemeLink.href = t('aboutSchemeUrl');
 
     if (STATIONS.length) {
       populateStationSelects();
@@ -1017,10 +1168,13 @@
   /* ---------- Загрузка данных ---------- */
   Promise.all([
     fetch('data/stations.json').then(function (r) { return r.json(); }),
-    fetch('data/schedule.json').then(function (r) { return r.json(); })
+    fetch('data/schedule.json').then(function (r) { return r.json(); }),
+    fetch('data/holidays.json').then(function (r) { return r.json(); }).catch(function () { return { dates: [], workingWeekends: [] }; })
   ]).then(function (results) {
     STATIONS = results[0].slice().sort(function (a,b) { return a.order - b.order; });
     SCHEDULE = results[1];
+    HOLIDAYS = (results[2] && results[2].dates) || [];
+    WORKING_WEEKENDS = (results[2] && results[2].workingWeekends) || [];
     STATIONS.forEach(function (s) { STATIONS_BY_SLUG[s.slug] = s; });
 
     populateStationSelects();

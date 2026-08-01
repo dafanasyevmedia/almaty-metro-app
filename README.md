@@ -20,6 +20,7 @@ index.html                     — всё приложение (разметка
 data/stations.json             — координаты + названия станций (ru/kk/en)
 data/schedule.json             — расписание (перегенерируется ежедневно)
 data/icon-source.svg           — исходник иконки (для перегенерации favicon)
+data/holidays.json             — даты праздников (обновлять раз в год, см. CLAUDE.md)
 scripts/update_schedule.py     — скрипт обновления расписания
 .github/workflows/update-schedule.yml — автозапуск скрипта раз в сутки
 favicon*, apple-touch-icon.png,
