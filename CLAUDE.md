@@ -39,7 +39,7 @@ data/stations.json                      — координаты + назван�
 data/schedule.json                      — расписание (перегенерируется скриптом)
 data/icon-source.svg                    — исходник иконки (для регенерации favicon)
 scripts/update_schedule.py              — тянет данные с API метро, пишет два JSON выше
-.github/workflows/update-schedule.yml   — запускает скрипт раз в неделю, коммитит результат
+.github/workflows/update-schedule.yml   — запускает скрипт раз в сутки, коммитит результат
 favicon*, apple-touch-icon.png,
 web-app-manifest-*.png, site.webmanifest — сгенерированы на realfavicongenerator.net
                                            из data/icon-source.svg, руками не редактировать

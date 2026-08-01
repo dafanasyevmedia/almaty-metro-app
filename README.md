@@ -2,7 +2,7 @@
 
 Одностраничное приложение: показывает ближайшую станцию метро по геопозиции
 и обратный отсчёт до следующих двух поездов в обе стороны. Данные берутся из
-`data/schedule.json`, который раз в неделю обновляется скриптом
+`data/schedule.json`, который раз в сутки обновляется скриптом
 `scripts/update_schedule.py` из официального API metroalmaty.kz. Три языка
 интерфейса (қазақша / русский / English).
 
@@ -18,10 +18,10 @@
 ```
 index.html                     — всё приложение (разметка + стили + JS, 3 языка)
 data/stations.json             — координаты + названия станций (ru/kk/en)
-data/schedule.json             — расписание (перегенерируется еженедельно)
+data/schedule.json             — расписание (перегенерируется ежедневно)
 data/icon-source.svg           — исходник иконки (для перегенерации favicon)
 scripts/update_schedule.py     — скрипт обновления расписания
-.github/workflows/update-schedule.yml — автозапуск скрипта раз в неделю
+.github/workflows/update-schedule.yml — автозапуск скрипта раз в сутки
 favicon*, apple-touch-icon.png,
 web-app-manifest-*.png, site.webmanifest — иконки (сгенерированы на
                                             realfavicongenerator.net)

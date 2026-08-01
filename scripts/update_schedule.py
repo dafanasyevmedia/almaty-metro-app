@@ -69,16 +69,27 @@ def estimate_weekend_via_neighbor(own_weekday: list[str], neighbor_weekday: list
     и соседней (по будним данным, где сверять есть с чем), и переносим этот
     сдвиг на реальное выходное расписание соседа. Физическое время в пути
     между двумя конкретными станциями от дня недели не зависит.
+
+    Поезда сопоставляются по порядковому номеру в отсортированном списке
+    (n-й поезд дня у одной станции = n-й поезд дня у соседней), а не по
+    "ближайшему по времени" — сопоставление по времени ловит коллизии в час
+    пик, когда интервал между поездами (~6 мин) сопоставим со временем в
+    пути между станциями (~2-3 мин): алгоритм иногда путает "этот же поезд"
+    со следующим/предыдущим и получает сдвиг с обратным знаком. Проверено на
+    реальных данных (станция Абая, направление на Райымбек батыра) — именно
+    так ловился баг с неверным временем.
     """
     if not own_weekday or not neighbor_weekday or not neighbor_weekend:
         return None
-    neighbor_minutes = sorted(time_to_minutes(t) for t in neighbor_weekday)
-    offsets = []
-    for t in own_weekday:
-        om = time_to_minutes(t)
-        nearest = min(neighbor_minutes, key=lambda nm: abs(nm - om))
-        offsets.append(om - nearest)
-    offsets.sort()
+    own_sorted = sorted(own_weekday, key=time_to_minutes)
+    neighbor_sorted = sorted(neighbor_weekday, key=time_to_minutes)
+    n = min(len(own_sorted), len(neighbor_sorted))
+    if n == 0:
+        return None
+    offsets = sorted(
+        time_to_minutes(own_sorted[i]) - time_to_minutes(neighbor_sorted[i])
+        for i in range(n)
+    )
     median_offset = offsets[len(offsets) // 2]
 
     estimated = [minutes_to_time_str(time_to_minutes(t) + median_offset) for t in neighbor_weekend]

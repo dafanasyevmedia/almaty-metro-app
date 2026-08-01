@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Метро Алматы — расписание</title>
-<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="shortcut icon" href="/favicon.ico" />
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-title" content="Almaty Metro" />
-<link rel="manifest" href="/site.webmanifest" />
+<link rel="manifest" href="site.webmanifest" />
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -155,11 +155,15 @@
   .dir-card{
     position:relative; overflow:hidden; background:var(--accent-soft);
     border-radius:16px; padding:16px 14px; text-align:center;
+    border:2px solid transparent; transition:border-color .3s;
   }
   .dir-card::before{
     content:''; position:absolute; top:0; left:0; right:0; height:3px;
     background:linear-gradient(90deg, var(--accent), var(--accent2));
+    transition:background .3s;
   }
+  .dir-card.imminent{ border-color:var(--success); }
+  .dir-card.imminent::before{ background:var(--success); }
   .dir-card .dir-label{
     font-size:12px; color:var(--muted); margin-bottom:10px; line-height:1.3; min-height:32px;
     display:flex; align-items:center; justify-content:center; font-weight:700;
@@ -766,12 +770,15 @@
       }
       var first = res.trains[0];
       var mins = first.minutes - res.nowMinutes;
+      var cardEl = el.closest('.dir-card');
       if (first.dayOffset === 1 || mins > 6 * 60) {
         // метро закрыто — следующий поезд относится к следующему дню (или очень нескоро)
         var arrivalClock = new Date(res.serviceStart.getTime() + first.minutes * 60000);
         el.innerHTML = '<small>' + t('metroClosed', fmtHHMM(arrivalClock)) + '</small>';
+        if (cardEl) cardEl.classList.remove('imminent');
       } else {
         el.textContent = fmtCountdown(mins);
+        if (cardEl) cardEl.classList.toggle('imminent', mins < 1);
       }
       if (elAfter) {
         if (res.trains[1]) {
@@ -792,7 +799,12 @@
       document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
       btn.classList.add('active');
       document.getElementById('view-' + btn.dataset.tab).classList.add('active');
-      if (btn.dataset.tab === 'full') renderFullSchedule();
+      if (btn.dataset.tab === 'full') {
+        // по умолчанию открываем ту же станцию, что выбрана на вкладке "Ближайший поезд" —
+        // выбор всё равно можно поменять вручную через select ниже
+        if (selectedSlug) fullStationSelect.value = selectedSlug;
+        renderFullSchedule();
+      }
     });
   });
 
