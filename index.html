@@ -195,7 +195,18 @@
 
   .sched-cols{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:400px){ .sched-cols{ grid-template-columns:1fr; } }
-  .sched-col h3{ font-size:12.5px; color:var(--muted); margin:0 0 10px; font-weight:700; }
+  .sched-col-header{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    cursor:pointer; user-select:none; margin:0 0 10px; padding:2px 0;
+  }
+  .sched-col-header h3{ font-size:12.5px; color:var(--muted); margin:0; font-weight:700; }
+  .sched-col-header .chevron{
+    width:16px; height:16px; flex:none; color:var(--muted);
+    transition:transform .2s; display:flex; align-items:center; justify-content:center;
+  }
+  .sched-col-body{ display:block; }
+  .sched-col.collapsed .sched-col-body{ display:none; }
+  .sched-col.collapsed .chevron{ transform:rotate(-90deg); }
   .hour-block{ margin-bottom:12px; }
   .hour-block .hour{ font-size:11px; color:var(--muted); margin-bottom:5px; font-weight:700; }
   .chip-row{ display:flex; flex-wrap:wrap; gap:5px; }
@@ -811,6 +822,18 @@
   /* ---------- Полное расписание ---------- */
   var fullStationSelect = document.getElementById('fullStationSelect');
   var fullDayType = null; // выставится после загрузки данных
+  // Состояние "свёрнуто/развёрнуто" по направлению — хранится отдельно от DOM
+  // (который renderFullSchedule() полностью перестраивает при каждой смене
+  // станции/дня), чтобы выбор пользователя не сбрасывался при переключении.
+  var collapsedDirections = { forward: false, backward: false };
+
+  document.getElementById('fullScheduleCols').addEventListener('click', function (e) {
+    var header = e.target.closest('.sched-col-header');
+    if (!header) return;
+    var dirKey = header.dataset.dir;
+    collapsedDirections[dirKey] = !collapsedDirections[dirKey];
+    header.closest('.sched-col').classList.toggle('collapsed', collapsedDirections[dirKey]);
+  });
 
   document.querySelectorAll('.daytype-toggle .btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -858,16 +881,26 @@
       var times = (st[fullDayType] && st[fullDayType][d.key]) || [];
       var nextRaw = viewingCurrentDayType ? (nextTrains(slug, d.key, 1).trains[0] || {}).raw : null;
       var col = document.createElement('div');
-      col.className = 'sched-col';
-      var h3 = document.createElement('h3');
-      h3.textContent = d.title;
-      col.appendChild(h3);
+      col.className = 'sched-col' + (collapsedDirections[d.key] ? ' collapsed' : '');
+
+      var header = document.createElement('div');
+      header.className = 'sched-col-header';
+      header.dataset.dir = d.key;
+      header.innerHTML =
+        '<h3>' + d.title + '</h3>' +
+        '<svg class="chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      col.appendChild(header);
+
+      var body = document.createElement('div');
+      body.className = 'sched-col-body';
+      col.appendChild(body);
 
       if (times.length === 0) {
         var p = document.createElement('div');
         p.className = 'note';
         p.textContent = t('noDepartures');
-        col.appendChild(p);
+        body.appendChild(p);
         cols.appendChild(col);
         return;
       }
@@ -897,7 +930,7 @@
           row.appendChild(chip);
         });
         block.appendChild(row);
-        col.appendChild(block);
+        body.appendChild(block);
       });
       cols.appendChild(col);
     });
