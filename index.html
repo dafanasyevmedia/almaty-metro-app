@@ -10,27 +10,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f2effa; --bg-blob1:#ffd9ee; --bg-blob2:#e4d6ff;
+    --bg:#eef1fb; --bg-blob1:#cddcfb; --bg-blob2:#c2d6ff;
     --card:rgba(255,255,255,.72); --card-solid:#ffffff;
-    --text:#171826; --muted:#6f7285;
-    --accent:#8b5cf6; --accent2:#ec4899;
-    --accent-soft:#efe9fd; --border:rgba(23,24,38,.09);
+    --text:#0f1a33; --muted:#5c6b85;
+    --accent:#1d4ed8; --accent2:#3b82f6;
+    --accent-soft:#e3ebfe; --border:rgba(15,26,51,.09);
     --success:#16a34a; --danger:#e0245e; --warn:#b8720a;
-    --shadow:0 10px 30px -14px rgba(90,50,150,.28);
+    --shadow:0 10px 30px -14px rgba(29,78,216,.28);
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#0a0a10; --bg-blob1:rgba(139,92,246,.28); --bg-blob2:rgba(236,72,153,.18);
-      --card:rgba(255,255,255,.05); --card-solid:#15151f; --text:#f2f1f8; --muted:#9c9db0;
-      --accent:#a78bfa; --accent2:#f472b6; --accent-soft:rgba(167,139,250,.16);
+    :root{ --bg:#070a14; --bg-blob1:rgba(29,78,216,.32); --bg-blob2:rgba(59,130,246,.22);
+      --card:rgba(255,255,255,.05); --card-solid:#0d1424; --text:#eef1fb; --muted:#8fa0bd;
+      --accent:#5a8bff; --accent2:#7db3ff; --accent-soft:rgba(90,139,255,.16);
       --border:rgba(255,255,255,.09); --success:#4ade80; --danger:#ff6b8b; --warn:#f2b84f;
       --shadow:0 10px 34px -14px rgba(0,0,0,.55); }
   }
-  html[data-tg-theme="light"]{ --bg:#f2effa; --bg-blob1:#ffd9ee; --bg-blob2:#e4d6ff;
-    --card:rgba(255,255,255,.72); --card-solid:#ffffff; --text:#171826; --muted:#6f7285;
-    --accent:#8b5cf6; --accent2:#ec4899; --accent-soft:#efe9fd; --border:rgba(23,24,38,.09); }
-  html[data-tg-theme="dark"]{ --bg:#0a0a10; --bg-blob1:rgba(139,92,246,.28); --bg-blob2:rgba(236,72,153,.18);
-    --card:rgba(255,255,255,.05); --card-solid:#15151f; --text:#f2f1f8; --muted:#9c9db0;
-    --accent:#a78bfa; --accent2:#f472b6; --accent-soft:rgba(167,139,250,.16); --border:rgba(255,255,255,.09); }
+  html[data-tg-theme="light"]{ --bg:#eef1fb; --bg-blob1:#cddcfb; --bg-blob2:#c2d6ff;
+    --card:rgba(255,255,255,.72); --card-solid:#ffffff; --text:#0f1a33; --muted:#5c6b85;
+    --accent:#1d4ed8; --accent2:#3b82f6; --accent-soft:#e3ebfe; --border:rgba(15,26,51,.09); }
+  html[data-tg-theme="dark"]{ --bg:#070a14; --bg-blob1:rgba(29,78,216,.32); --bg-blob2:rgba(59,130,246,.22);
+    --card:rgba(255,255,255,.05); --card-solid:#0d1424; --text:#eef1fb; --muted:#8fa0bd;
+    --accent:#5a8bff; --accent2:#7db3ff; --accent-soft:rgba(90,139,255,.16); --border:rgba(255,255,255,.09); }
 
   *{box-sizing:border-box;}
   html{ -webkit-tap-highlight-color:transparent; }
@@ -81,7 +81,7 @@
   }
   .tab-btn.active{
     background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff;
-    box-shadow:0 6px 16px -6px rgba(139,92,246,.55);
+    box-shadow:0 6px 16px -6px color-mix(in srgb, var(--accent) 55%, transparent);
   }
 
   main{ padding:12px 16px 24px; max-width:640px; margin:0 auto; }
@@ -196,7 +196,7 @@
   .chip.past{ opacity:.32; }
   .chip.next{
     background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff;
-    border-color:transparent; font-weight:800; box-shadow:0 4px 12px -4px rgba(139,92,246,.6);
+    border-color:transparent; font-weight:800; box-shadow:0 4px 12px -4px color-mix(in srgb, var(--accent) 60%, transparent);
   }
 
   .spinner{
@@ -368,7 +368,7 @@
         return 'Ең жақын бекет: <b>' + name + '</b> (≈' + dist + ' м)';
       },
       notInAlmaty: function (name, distKm) {
-        return 'Сіз, көрінеді, Алматыда емессіз… 😔 Өкінішті. Осы жерден ең жақын бекет — «' + name + '», қашықтығы ' + distKm + ' км. Бекетті қолмен таңдауға болады.';
+        return 'Сіз Алматыда емес сияқтысыз… 😔 Өкінішті. Ең жақын станция — «' + name + '», оған дейінгі қашықтық ' + distKm + ' км. Станцияны қолмен таңдауға болады.';
       },
       geoFailed: function (reason) {
         return 'Орналасқан жеріңізді анықтау мүмкін болмады' + (reason ? ' (' + reason + ')' : '') + '. Бекетті қолмен таңдаңыз.';
@@ -382,14 +382,14 @@
       terminusNote: 'Соңғы бекет — бұл бағытта пойыз жоқ',
       noData: 'деректер жоқ',
       metroClosed: function (hhmm) { return 'метро жабық<br>бірінші пойыз: ' + hhmm; },
-      thenIn: function (t) { return 'содан кейін ' + t; },
+      thenIn: function (t) { return 'келесі пойыз: ' + t; },
       estimatedNote: '⚠️ Метро сервері бұл бекет үшін демалыс күндерінің кестесін бермейді — аралықтар көрші бекеттер бойынша есептелген.',
       fullEstimatedNote: '⚠️ Бұл бекет үшін демалыс күндерінің деректері метро серверінде жоқ — аралықтар көрші бекеттер бойынша есептелген.',
       weekday: 'Жұмыс күндері',
       weekend: 'Демалыс күндері',
       noDepartures: 'Рейстер жоқ (соңғы бекет немесе деректер жоқ).',
       footerUpdated: function (date) { return 'Метро деректері жаңартылды: ' + date + ' · дереккөзі metroalmaty.kz'; },
-      footerStatic: 'Кесте статикалық (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай'
+      footerStatic: 'Статикалық кесте (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай'
     },
     en: {
       pageTitle: 'Almaty Metro — Schedule',
