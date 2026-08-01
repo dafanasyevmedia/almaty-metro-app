@@ -228,8 +228,8 @@
   </div>
   <p id="appSubtitle">Онлайн-расписание — сколько ждать до поезда</p>
   <div class="lang-toggle" id="langToggle">
-    <button class="lang-btn" data-lang="ru">RU</button>
     <button class="lang-btn" data-lang="kk">ҚАЗ</button>
+    <button class="lang-btn" data-lang="ru">RU</button>
     <button class="lang-btn" data-lang="en">EN</button>
   </div>
 </header>
@@ -349,8 +349,8 @@
       noData: 'нет данных',
       metroClosed: function (hhmm) { return 'метро закрыто<br>первый поезд в ' + hhmm; },
       thenIn: function (t) { return 'затем через ' + t; },
-      estimatedNote: '⚠️ Для этой станции на сервере метро нет расписания на выходные — показаны будние интервалы как оценка.',
-      fullEstimatedNote: '⚠️ Данные на выходные для этой станции недоступны на сервере метро — показаны будние интервалы.',
+      estimatedNote: '⚠️ Сервер метро не отдаёт расписание на выходные для этой станции — интервалы рассчитаны по соседним станциям.',
+      fullEstimatedNote: '⚠️ Данные на выходные для этой станции недоступны на сервере метро — интервалы рассчитаны по соседним станциям.',
       weekday: 'Будни',
       weekend: 'Выходные',
       noDepartures: 'Нет отправлений (конечная станция или нет данных).',
@@ -383,8 +383,8 @@
       noData: 'деректер жоқ',
       metroClosed: function (hhmm) { return 'метро жабық<br>бірінші пойыз: ' + hhmm; },
       thenIn: function (t) { return 'содан кейін ' + t; },
-      estimatedNote: '⚠️ Бұл бекет үшін метро серверінде демалыс күндеріне арналған кесте жоқ — бағалау ретінде жұмыс күндерінің аралығы көрсетілген.',
-      fullEstimatedNote: '⚠️ Бұл бекет үшін демалыс күндерінің деректері метро серверінде жоқ — жұмыс күндерінің аралығы көрсетілген.',
+      estimatedNote: '⚠️ Метро сервері бұл бекет үшін демалыс күндерінің кестесін бермейді — аралықтар көрші бекеттер бойынша есептелген.',
+      fullEstimatedNote: '⚠️ Бұл бекет үшін демалыс күндерінің деректері метро серверінде жоқ — аралықтар көрші бекеттер бойынша есептелген.',
       weekday: 'Жұмыс күндері',
       weekend: 'Демалыс күндері',
       noDepartures: 'Рейстер жоқ (соңғы бекет немесе деректер жоқ).',
@@ -417,8 +417,8 @@
       noData: 'no data',
       metroClosed: function (hhmm) { return 'metro closed<br>first train at ' + hhmm; },
       thenIn: function (t) { return 'then in ' + t; },
-      estimatedNote: '⚠️ This station has no weekend schedule on the metro server — showing weekday intervals as an estimate.',
-      fullEstimatedNote: '⚠️ Weekend data for this station is unavailable on the metro server — showing weekday intervals.',
+      estimatedNote: '⚠️ The metro server has no weekend schedule for this station — intervals are estimated from neighboring stations.',
+      fullEstimatedNote: '⚠️ Weekend data for this station is unavailable on the metro server — intervals are estimated from neighboring stations.',
       weekday: 'Weekdays',
       weekend: 'Weekends',
       noDepartures: 'No departures (terminus station or no data).',

@@ -8,6 +8,8 @@
 через GitHub Actions (.github/workflows/update-schedule.yml).
 """
 
+from __future__ import annotations
+
 import json
 import sys
 import time
@@ -40,6 +42,50 @@ EN_NAMES = {
 }
 
 
+def time_to_minutes(t: str) -> float:
+    """Как timeStrToMinutes() в index.html: хвостовые поезда после полуночи
+    (час < 3) считаются продолжением текущих суток, а не следующих."""
+    h, m, s = (int(x) for x in t.split(":"))
+    mins = h * 60 + m + s / 60
+    if h < 3:
+        mins += 24 * 60
+    return mins
+
+
+def minutes_to_time_str(mins: float) -> str:
+    mins = mins % (24 * 60)
+    total_seconds = round(mins * 60)
+    h = (total_seconds // 3600) % 24
+    m = (total_seconds % 3600) // 60
+    s = total_seconds % 60
+    return f"{h:02d}:{m:02d}:{s:02d}"
+
+
+def estimate_weekend_via_neighbor(own_weekday: list[str], neighbor_weekday: list[str], neighbor_weekend: list[str]) -> list[str] | None:
+    """Оценивает расписание станции на выходные, когда сервер метро его не отдаёт.
+
+    Вместо того чтобы просто копировать будние интервалы (они гуще настоящих
+    выходных), считаем медианный сдвиг по времени в пути между этой станцией
+    и соседней (по будним данным, где сверять есть с чем), и переносим этот
+    сдвиг на реальное выходное расписание соседа. Физическое время в пути
+    между двумя конкретными станциями от дня недели не зависит.
+    """
+    if not own_weekday or not neighbor_weekday or not neighbor_weekend:
+        return None
+    neighbor_minutes = sorted(time_to_minutes(t) for t in neighbor_weekday)
+    offsets = []
+    for t in own_weekday:
+        om = time_to_minutes(t)
+        nearest = min(neighbor_minutes, key=lambda nm: abs(nm - om))
+        offsets.append(om - nearest)
+    offsets.sort()
+    median_offset = offsets[len(offsets) // 2]
+
+    estimated = [minutes_to_time_str(time_to_minutes(t) + median_offset) for t in neighbor_weekend]
+    estimated.sort(key=time_to_minutes)
+    return estimated
+
+
 def fetch_json(url: str) -> dict:
     req = urllib.request.Request(url, headers={"User-Agent": "almaty-metro-schedule-app/1.0"})
     with urllib.request.urlopen(req, timeout=20) as resp:
@@ -64,6 +110,8 @@ def fetch_station_payload(slug: str) -> dict:
 
 def main() -> int:
     stations = json.loads(STATIONS_FILE.read_text(encoding="utf-8"))
+    stations_by_slug = {s["slug"]: s for s in stations}
+    stations_by_order = {s["order"]: s for s in stations}
     result = {
         "generated_at": datetime.now(tz=ALMATY_TZ).isoformat(),
         "source": f"{API_BASE}/schedule/{{slug}}",
@@ -72,6 +120,11 @@ def main() -> int:
 
     max_order = max(s["order"] for s in stations)
 
+    # Проход 1: скачиваем и раскладываем сырые данные по станциям. Оценку
+    # недостающих выходных откладываем на проход 2 — там она может понадобиться
+    # станция, которая по порядку в списке идёт позже текущей (напр. для Абая
+    # нужен Байконыр, а он в списке станций идёт после).
+    raw = {}
     for st in sorted(stations, key=lambda s: s["order"]):
         slug = st["slug"]
         print(f"  {slug:6s} -> {API_BASE}/schedule/{slug}", file=sys.stderr)
@@ -105,7 +158,7 @@ def main() -> int:
 
         weekend_missing = not isinstance(payload.get("weekend"), dict)
         if weekend_missing:
-            print(f"    !! {slug}: на сервере нет расписания на выходные — используем будни как оценку", file=sys.stderr)
+            print(f"    !! {slug}: на сервере нет расписания на выходные, оценим по соседям", file=sys.stderr)
 
         # API отдаёт название станции на русском и казахском в current_station_locales —
         # используем это, чтобы data/stations.json содержал оба варианта для переключения
@@ -119,17 +172,63 @@ def main() -> int:
         name_en = EN_NAMES.get(slug) or name_ru
         st["name"] = {"ru": name_ru, "kk": name_kk, "en": name_en}
 
+        raw[slug] = {
+            "order": st["order"],
+            "weekday_forward": times("non_weekend", fwd_key),
+            "weekday_backward": times("non_weekend", bwd_key),
+            "weekend_forward": [] if weekend_missing else times("weekend", fwd_key),
+            "weekend_backward": [] if weekend_missing else times("weekend", bwd_key),
+            "weekend_missing": weekend_missing,
+        }
+
+    # Проход 2: заполняем недостающие выходные расписания оценкой по соседям
+    # (см. estimate_weekend_via_neighbor), а если соседа с реальными выходными
+    # данными нет — откатываемся на старый способ (будни как оценка).
+    for slug, data in raw.items():
+        if not data["weekend_missing"]:
+            continue
+
+        order = data["order"]
+        fwd_neighbor = stations_by_order.get(order - 1)
+        bwd_neighbor = stations_by_order.get(order + 1)
+
+        estimated_forward = None
+        if fwd_neighbor and not raw[fwd_neighbor["slug"]]["weekend_missing"]:
+            estimated_forward = estimate_weekend_via_neighbor(
+                data["weekday_forward"],
+                raw[fwd_neighbor["slug"]]["weekday_forward"],
+                raw[fwd_neighbor["slug"]]["weekend_forward"],
+            )
+
+        estimated_backward = None
+        if bwd_neighbor and not raw[bwd_neighbor["slug"]]["weekend_missing"]:
+            estimated_backward = estimate_weekend_via_neighbor(
+                data["weekday_backward"],
+                raw[bwd_neighbor["slug"]]["weekday_backward"],
+                raw[bwd_neighbor["slug"]]["weekend_backward"],
+            )
+
+        if estimated_forward is not None and estimated_backward is not None:
+            print(f"    -> {slug}: выходные оценены по соседям ({fwd_neighbor['slug']} / {bwd_neighbor['slug']})", file=sys.stderr)
+            data["weekend_forward"] = estimated_forward
+            data["weekend_backward"] = estimated_backward
+        else:
+            print(f"    -> {slug}: соседи тоже без выходных данных, используем будни как оценку", file=sys.stderr)
+            data["weekend_forward"] = data["weekday_forward"]
+            data["weekend_backward"] = data["weekday_backward"]
+
+    for slug, data in raw.items():
         entry = {
             "weekday": {
-                "forward": times("non_weekend", fwd_key),
-                "backward": times("non_weekend", bwd_key),
+                "forward": data["weekday_forward"],
+                "backward": data["weekday_backward"],
             },
             "weekend": {
-                "forward": times("weekend", fwd_key) if not weekend_missing else times("non_weekend", fwd_key),
-                "backward": times("weekend", bwd_key) if not weekend_missing else times("non_weekend", bwd_key),
+                "forward": data["weekend_forward"],
+                "backward": data["weekend_backward"],
             },
         }
-        if weekend_missing:
+        if data["weekend_missing"]:
             entry["weekend_estimated"] = True
         result["stations"][slug] = entry
 
