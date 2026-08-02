@@ -140,9 +140,21 @@
   .station-title h2{ font-size:21px; margin:0; font-weight:800; letter-spacing:-.2px; }
   .station-title .dist{ font-size:12px; color:var(--muted); white-space:nowrap; font-weight:600; }
 
-  /* линия метро — визуализация позиции станции */
+  /* линия метро — визуализация позиции станции. */
   .line-wrap{ margin:2px 4px 20px; }
-  .line-track{ position:relative; display:flex; justify-content:space-between; align-items:center; padding:0 6px; height:16px; }
+  .line-track{
+    position:relative; display:flex; justify-content:space-between; align-items:center;
+    padding:10px 6px; height:36px; overflow:hidden;
+    /* overflow:hidden обрезает "хвост" вагончика по горизонтали — иначе при
+       отправлении с самой первой/последней станции корпус тянется в пустоту за
+       пределы схемы (там нет предыдущего/следующего перегона, куда он мог бы
+       "уходить"). Вертикальный padding (10px сверху/снизу, при высоте самой
+       линии/точек 16px) — запас, чтобы та же обрезка не резала точки-поезда
+       над/под линией и свечение активной станции: паддинг симметричный, так что
+       центрирование линии и точек не сдвигается, просто у обрезки больше места
+       по вертикали. Если увеличите смещение .train-marker над/под линией —
+       увеличьте и этот padding. */
+  }
   .line-track::before{
     content:''; position:absolute; left:6px; right:6px; top:50%; height:2px; margin-top:-1px;
     background:linear-gradient(90deg, var(--accent), var(--accent2)); opacity:.35; border-radius:2px;
@@ -173,18 +185,25 @@
      --train2, оба не в тон общей синей палитры), чтобы соседние точки над и
      под линией не сливались друг с другом. См. renderTrainMarkers() в JS. */
   .train-marker{
-    position:absolute; top:50%; left:0; width:16px; height:8px; margin:-4px 0 0 -8px;
+    position:absolute; top:50%; left:0; width:16px; height:8px; margin-top:-4px;
     pointer-events:none; z-index:2;
     transition:left .95s linear, top .3s ease; animation:trainPulse 1.7s ease-in-out infinite;
   }
   .train-marker.fwd{
-    top:calc(50% - 7px);
+    /* Координата — это НОС (передняя точка по ходу движения), а не центр
+       прямоугольника: иначе на стоянке кажется, что поезд уже отъехал от
+       станции (нос торчит за неё), а на конечных — что вылезает за линию.
+       Поэтому весь прямоугольник сдвинут так, что именно правый край (нос)
+       стоит ровно в точке координаты, margin-left:-100% ширины. */
+    top:calc(50% - 7px); margin-left:-16px;
     background:linear-gradient(100deg, #d6fff0, var(--train) 55%);
     box-shadow:0 0 0 2px color-mix(in srgb, var(--train) 20%, transparent),
                0 0 8px 1px color-mix(in srgb, var(--train) 60%, transparent);
     clip-path:polygon(0 0, 62% 0, 84% 14%, 100% 50%, 84% 86%, 62% 100%, 0 100%);
   }
   .train-marker.bwd{
+    /* Здесь нос — левый край прямоугольника, он и так стоит в точке координаты
+       (margin-left не нужен), см. комментарий у .fwd. */
     top:calc(50% + 7px);
     background:linear-gradient(260deg, #f2ffd6, var(--train2) 55%);
     box-shadow:0 0 0 2px color-mix(in srgb, var(--train2) 20%, transparent),
