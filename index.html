@@ -21,14 +21,15 @@
     --text:#0f1a33; --muted:#5c6b85;
     --accent:#1d4ed8; --accent2:#3b82f6;
     --accent-soft:#e3ebfe; --border:rgba(15,26,51,.09);
-    --success:#16a34a; --danger:#e0245e; --warn:#b8720a; --train:#e8790c;
+    --success:#16a34a; --danger:#e0245e; --warn:#b8720a; --train:#10b981; --train2:#84cc16;
     --shadow:0 10px 30px -14px rgba(29,78,216,.28);
   }
   @media (prefers-color-scheme: dark){
     :root{ --bg:#070a14; --bg-blob1:rgba(29,78,216,.32); --bg-blob2:rgba(59,130,246,.22);
       --card:rgba(255,255,255,.05); --card-solid:#0d1424; --text:#eef1fb; --muted:#8fa0bd;
       --accent:#5a8bff; --accent2:#7db3ff; --accent-soft:rgba(90,139,255,.16);
-      --border:rgba(255,255,255,.09); --success:#4ade80; --danger:#ff6b8b; --warn:#f2b84f; --train:#ffb547;
+      --border:rgba(255,255,255,.09); --success:#4ade80; --danger:#ff6b8b; --warn:#f2b84f;
+      --train:#34d399; --train2:#a3e635;
       --shadow:0 10px 34px -14px rgba(0,0,0,.55); }
   }
   html[data-tg-theme="light"]{ --bg:#eef1fb; --bg-blob1:#cddcfb; --bg-blob2:#c2d6ff;
@@ -159,29 +160,31 @@
   .line-ends span:last-child{ text-align:right; }
 
   /* Точки-"поезда" — примерное положение едущих сейчас поездов, посчитанное по
-     расписанию (не GPS). Светящаяся головка + хвост-шлейф в сторону, откуда едет
-     поезд; вперёд — над линией, назад — под линией. Цвет отдельный (--train,
-     тёплый янтарный), специально не в тон общей синей палитры — чтобы бегущие
-     точки сразу читались как отдельный, "живой" слой поверх интерфейса.
-     См. renderTrainMarkers() в JS. */
+     расписанию (не GPS). Силуэт вагончика одним залитым цветом (clip-path):
+     плоская "корма", заострённый нос по ходу движения; вперёд — над линией,
+     назад — под линией. У двух направлений разные оттенки зелёного (--train /
+     --train2, оба не в тон общей синей палитры), чтобы соседние точки над и
+     под линией не сливались друг с другом. См. renderTrainMarkers() в JS. */
   .train-marker{
-    position:absolute; top:50%; left:0; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
-    border-radius:50%; pointer-events:none; z-index:2;
-    background:radial-gradient(circle at 35% 32%, #fff3d6, var(--train) 68%);
-    box-shadow:0 0 0 3px color-mix(in srgb, var(--train) 22%, transparent),
-               0 0 9px 1px color-mix(in srgb, var(--train) 65%, transparent);
+    position:absolute; top:50%; left:0; width:16px; height:8px; margin:-4px 0 0 -8px;
+    pointer-events:none; z-index:2;
     transition:left .95s linear, top .3s ease; animation:trainPulse 1.7s ease-in-out infinite;
   }
-  .train-marker::after{
-    content:''; position:absolute; top:50%; width:0; height:0; margin-top:-3.5px;
-    border-top:3.5px solid transparent; border-bottom:3.5px solid transparent;
-    opacity:.6;
+  .train-marker.fwd{
+    top:calc(50% - 7px);
+    background:linear-gradient(100deg, #d6fff0, var(--train) 55%);
+    box-shadow:0 0 0 2px color-mix(in srgb, var(--train) 20%, transparent),
+               0 0 8px 1px color-mix(in srgb, var(--train) 60%, transparent);
+    clip-path:polygon(0 0, 62% 0, 84% 14%, 100% 50%, 84% 86%, 62% 100%, 0 100%);
   }
-  .train-marker.fwd{ top:calc(50% - 7px); }
-  .train-marker.fwd::after{ right:100%; border-right:7px solid var(--train); }
-  .train-marker.bwd{ top:calc(50% + 7px); }
-  .train-marker.bwd::after{ left:100%; border-left:7px solid var(--train); }
-  @keyframes trainPulse{ 0%,100%{ opacity:.7; transform:scale(.85); } 50%{ opacity:1; transform:scale(1); } }
+  .train-marker.bwd{
+    top:calc(50% + 7px);
+    background:linear-gradient(260deg, #f2ffd6, var(--train2) 55%);
+    box-shadow:0 0 0 2px color-mix(in srgb, var(--train2) 20%, transparent),
+               0 0 8px 1px color-mix(in srgb, var(--train2) 60%, transparent);
+    clip-path:polygon(100% 0, 38% 0, 16% 14%, 0 50%, 16% 86%, 38% 100%, 100% 100%);
+  }
+  @keyframes trainPulse{ 0%,100%{ opacity:.75; transform:scale(.9); } 50%{ opacity:1; transform:scale(1); } }
 
   .directions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:400px){ .directions{ grid-template-columns:1fr; } }
@@ -736,6 +739,20 @@
     }
     return ans;
   }
+  // Индекс первого элемента отсортированного timeline с minutes > граница (бинарный поиск).
+  function firstTimelineIndexAfter(timeline, minutes) {
+    var lo = 0, hi = timeline.length;
+    while (lo < hi) {
+      var mid = (lo + hi) >> 1;
+      if (timeline[mid].minutes > minutes) hi = mid; else lo = mid + 1;
+    }
+    return lo; // == timeline.length, если такого элемента нет
+  }
+  // Разумный потолок на время в пути между соседними станциями — если "сопоставленный"
+  // приезд получается дальше, чем это физически может быть один перегон, значит это
+  // не тот поезд (дыра в данных на границе смены часов работы и т.п.) — лучше не
+  // показывать точку, чем показывать её ползущей неправдоподобно долго.
+  var MAX_SEGMENT_MIN = 8;
 
   // "Стоянка" на станции: точка доезжает до станции на DWELL_MIN раньше расписания
   // и трогается в путь на DWELL_MIN позже — чтобы визуально казалось, что поезд
@@ -750,12 +767,17 @@
   }
 
   // Точки-стрелочки "где сейчас едут поезда" — чисто визуальная фишка, не GPS.
-  // Идея: у нас есть время отправления с каждой станции в обе стороны. Раз поезд не
-  // пропускает станции, k-е по счёту отправление со станции i и k-е отправление со
-  // станции i+1 (в одном направлении) — это, скорее всего, один и тот же поезд (тот же
-  // приём сортировки по индексу, что и в estimate_weekend_via_neighbor в update_schedule.py).
-  // Значит время в пути на этом перегоне ~ (время i+1) − (время i), и если "сейчас" попадает
-  // в этот промежуток — поезд физически где-то между станциями, рисуем точку на нужной доле пути.
+  // Идея: у нас есть время отправления с каждой станции в обе стороны. Берём последнее
+  // отправление со станции i, которое уже наступило ("dep"), и ищем ближайшее по времени
+  // отправление со станции i+1, которое ПОЗЖЕ dep — это и есть время прибытия того же
+  // поезда на соседнюю станцию (поезда идут друг за другом по одному пути, не обгоняя,
+  // так что первое время после dep — всегда тот же самый поезд).
+  //
+  // Раньше матчили по номеру в списке (k-е отправление со станции i = k-е со станции i+1),
+  // как в estimate_weekend_via_neighbor в update_schedule.py — но там счётчики отправлений
+  // на соседних станциях иногда отличаются на 1 (лишний/недостающий рейс где-то в списке),
+  // и матч по индексу от этого "съезжает" на весь остаток дня, точка привязывается не к
+  // тому поезду. Матч по времени ("первое отправление после dep") устойчив к этому.
   function renderTrainMarkers(nowMinutes, serviceStart) {
     var track = document.getElementById('lineTrack');
     if (!track) return;
@@ -771,10 +793,14 @@
       var depFwd = fwdTimelines[i], arrFwd = fwdTimelines[i + 1];
       if (depFwd.length && arrFwd.length) {
         var kf = lastTimelineIndexAtOrBefore(depFwd, nowMinutes);
-        if (kf >= 0 && kf < arrFwd.length) {
-          var d1 = depFwd[kf].minutes, a1 = arrFwd[kf].minutes;
-          if (a1 > d1 && nowMinutes < a1) {
-            wanted.push({ key: 'f' + i + '_' + kf, dir: 'fwd', pos: i + dwellFrac(nowMinutes, d1, a1) });
+        if (kf >= 0) {
+          var d1 = depFwd[kf].minutes;
+          var mf = firstTimelineIndexAfter(arrFwd, d1);
+          if (mf < arrFwd.length) {
+            var a1 = arrFwd[mf].minutes;
+            if (a1 - d1 <= MAX_SEGMENT_MIN && nowMinutes < a1) {
+              wanted.push({ key: 'f' + i + '_' + kf, dir: 'fwd', pos: i + dwellFrac(nowMinutes, d1, a1) });
+            }
           }
         }
       }
@@ -782,10 +808,14 @@
       var depBwd = bwdTimelines[i + 1], arrBwd = bwdTimelines[i];
       if (depBwd.length && arrBwd.length) {
         var kb = lastTimelineIndexAtOrBefore(depBwd, nowMinutes);
-        if (kb >= 0 && kb < arrBwd.length) {
-          var d2 = depBwd[kb].minutes, a2 = arrBwd[kb].minutes;
-          if (a2 > d2 && nowMinutes < a2) {
-            wanted.push({ key: 'b' + i + '_' + kb, dir: 'bwd', pos: i + (1 - dwellFrac(nowMinutes, d2, a2)) });
+        if (kb >= 0) {
+          var d2 = depBwd[kb].minutes;
+          var mb = firstTimelineIndexAfter(arrBwd, d2);
+          if (mb < arrBwd.length) {
+            var a2 = arrBwd[mb].minutes;
+            if (a2 - d2 <= MAX_SEGMENT_MIN && nowMinutes < a2) {
+              wanted.push({ key: 'b' + i + '_' + kb, dir: 'bwd', pos: i + (1 - dwellFrac(nowMinutes, d2, a2)) });
+            }
           }
         }
       }
