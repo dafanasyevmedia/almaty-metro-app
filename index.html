@@ -149,12 +149,19 @@
   }
   .line-dot{
     position:relative; width:7px; height:7px; border-radius:50%; background:var(--muted); opacity:.4;
-    transition:all .2s;
+    transition:all .2s; cursor:pointer;
   }
+  .line-dot::before{
+    /* Увеличивает область клика/тапа, не меняя видимый размер точки. */
+    content:''; position:absolute; top:50%; left:50%; width:22px; height:22px;
+    transform:translate(-50%, -50%);
+  }
+  .line-dot:hover{ opacity:.75; transform:scale(1.3); }
   .line-dot.active{
     width:15px; height:15px; opacity:1; background:linear-gradient(120deg, var(--accent), var(--accent2));
     box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent), 0 0 14px -2px var(--accent);
   }
+  .line-dot.active:hover{ transform:none; }
   .line-ends{ display:flex; justify-content:space-between; margin:6px 2px 0; font-size:10.5px; color:var(--muted); font-weight:600; }
   .line-ends span{ max-width:44%; }
   .line-ends span:last-child{ text-align:right; }
@@ -900,6 +907,10 @@
     STATIONS.forEach(function (s) {
       var dot = document.createElement('div');
       dot.className = 'line-dot' + (s.slug === slug ? ' active' : '');
+      dot.title = stationName(s);
+      dot.setAttribute('role', 'button');
+      dot.setAttribute('aria-label', stationName(s));
+      dot.addEventListener('click', function () { selectStation(s.slug, false); });
       track.appendChild(dot);
     });
     var ends = document.querySelectorAll('#lineEnds span');
