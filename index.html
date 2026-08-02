@@ -773,6 +773,28 @@
     return (now - dep - DWELL_MIN) / (span - 2 * DWELL_MIN);
   }
 
+  // Оценка времени в пути на перегоне по спискам отправлений (медиана по всем
+  // сматченным парам "первое время после dep"). Используется как запасной вариант,
+  // когда у станции нет собственного списка в нужном направлении (конечные
+  // станции — Б. Момышулы не "едет дальше вперёд", Райымбек батыра не "едет
+  // дальше назад") — тогда время перегона берём из ОБРАТНОГО направления той же
+  // пары станций (те же рельсы, то же расстояние), а не оставляем перегон "пустым".
+  function medianSegmentTravelMin(depTimeline, arrTimeline) {
+    if (!depTimeline.length || !arrTimeline.length) return null;
+    var samples = [];
+    for (var idx = 0; idx < depTimeline.length; idx++) {
+      var dep = depTimeline[idx].minutes;
+      var m = firstTimelineIndexAfter(arrTimeline, dep);
+      if (m < arrTimeline.length) {
+        var travel = arrTimeline[m].minutes - dep;
+        if (travel > 0 && travel <= MAX_SEGMENT_MIN) samples.push(travel);
+      }
+    }
+    if (!samples.length) return null;
+    samples.sort(function (a, b) { return a - b; });
+    return samples[Math.floor(samples.length / 2)];
+  }
+
   // Точки-стрелочки "где сейчас едут поезда" — чисто визуальная фишка, не GPS.
   // Идея: у нас есть время отправления с каждой станции в обе стороны. Берём последнее
   // отправление со станции i, которое уже наступило ("dep"), и ищем ближайшее по времени
@@ -798,31 +820,44 @@
     for (var i = 0; i < n - 1; i++) {
       // Вперёд: со станции i к станции i+1
       var depFwd = fwdTimelines[i], arrFwd = fwdTimelines[i + 1];
-      if (depFwd.length && arrFwd.length) {
+      if (depFwd.length) {
         var kf = lastTimelineIndexAtOrBefore(depFwd, nowMinutes);
         if (kf >= 0) {
-          var d1 = depFwd[kf].minutes;
-          var mf = firstTimelineIndexAfter(arrFwd, d1);
-          if (mf < arrFwd.length) {
-            var a1 = arrFwd[mf].minutes;
-            if (a1 - d1 <= MAX_SEGMENT_MIN && nowMinutes < a1) {
-              wanted.push({ key: 'f' + i + '_' + kf, dir: 'fwd', pos: i + dwellFrac(nowMinutes, d1, a1) });
+          var d1 = depFwd[kf].minutes, a1 = null, extraDwell1 = 0;
+          if (arrFwd.length) {
+            var mf = firstTimelineIndexAfter(arrFwd, d1);
+            if (mf < arrFwd.length && arrFwd[mf].minutes - d1 <= MAX_SEGMENT_MIN) {
+              a1 = arrFwd[mf].minutes;
             }
+          } else {
+            // У станции i+1 нет своего "вперёд" списка (конечная) — оценим время
+            // перегона по обратному направлению той же пары станций и продлим
+            // стоянку на конечной, раз передать эстафету следующему перегону некому.
+            var estFwd = medianSegmentTravelMin(bwdTimelines[i + 1], bwdTimelines[i]);
+            if (estFwd != null) { a1 = d1 + estFwd; extraDwell1 = DWELL_MIN; }
+          }
+          if (a1 != null && nowMinutes < a1 + extraDwell1) {
+            wanted.push({ key: 'f' + i + '_' + kf, dir: 'fwd', pos: i + dwellFrac(nowMinutes, d1, a1) });
           }
         }
       }
       // Назад: со станции i+1 к станции i
       var depBwd = bwdTimelines[i + 1], arrBwd = bwdTimelines[i];
-      if (depBwd.length && arrBwd.length) {
+      if (depBwd.length) {
         var kb = lastTimelineIndexAtOrBefore(depBwd, nowMinutes);
         if (kb >= 0) {
-          var d2 = depBwd[kb].minutes;
-          var mb = firstTimelineIndexAfter(arrBwd, d2);
-          if (mb < arrBwd.length) {
-            var a2 = arrBwd[mb].minutes;
-            if (a2 - d2 <= MAX_SEGMENT_MIN && nowMinutes < a2) {
-              wanted.push({ key: 'b' + i + '_' + kb, dir: 'bwd', pos: i + (1 - dwellFrac(nowMinutes, d2, a2)) });
+          var d2 = depBwd[kb].minutes, a2 = null, extraDwell2 = 0;
+          if (arrBwd.length) {
+            var mb = firstTimelineIndexAfter(arrBwd, d2);
+            if (mb < arrBwd.length && arrBwd[mb].minutes - d2 <= MAX_SEGMENT_MIN) {
+              a2 = arrBwd[mb].minutes;
             }
+          } else {
+            var estBwd = medianSegmentTravelMin(fwdTimelines[i], fwdTimelines[i + 1]);
+            if (estBwd != null) { a2 = d2 + estBwd; extraDwell2 = DWELL_MIN; }
+          }
+          if (a2 != null && nowMinutes < a2 + extraDwell2) {
+            wanted.push({ key: 'b' + i + '_' + kb, dir: 'bwd', pos: i + (1 - dwellFrac(nowMinutes, d2, a2)) });
           }
         }
       }
