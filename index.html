@@ -246,6 +246,17 @@
   .note.warn{ color:var(--warn); }
   .note.holiday{ color:var(--accent); font-weight:600; }
 
+  /* Общий баннер-напоминание (не привязан к конкретной станции/дню) — стоит
+     один раз, отдельно от <main>, между обеими вкладками и кнопкой "О метро",
+     поэтому сам задаёт себе ширину/центрирование как у main. */
+  .disclaimer{
+    display:flex; gap:9px; align-items:flex-start; background:var(--accent-soft);
+    border-radius:14px; padding:11px 14px; margin:0 auto 12px;
+    max-width:640px; width:calc(100% - 32px);
+    font-size:12.5px; color:var(--text); line-height:1.45;
+  }
+  .disclaimer .icon{ flex:none; font-size:15px; line-height:1.3; }
+
   /* вкладка "О метро" */
   .about-h2{ font-size:15px; font-weight:800; margin:0 0 10px; letter-spacing:-.2px; }
   .about-text{ font-size:13.5px; color:var(--muted); line-height:1.6; margin:0; }
@@ -414,6 +425,11 @@
   </section>
 </main>
 
+<div class="disclaimer">
+  <span class="icon">ℹ️</span>
+  <span id="scheduleDisclaimer">Поезда чаще всего отправляются ровно по расписанию, указанному на этом сайте. Но иногда метро добавляет дополнительные составы.</span>
+</div>
+
 <button class="tab-btn about-link-btn" data-tab="about" id="aboutLinkBtn">О метро</button>
 
 <footer class="meta" id="metaFooter">Загрузка данных…</footer>
@@ -450,6 +466,7 @@
       pageTitle: 'Метро Алматы — расписание',
       appTitle: 'Метро Алматы',
       appSubtitle: 'Онлайн-расписание — сколько ждать до поезда',
+      scheduleDisclaimer: 'Поезда чаще всего отправляются ровно по расписанию, указанному на этом сайте. Но иногда метро добавляет дополнительные составы.',
       tabNearest: 'Ближайший поезд',
       tabFull: 'Всё расписание',
       locating: 'Определяем ваше местоположение…',
@@ -477,7 +494,7 @@
       weekday: 'Будни',
       weekend: 'Выходные',
       noDepartures: 'Нет отправлений (конечная станция или нет данных).',
-      footerUpdated: function (date) { return 'Данные метро обновлены: ' + date + ' · источник metroalmaty.kz'; },
+      footerUpdated: function (date) { return 'Данные обновляются дважды в сутки. Последнее обновление: ' + date + ' · источник metroalmaty.kz'; },
       footerStatic: 'Расписание статическое (не GPS-трекинг поездов), как и на официальном сайте',
       aboutTab: 'О метро',
       aboutHistoryTitle: 'История',
@@ -500,6 +517,7 @@
       pageTitle: 'Алматы метросы — кесте',
       appTitle: 'Алматы метросы',
       appSubtitle: 'Онлайн-кесте — пойызды қанша күту керек',
+      scheduleDisclaimer: 'Пойыздар көбіне осы сайтта көрсетілген кесте бойынша дәл жүреді. Бірақ кейде метро қосымша құрам қосады.',
       tabNearest: 'Жақын пойыз',
       tabFull: 'Толық кесте',
       locating: 'Орналасқан жеріңізді анықтап жатырмыз…',
@@ -527,7 +545,7 @@
       weekday: 'Жұмыс күндері',
       weekend: 'Демалыс күндері',
       noDepartures: 'Рейстер жоқ (соңғы бекет немесе деректер жоқ).',
-      footerUpdated: function (date) { return 'Метро деректері жаңартылды: ' + date + ' · дереккөзі metroalmaty.kz'; },
+      footerUpdated: function (date) { return 'Деректер тәулігіне екі рет жаңартылады. Соңғы жаңарту: ' + date + ' · дереккөзі metroalmaty.kz'; },
       footerStatic: 'Статикалық кесте (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай',
       aboutTab: 'Метро туралы',
       aboutHistoryTitle: 'Тарихы',
@@ -550,6 +568,7 @@
       pageTitle: 'Almaty Metro — Schedule',
       appTitle: 'Almaty Metro',
       appSubtitle: 'Live schedule — how long until the next train',
+      scheduleDisclaimer: 'Trains usually depart exactly on the schedule shown here. But the metro sometimes adds extra trains.',
       tabNearest: 'Nearest train',
       tabFull: 'Full schedule',
       locating: 'Locating you…',
@@ -577,7 +596,7 @@
       weekday: 'Weekdays',
       weekend: 'Weekends',
       noDepartures: 'No departures (terminus station or no data).',
-      footerUpdated: function (date) { return 'Metro data updated: ' + date + ' · source metroalmaty.kz'; },
+      footerUpdated: function (date) { return 'Data updates twice a day. Last update: ' + date + ' · source metroalmaty.kz'; },
       footerStatic: 'Static schedule (not live GPS train tracking), same as on the official site',
       aboutTab: 'About',
       aboutHistoryTitle: 'History',
@@ -1302,20 +1321,30 @@
     });
   }
 
-  function fmtDate(date) {
+  function fmtDateTime(almatyDate) {
     // Не полагаемся на Intl/toLocaleDateString: в некоторых WebView (в т.ч. внутри
     // Telegram) нет полных данных локали "kk", и дата откатывается к ISO-виду
     // ("2026-08-01") вместо человеческого формата. Форматируем вручную.
-    var d = String(date.getDate()).padStart(2, '0');
-    var m = String(date.getMonth() + 1).padStart(2, '0');
-    return d + '.' + m + '.' + date.getFullYear();
+    // Ожидает "псевдо-UTC" дату времени Алматы (как almatyNow()) — читаем через
+    // getUTC*, а не обычные геттеры, иначе у зрителя из другого часового пояса
+    // подставится время его браузера, а не Алматы.
+    var d = String(almatyDate.getUTCDate()).padStart(2, '0');
+    var m = String(almatyDate.getUTCMonth() + 1).padStart(2, '0');
+    var h = String(almatyDate.getUTCHours()).padStart(2, '0');
+    var mi = String(almatyDate.getUTCMinutes()).padStart(2, '0');
+    return d + '.' + m + '.' + almatyDate.getUTCFullYear() + ' ' + h + ':' + mi;
   }
 
   function renderFooter() {
     if (!SCHEDULE) return;
+    // SCHEDULE.generated_at — ISO-строка с явным смещением (пишет update_schedule.py),
+    // поэтому new Date(...) даёт верный момент времени; переводим его в ту же
+    // "псевдо-UTC" форму времени Алматы, что и almatyNow(), чтобы fmtDateTime
+    // прочитала его теми же getUTC*-геттерами.
     var genDate = new Date(SCHEDULE.generated_at);
+    var genDateAlmaty = new Date(genDate.getTime() + ALMATY_OFFSET_MS);
     document.getElementById('metaFooter').innerHTML =
-      t('footerUpdated', fmtDate(genDate)) + '<br>' + t('footerStatic');
+      t('footerUpdated', fmtDateTime(genDateAlmaty)) + '<br>' + t('footerStatic');
   }
 
   function applyLanguage(lang) {
@@ -1326,6 +1355,7 @@
     document.title = t('pageTitle');
     document.getElementById('appTitle').textContent = t('appTitle');
     document.getElementById('appSubtitle').textContent = t('appSubtitle');
+    document.getElementById('scheduleDisclaimer').textContent = t('scheduleDisclaimer');
     document.querySelector('[data-tab="nearest"]').textContent = t('tabNearest');
     document.querySelector('[data-tab="full"]').textContent = t('tabFull');
     document.querySelector('[data-tab="about"]').textContent = t('aboutTab');

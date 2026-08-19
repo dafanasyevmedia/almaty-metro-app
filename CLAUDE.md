@@ -24,7 +24,7 @@ Telegram Mini App (и просто веб-страница): показывае�
 - [x] Три языка (қазақша / русский / English) с переключателем и автоопределением
 - [x] Синяя цветовая палитра ("Metro")
 - [x] Favicon + иконка для "Добавить на экран Домой" (iOS/Android)
-- [x] Ежедневное автообновление расписания через GitHub Actions
+- [x] Автообновление расписания дважды в сутки через GitHub Actions
 - [x] Вкладка "О метро" — история, способы оплаты, режим работы, ссылка на официальную схему
 - [x] Учёт праздничных дней (метро работает по графику выходных)
 - [x] Опубликовано на GitHub Pages, работает
@@ -42,7 +42,7 @@ data/schedule.json                      — расписание (переген
 data/icon-source.svg                    — исходник иконки (для регенерации favicon)
 data/holidays.json                      — даты казахстанских праздников (обновлять раз в год вручную!)
 scripts/update_schedule.py              — тянет данные с API метро, пишет два JSON выше
-.github/workflows/update-schedule.yml   — запускает скрипт раз в сутки, коммитит результат
+.github/workflows/update-schedule.yml   — запускает скрипт дважды в сутки, коммитит результат
 favicon*, apple-touch-icon.png,
 web-app-manifest-*.png, site.webmanifest — сгенерированы на realfavicongenerator.net
                                            из data/icon-source.svg, руками не редактировать
