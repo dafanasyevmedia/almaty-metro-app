@@ -1282,12 +1282,19 @@
         el.innerHTML = '<small>' + t('metroClosed', fmtHHMM(arrivalClock)) + '</small>';
         if (cardEl) setWaitTier(cardEl, null);
         lastFirstMinutes[dirKey] = null;
+      } else if (cardEl && lastFirstMinutes[dirKey] != null && lastFirstMinutes[dirKey] !== first.minutes) {
+        // Тот самый поезд, до которого шёл отсчёт, только что отправился — двери ещё
+        // только начинают закрываться, ничего толком не прикрывая. Поэтому в этот тик
+        // специально НЕ показываем уже наступившие новые "8:56" и т.п. — оставляем на
+        // экране прежний кадр (обнулившийся отсчёт) ещё на секунду, пока створки не
+        // сомкнутся, и только следующий тик покажет актуальные цифры под закрытыми
+        // дверями, а не поверх открывающегося зазора.
+        playDoorsFx(cardEl);
+        lastFirstMinutes[dirKey] = first.minutes;
+        return; // ничего больше в этот тик не трогаем, включая "затем через…" ниже
       } else {
         el.textContent = fmtCountdown(mins);
         if (cardEl) {
-          if (lastFirstMinutes[dirKey] != null && lastFirstMinutes[dirKey] !== first.minutes) {
-            playDoorsFx(cardEl); // тот самый поезд, до которого шёл отсчёт, уже отправился
-          }
           lastFirstMinutes[dirKey] = first.minutes;
           var headway = currentHeadwayMin(selectedSlug, dirKey, res.serviceStart, first.minutes);
           var longThreshold = headway != null ? headway * WAIT_LONG_FRACTION : WAIT_LONG_FALLBACK_MIN;
