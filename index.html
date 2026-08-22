@@ -215,18 +215,49 @@
   .directions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:400px){ .directions{ grid-template-columns:1fr; } }
 
+  /* Цвет карточки = сколько ждать поезд ("тир") — красит верхнюю полоску всегда,
+     а рамку и пульсацию — только когда поезд вот-вот придёт. Цифры отсчёта тира не
+     знают, всегда акцентного цвета. Классы вешает tickCountdowns():
+       .wait-long   (долго для текущего интервала) — приглушённый (--muted), спокойно
+       .wait-normal (обычное ожидание)              — синий (--accent/--accent2)
+       .wait-soon   (< 1 мин)                        — зелёный + рамка + пульсация
+     "Долго" — не фиксированные минуты, а доля от текущего интервала между поездами
+     в этом направлении (см. WAIT_LONG_FRACTION в JS): одни и те же 5 минут — долго
+     в час пик (интервал 6 мин) и норма ночью (интервал 15 мин).
+     Полоска также служит прогресс-баром: --progress (0..1, ставит JS каждую
+     секунду) — доля УЖЕ прошедшего времени от текущего интервала, полоска
+     "наполняется" от пустой (только уехал предыдущий) к полной (подъезжает
+     следующий) — так понятнее, чем наоборот.
+     .wait-pulse — последние секунды перед приходом, лёгкая пульсация свечения.
+     Без класса (метро закрыто / нет данных / конечная) — нейтральный вид, полоска
+     на всю ширину (--progress по умолчанию = 1). */
   .dir-card{
     position:relative; overflow:hidden; background:var(--accent-soft);
     border-radius:16px; padding:16px 14px; text-align:center;
     border:2px solid transparent; transition:border-color .3s;
+    --tier:var(--accent); --tier2:var(--accent2);
   }
+  .dir-card.wait-long{   --tier:var(--muted);   --tier2:var(--muted); }
+  .dir-card.wait-normal{ --tier:var(--accent);   --tier2:var(--accent2); }
+  .dir-card.wait-soon{   --tier:var(--success);  --tier2:var(--success); }
+  .dir-card.wait-soon{ border-color:var(--tier); }
   .dir-card::before{
-    content:''; position:absolute; top:0; left:0; right:0; height:3px;
-    background:linear-gradient(90deg, var(--accent), var(--accent2));
-    transition:background .3s;
+    content:''; position:absolute; top:0; left:0; height:3px;
+    width:calc(var(--progress, 1) * 100%);
+    background:linear-gradient(90deg, var(--tier), var(--tier2));
+    transition:width 1s linear, background .3s;
   }
-  .dir-card.imminent{ border-color:var(--success); }
-  .dir-card.imminent::before{ background:var(--success); }
+  /* У обратного направления полоска растёт справа налево — в ту же сторону, что и
+     стрелка "←" над ней. */
+  .dir-card-backward::before{
+    left:auto; right:0;
+    background:linear-gradient(-90deg, var(--tier), var(--tier2));
+  }
+  @keyframes waitPulseGlow{
+    0%, 100%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--tier) 45%, transparent); }
+    50%{ box-shadow:0 0 16px 3px color-mix(in srgb, var(--tier) 55%, transparent); }
+  }
+  .dir-card.wait-pulse{ animation:waitPulseGlow 1s ease-in-out infinite; }
   /* Направление = стрелка + название конечной. Стрелка отдельной строкой сверху и
      направлена так же, как линия станций выше (Райымбек батыра слева → Б. Момышулы
      справа): "туда" — вправо, "обратно" — влево. Раньше у обеих карточек стояла
@@ -1121,7 +1152,9 @@
         '<span class="dir-name">' + d.name + '</span>' +
         '</div>';
       var wrap = document.createElement('div');
-      wrap.className = 'dir-card';
+      // dir-card-forward/backward — чтобы прогресс-полоска росла в ту же сторону,
+      // что и стрелка над ней (вправо для "→", влево для "←"): буквально "поезд едет".
+      wrap.className = 'dir-card dir-card-' + d.key;
       var hasAny = (st.weekday[d.key] && st.weekday[d.key].length) || (st.weekend[d.key] && st.weekend[d.key].length);
       if (!hasAny) {
         wrap.classList.add('unavailable');
@@ -1145,6 +1178,33 @@
     document.getElementById('workdayNote').style.display = isWeekendForcedWorkday(todayStart) ? '' : 'none';
 
     tickCountdowns();
+  }
+
+  // "Долго" считаем не в абсолютных минутах, а относительно текущего интервала между
+  // поездами в этом направлении: если из оставшегося времени ожидания ещё не прошло
+  // больше WAIT_LONG_FRACTION интервала — значит, ждать ещё "долгую" часть пути до
+  // следующего поезда. WAIT_LONG_FALLBACK_MIN — на случай, если интервал посчитать не
+  // от чего (например, самый первый рейс после открытия метро, предыдущего ещё не было).
+  var WAIT_LONG_FRACTION = 0.5;
+  var WAIT_LONG_FALLBACK_MIN = 5;
+  var WAIT_PULSE_SEC = 15; // последние секунды перед приходом — лёгкая пульсация
+
+  function setWaitTier(cardEl, tier) {
+    cardEl.classList.remove('wait-soon', 'wait-normal', 'wait-long', 'wait-pulse');
+    if (tier) cardEl.classList.add('wait-' + tier);
+    cardEl.style.removeProperty('--progress');
+  }
+
+  // Интервал (в минутах) между предыдущим и следующим ("first") поездом в этом
+  // направлении — основа и для порога "долго", и для прогресс-бара в полоске.
+  // null, если предыдущего рейса нет в пределах текущей временной шкалы (самый
+  // первый поезд дня).
+  function currentHeadwayMin(slug, direction, serviceStart, firstMinutes) {
+    var timeline = buildTimeline(slug, direction, serviceStart);
+    var prevIdx = lastTimelineIndexAtOrBefore(timeline, firstMinutes - 0.001);
+    if (prevIdx < 0) return null;
+    var span = firstMinutes - timeline[prevIdx].minutes;
+    return span > 0 ? span : null;
   }
 
   var tickTimer = null;
@@ -1173,10 +1233,23 @@
         // метро закрыто — следующий поезд относится к следующему дню (или очень нескоро)
         var arrivalClock = new Date(res.serviceStart.getTime() + first.minutes * 60000);
         el.innerHTML = '<small>' + t('metroClosed', fmtHHMM(arrivalClock)) + '</small>';
-        if (cardEl) cardEl.classList.remove('imminent');
+        if (cardEl) setWaitTier(cardEl, null);
       } else {
         el.textContent = fmtCountdown(mins);
-        if (cardEl) cardEl.classList.toggle('imminent', mins < 1);
+        if (cardEl) {
+          var headway = currentHeadwayMin(selectedSlug, dirKey, res.serviceStart, first.minutes);
+          var longThreshold = headway != null ? headway * WAIT_LONG_FRACTION : WAIT_LONG_FALLBACK_MIN;
+          var tier = mins < 1 ? 'soon' : mins > longThreshold ? 'long' : 'normal';
+          setWaitTier(cardEl, tier);
+          // Полоска-прогресс: доля УЖЕ прошедшего времени интервала — 0 сразу после
+          // отправления предыдущего поезда, 1 в момент прихода следующего (наполняется,
+          // а не убывает — так понятнее читать на глаз).
+          var remainingFraction = headway != null
+            ? Math.max(0, Math.min(1, mins / headway))
+            : Math.max(0, Math.min(1, mins / (longThreshold * 2)));
+          cardEl.style.setProperty('--progress', 1 - remainingFraction);
+          cardEl.classList.toggle('wait-pulse', tier === 'soon' && mins < WAIT_PULSE_SEC / 60);
+        }
       }
       if (elAfter) {
         if (res.trains[1]) {
