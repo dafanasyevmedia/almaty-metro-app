@@ -575,7 +575,7 @@
       weekday: 'Будни',
       weekend: 'Выходные',
       noDepartures: 'Нет отправлений (конечная станция или нет данных).',
-      footerUpdated: function (date) { return 'Данные обновляются дважды в сутки. Последнее обновление: ' + date + ' · источник metroalmaty.kz'; },
+      footerUpdated: function (date) { return 'Последнее обновление: ' + date + ' · источник metroalmaty.kz'; },
       footerStatic: 'Расписание статическое (не GPS-трекинг поездов), как и на официальном сайте',
       aboutTab: 'О метро',
       aboutHistoryTitle: 'История',
@@ -626,7 +626,7 @@
       weekday: 'Жұмыс күндері',
       weekend: 'Демалыс күндері',
       noDepartures: 'Рейстер жоқ (соңғы бекет немесе деректер жоқ).',
-      footerUpdated: function (date) { return 'Деректер тәулігіне екі рет жаңартылады. Соңғы жаңарту: ' + date + ' · дереккөзі metroalmaty.kz'; },
+      footerUpdated: function (date) { return 'Соңғы жаңарту: ' + date + ' · дереккөзі metroalmaty.kz'; },
       footerStatic: 'Статикалық кесте (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай',
       aboutTab: 'Метро туралы',
       aboutHistoryTitle: 'Тарихы',
@@ -677,7 +677,7 @@
       weekday: 'Weekdays',
       weekend: 'Weekends',
       noDepartures: 'No departures (terminus station or no data).',
-      footerUpdated: function (date) { return 'Data updates twice a day. Last update: ' + date + ' · source metroalmaty.kz'; },
+      footerUpdated: function (date) { return 'Last update: ' + date + ' · source metroalmaty.kz'; },
       footerStatic: 'Static schedule (not live GPS train tracking), same as on the official site',
       aboutTab: 'About',
       aboutHistoryTitle: 'History',
@@ -725,6 +725,16 @@
   function stationName(s) {
     if (!s || !s.name) return '';
     return s.name[currentLang] || s.name.ru || '';
+  }
+
+  /* ---------- Google Analytics (GA4) — события использования ---------- */
+  // gtag подключён в <head>; на всякий случай (блокировщики рекламы могут вырезать
+  // сам скрипт googletagmanager.com, тогда window.gtag не определится) оборачиваем
+  // в try/catch — аналитика не должна ронять приложение.
+  function trackEvent(name, params) {
+    if (typeof window.gtag === 'function') {
+      try { window.gtag('event', name, params || {}); } catch (e) { /* игнорируем */ }
+    }
   }
 
   /* ---------- Время Алматы (UTC+5, без перехода на летнее) ---------- */
@@ -1072,7 +1082,7 @@
     ends[1].textContent = stationName(STATIONS[STATIONS.length - 1]);
   }
 
-  function selectStation(slug, viaGeo, distanceMeters) {
+  function selectStation(slug, viaGeo, distanceMeters, method) {
     selectedSlug = slug;
     stationSelect.value = slug;
     var st = STATIONS_BY_SLUG[slug];
@@ -1082,6 +1092,10 @@
       viaGeo && distanceMeters != null ? t('distFromYou', Math.round(distanceMeters)) : '';
     renderLineStrip(slug);
     renderDirections();
+    // method: 'geo' — по геолокации, 'manual' — выбрал сам (список/точка на линии),
+    // 'default' — авто-фолбэк на первую станцию (геолокация недоступна/далеко), это
+    // не осознанный выбор пользователя, но полезно отличать в статистике.
+    trackEvent('select_station', { station: slug, method: method || (viaGeo ? 'geo' : 'manual') });
   }
 
   var FAR_FROM_ALMATY_METERS = 30000; // за пределами города и ближних пригородов — точно не Алматы
@@ -1091,23 +1105,26 @@
     if (res.distance > FAR_FROM_ALMATY_METERS) {
       locateState = { kind: 'far', station: res.station, distance: res.distance };
       renderLocateStatus();
+      trackEvent('geo_result', { result: 'far' });
       locateBtn.style.display = 'none';
       stationSelect.style.display = '';
-      if (!selectedSlug) selectStation(STATIONS[0].slug, false);
+      if (!selectedSlug) selectStation(STATIONS[0].slug, false, null, 'default');
       return;
     }
     locateState = { kind: 'ok', station: res.station, distance: res.distance };
     renderLocateStatus();
+    trackEvent('geo_result', { result: 'ok' });
     locateBtn.style.display = '';
-    selectStation(res.station.slug, true, res.distance);
+    selectStation(res.station.slug, true, res.distance, 'geo');
   }
 
   function onGeoFail(reasonKey, rawMessage) {
     locateState = { kind: 'err', reasonKey: reasonKey, rawMessage: rawMessage };
     renderLocateStatus();
+    trackEvent('geo_result', { result: reasonKey === 'permissionDenied' ? 'denied' : reasonKey === 'unsupported' ? 'unsupported' : 'error' });
     locateBtn.style.display = 'none';
     stationSelect.style.display = '';
-    if (!selectedSlug) selectStation(STATIONS[0].slug, false);
+    if (!selectedSlug) selectStation(STATIONS[0].slug, false, null, 'default');
   }
 
   function tryTelegramLocation() {
@@ -1338,6 +1355,7 @@
       document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
       btn.classList.add('active');
       document.getElementById('view-' + btn.dataset.tab).classList.add('active');
+      trackEvent('switch_tab', { tab: btn.dataset.tab });
       if (btn.dataset.tab === 'full') {
         // по умолчанию открываем ту же станцию, что выбрана на вкладке "Ближайший поезд" —
         // выбор всё равно можно поменять вручную через select ниже
@@ -1571,7 +1589,10 @@
 
   document.querySelectorAll('.lang-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      if (btn.dataset.lang !== currentLang) applyLanguage(btn.dataset.lang);
+      if (btn.dataset.lang !== currentLang) {
+        applyLanguage(btn.dataset.lang);
+        trackEvent('change_language', { lang: btn.dataset.lang });
+      }
     });
   });
 
@@ -1608,6 +1629,7 @@
     document.getElementById('metaFooter').textContent = t('loadError', err.message);
     locateState = { kind: 'loadError' };
     renderLocateStatus();
+    trackEvent('schedule_load_error', { message: String(err && err.message || err).slice(0, 100) });
   });
 
 })();
