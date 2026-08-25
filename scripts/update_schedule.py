@@ -21,6 +21,7 @@ API_BASE = "https://api.metroalmaty.kz/api/v1"
 ROOT = Path(__file__).resolve().parent.parent
 STATIONS_FILE = ROOT / "data" / "stations.json"
 OUTPUT_FILE = ROOT / "data" / "schedule.json"
+DRIFT_LOG_FILE = ROOT / "data" / "schedule_drift_log.jsonl"
 ALMATY_TZ = timezone(timedelta(hours=5))
 MAX_ATTEMPTS = 5
 
@@ -117,6 +118,60 @@ def fetch_station_payload(slug: str) -> dict:
         print(f"    ...{slug}: попытка {attempt}/{MAX_ATTEMPTS}, API вернул неполные будние данные, повтор", file=sys.stderr)
         time.sleep(1.5)
     raise RuntimeError(f"API не отдал будние расписание для {slug} за {MAX_ATTEMPTS} попыток: {last_payload}")
+
+
+def diff_schedules(old_stations: dict, new_stations: dict) -> list[dict]:
+    """Сравнивает предыдущий и только что скачанный schedule.json (по станциям/
+    дню недели/направлению) — диагностика для отслеживания того, насколько часто
+    и насколько сильно сам metroalmaty.kz меняет расписание на ещё не наступившие
+    часы дня (см. CLAUDE.md, п. 6). Возвращает список найденных расхождений;
+    пустой список — ничего не изменилось с прошлого запуска."""
+    changes = []
+    for slug, new_entry in new_stations.items():
+        old_entry = old_stations.get(slug)
+        if not old_entry:
+            continue  # новая станция в данных — сравнивать не с чем
+        for daytype in ("weekday", "weekend"):
+            for direction in ("forward", "backward"):
+                old_list = ((old_entry.get(daytype) or {}).get(direction)) or []
+                new_list = ((new_entry.get(daytype) or {}).get(direction)) or []
+                if old_list == new_list:
+                    continue
+                first_diff = next(
+                    (i for i in range(min(len(old_list), len(new_list))) if old_list[i] != new_list[i]),
+                    None,
+                )
+                changes.append({
+                    "station": slug,
+                    "daytype": daytype,
+                    "direction": direction,
+                    "old_count": len(old_list),
+                    "new_count": len(new_list),
+                    "first_diff_index": first_diff,
+                    "old_at_first_diff": old_list[first_diff] if first_diff is not None else None,
+                    "new_at_first_diff": new_list[first_diff] if first_diff is not None else None,
+                })
+    return changes
+
+
+def log_drift(changes: list[dict]) -> None:
+    """Дописывает одну строку JSON (JSONL) за запуск — есть расхождения или нет.
+    Специально одна строка на весь прогон, а не на каждую станцию/направление —
+    иначе лог раздувается (11 станций × 2 дня недели × 2 направления = 44
+    проверки в час), а по одной строке в час видно и сам факт "проверяли,
+    расхождений не было" (важно для оценки частоты — иначе непонятно, пропуск в
+    логе значит "не менялось" или "джоба не запустилась")."""
+    entry = {
+        "checked_at": datetime.now(tz=ALMATY_TZ).isoformat(),
+        "changed_count": len(changes),
+        "changes": changes,
+    }
+    with DRIFT_LOG_FILE.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    if changes:
+        print(f"  !! Расхождения с предыдущим снимком: {len(changes)} (см. {DRIFT_LOG_FILE.name})", file=sys.stderr)
+    else:
+        print("  Расхождений с предыдущим снимком не обнаружено", file=sys.stderr)
 
 
 def main() -> int:
@@ -242,6 +297,15 @@ def main() -> int:
         if data["weekend_missing"]:
             entry["weekend_estimated"] = True
         result["stations"][slug] = entry
+
+    # Сравниваем с тем, что лежало в schedule.json ДО перезаписи (то есть с прошлым
+    # запуском скрипта, час назад) — диагностика дрейфа расписания, см. diff_schedules().
+    if OUTPUT_FILE.exists():
+        try:
+            old_result = json.loads(OUTPUT_FILE.read_text(encoding="utf-8"))
+            log_drift(diff_schedules(old_result.get("stations", {}), result["stations"]))
+        except (json.JSONDecodeError, OSError) as exc:
+            print(f"  (не удалось сравнить с предыдущим снимком: {exc})", file=sys.stderr)
 
     OUTPUT_FILE.write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
