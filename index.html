@@ -13,121 +13,87 @@
 
   gtag('config', 'G-Q7NT3NLEJY');
 </script>
-<link rel="icon" type="image/png" href="favicon-96x96.png?v=2" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v=2" />
-<link rel="shortcut icon" href="favicon.ico?v=2" />
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2" />
+<link rel="icon" type="image/png" href="favicon-32x32.png?v=3" sizes="32x32" />
+<link rel="icon" type="image/png" href="favicon-16x16.png?v=3" sizes="16x16" />
+<link rel="shortcut icon" href="favicon.ico?v=3" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3" />
 <meta name="apple-mobile-web-app-title" content="Almaty Metro" />
 <link rel="manifest" href="site.webmanifest" />
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#eef1fb; --bg-blob1:#cddcfb; --bg-blob2:#c2d6ff;
-    --card:rgba(255,255,255,.72); --card-solid:#ffffff;
-    --text:#0f1a33; --muted:#5c6b85;
-    --accent:#1d4ed8; --accent2:#3b82f6;
-    --accent-soft:#e3ebfe; --border:rgba(15,26,51,.09);
-    --success:#16a34a; --danger:#e0245e; --warn:#b8720a; --train:#10b981; --train2:#84cc16;
-    --shadow:0 10px 30px -14px rgba(29,78,216,.28);
+    --bg:oklch(0.16 0.012 255); --card:oklch(0.20 0.014 255); --card2:oklch(0.24 0.016 255);
+    --text:oklch(0.95 0.006 255); --muted:oklch(0.62 0.02 255); --muted2:oklch(0.5 0.015 255);
+    --border:oklch(0.30 0.02 255 / .55);
+    --accent:oklch(0.82 0.19 132); --accent-ink:oklch(0.16 0.012 255); --accent-soft:oklch(0.82 0.19 132 / .14);
+    --success:var(--accent); --danger:oklch(0.72 0.17 25); --warn:oklch(0.78 0.17 75);
   }
-  @media (prefers-color-scheme: dark){
-    :root{ --bg:#070a14; --bg-blob1:rgba(29,78,216,.32); --bg-blob2:rgba(59,130,246,.22);
-      --card:rgba(255,255,255,.05); --card-solid:#0d1424; --text:#eef1fb; --muted:#8fa0bd;
-      --accent:#5a8bff; --accent2:#7db3ff; --accent-soft:rgba(90,139,255,.16);
-      --border:rgba(255,255,255,.09); --success:#4ade80; --danger:#ff6b8b; --warn:#f2b84f;
-      --train:#34d399; --train2:#a3e635;
-      --shadow:0 10px 34px -14px rgba(0,0,0,.55); }
+  /* Светлая тема: системная (prefers-color-scheme) или тема самого Telegram
+     (data-tg-theme ставит JS — см. <script> внизу, атрибут уже был, просто раньше
+     его не читал CSS). Тот же акцентный hue (132), но темнее/насыщеннее для
+     контраста на белом — чистый неоновый лайм на белом фоне почти не читается. */
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:oklch(0.98 0.004 255); --card:oklch(0.995 0.002 255); --card2:oklch(0.93 0.008 255);
+      --text:oklch(0.18 0.012 255); --muted:oklch(0.46 0.02 255); --muted2:oklch(0.6 0.015 255);
+      --border:oklch(0.84 0.012 255 / .9);
+      --accent:oklch(0.55 0.16 132); --accent-ink:oklch(0.99 0.003 255); --accent-soft:oklch(0.55 0.16 132 / .12);
+      --danger:oklch(0.55 0.17 25); --warn:oklch(0.55 0.16 75);
+    }
   }
-  html[data-tg-theme="light"]{ --bg:#eef1fb; --bg-blob1:#cddcfb; --bg-blob2:#c2d6ff;
-    --card:rgba(255,255,255,.72); --card-solid:#ffffff; --text:#0f1a33; --muted:#5c6b85;
-    --accent:#1d4ed8; --accent2:#3b82f6; --accent-soft:#e3ebfe; --border:rgba(15,26,51,.09); }
-  html[data-tg-theme="dark"]{ --bg:#070a14; --bg-blob1:rgba(29,78,216,.32); --bg-blob2:rgba(59,130,246,.22);
-    --card:rgba(255,255,255,.05); --card-solid:#0d1424; --text:#eef1fb; --muted:#8fa0bd;
-    --accent:#5a8bff; --accent2:#7db3ff; --accent-soft:rgba(90,139,255,.16); --border:rgba(255,255,255,.09); }
+  html[data-tg-theme="light"]{
+    --bg:oklch(0.98 0.004 255); --card:oklch(0.995 0.002 255); --card2:oklch(0.93 0.008 255);
+    --text:oklch(0.18 0.012 255); --muted:oklch(0.46 0.02 255); --muted2:oklch(0.6 0.015 255);
+    --border:oklch(0.84 0.012 255 / .9);
+    --accent:oklch(0.55 0.16 132); --accent-ink:oklch(0.99 0.003 255); --accent-soft:oklch(0.55 0.16 132 / .12);
+    --danger:oklch(0.55 0.17 25); --warn:oklch(0.55 0.16 75);
+  }
+  html[data-tg-theme="dark"]{
+    --bg:oklch(0.16 0.012 255); --card:oklch(0.20 0.014 255); --card2:oklch(0.24 0.016 255);
+    --text:oklch(0.95 0.006 255); --muted:oklch(0.62 0.02 255); --muted2:oklch(0.5 0.015 255);
+    --border:oklch(0.30 0.02 255 / .55);
+    --accent:oklch(0.82 0.19 132); --accent-ink:oklch(0.16 0.012 255); --accent-soft:oklch(0.82 0.19 132 / .14);
+    --danger:oklch(0.72 0.17 25); --warn:oklch(0.78 0.17 75);
+  }
 
   *{box-sizing:border-box;}
   html{ -webkit-tap-highlight-color:transparent; }
   body{
-    margin:0; color:var(--text); min-height:100vh;
-    font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    padding-bottom:64px;
-    background-color:var(--bg);
-    background-image:
-      radial-gradient(circle at 12% -8%, var(--bg-blob1) 0%, transparent 42%),
-      radial-gradient(circle at 105% 6%, var(--bg-blob2) 0%, transparent 40%);
-    background-attachment:fixed;
-    transition:background-color .3s;
+    margin:0; color:var(--text); min-height:100vh; background:var(--bg);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding-bottom:88px;
   }
+  .brand,.countdown{ font-family:"Unbounded","Inter",sans-serif; }
 
-  header{ position:relative; padding:22px 16px 6px; text-align:center; }
-  .brand{ display:flex; align-items:center; justify-content:center; gap:9px; }
-  .brand svg{ width:26px; height:26px; flex:none; }
-  header h1{
-    font-size:19px; margin:0; font-weight:800; letter-spacing:-.2px;
-    background:linear-gradient(120deg, var(--accent), var(--accent2));
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-  }
-  header p{ margin:5px 0 0; color:var(--muted); font-size:13px; font-weight:500; }
+  header{ position:relative; padding:22px 16px 4px; display:flex; align-items:center; justify-content:space-between; max-width:640px; margin:0 auto; }
+  .brand{ display:flex; align-items:center; gap:9px; }
+  .logo-mark{ width:28px; height:28px; flex:none; display:block; border-radius:50%; }
+  header h1{ font-size:15px; margin:0; font-weight:600; letter-spacing:-.2px; color:var(--text); }
+  header p{ display:none; }
 
-  .lang-toggle{
-    display:inline-flex; gap:2px; margin-top:12px;
-    background:var(--card); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-    border:1px solid var(--border); border-radius:10px; padding:3px; box-shadow:var(--shadow);
-  }
+  .lang-toggle{ display:inline-flex; gap:3px; background:var(--card2); border-radius:10px; padding:3px; }
   .lang-btn{
     appearance:none; border:none; background:transparent; color:var(--muted);
-    font-family:inherit; font-size:11px; font-weight:800; padding:5px 8px;
+    font-family:inherit; font-size:11px; font-weight:700; padding:5px 9px;
     border-radius:7px; cursor:pointer; transition:all .2s;
   }
-  .lang-btn.active{ background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff; }
+  .lang-btn.active{ background:var(--accent); color:var(--accent-ink); }
 
-  .tabs{
-    display:flex; gap:4px; width:calc(100% - 32px); max-width:640px; margin:18px auto 4px;
-    background:var(--card); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-    border:1px solid var(--border); border-radius:14px; padding:4px;
-    box-shadow:var(--shadow);
-  }
-  .tab-btn{
-    flex:1; padding:10px 6px; border:none; background:transparent; color:var(--muted);
-    font-family:inherit; font-size:13.5px; font-weight:700; border-radius:11px; cursor:pointer;
-    transition:all .25s ease;
-  }
-  .tab-btn.active{
-    background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff;
-    box-shadow:0 6px 16px -6px color-mix(in srgb, var(--accent) 55%, transparent);
-  }
-
-  .about-link-btn{
-    display:block; flex:none; width:max-content; margin:14px auto 0; padding:6px 14px;
-    background:transparent; border:1px solid var(--border); border-radius:20px;
-    color:var(--muted); font-size:12.5px; font-weight:600; box-shadow:none;
-  }
-  .about-link-btn.active{
-    background:var(--card); color:var(--text); box-shadow:none;
-  }
-
-  main{ padding:12px 16px 24px; max-width:640px; margin:0 auto; }
+  main{ padding:16px 16px 8px; max-width:640px; margin:0 auto; }
   .view{ display:none; }
-  .view.active{ display:block; animation:fadeIn .35s ease; }
+  .view.active{ display:block; animation:fadeIn .3s ease; }
   @keyframes fadeIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none;} }
 
-  .card{
-    background:var(--card); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-    border:1px solid var(--border); border-radius:20px;
-    padding:18px; margin-bottom:12px; box-shadow:var(--shadow);
-  }
+  .card{ background:var(--card); border-radius:18px; padding:18px; margin-bottom:12px; }
 
   .locate-row{ display:flex; align-items:center; gap:10px; }
-  .locate-row .dot{
-    width:9px; height:9px; border-radius:50%; background:var(--muted); flex:none;
-    box-shadow:0 0 0 4px transparent;
-  }
-  .locate-row .dot.ok{ background:var(--success); box-shadow:0 0 0 4px color-mix(in srgb, var(--success) 18%, transparent); }
-  .locate-row .dot.err{ background:var(--danger); box-shadow:0 0 0 4px color-mix(in srgb, var(--danger) 15%, transparent); }
-  .locate-row .dot.far{ background:var(--warn); box-shadow:0 0 0 4px color-mix(in srgb, var(--warn) 18%, transparent); }
+  .locate-row .dot{ width:9px; height:9px; border-radius:50%; background:var(--muted); flex:none; }
+  .locate-row .dot.ok{ background:var(--success); }
+  .locate-row .dot.err{ background:var(--danger); }
+  .locate-row .dot.far{ background:var(--warn); }
   .locate-text{ flex:1; font-size:13.5px; color:var(--muted); line-height:1.4; }
   .locate-text b{ color:var(--text); font-weight:700; }
   .btn{
@@ -136,295 +102,193 @@
     border-radius:11px; cursor:pointer; white-space:nowrap; transition:transform .15s, opacity .15s;
   }
   .btn:active{ transform:scale(.96); opacity:.85; }
-  .btn.primary{ background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff; border-color:transparent; }
+  .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
 
   select{
     width:100%; padding:12px 36px 12px 14px; border-radius:13px; border:1px solid var(--border);
-    background:var(--card-solid) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%239c9db0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>') no-repeat right 12px center;
+    background:var(--card2) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%238a94ab" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>') no-repeat right 12px center;
     color:var(--text); font-size:15px; font-weight:600; font-family:inherit; margin-top:10px;
     appearance:none; -webkit-appearance:none;
   }
 
   .station-title{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:14px;}
-  .station-title h2{ font-size:21px; margin:0; font-weight:800; letter-spacing:-.2px; }
+  .station-title h2{ font-size:22px; margin:0; font-weight:600; letter-spacing:-.3px; }
   .station-title .dist{ font-size:12px; color:var(--muted); white-space:nowrap; font-weight:600; }
 
-  /* линия метро — визуализация позиции станции. */
   .line-wrap{ margin:2px 4px 20px; }
-  .line-track{
-    position:relative; display:flex; justify-content:space-between; align-items:center;
-    padding:10px 6px; height:36px; overflow:hidden;
-    /* overflow:hidden обрезает "хвост" вагончика по горизонтали — иначе при
-       отправлении с самой первой/последней станции корпус тянется в пустоту за
-       пределы схемы (там нет предыдущего/следующего перегона, куда он мог бы
-       "уходить"). Вертикальный padding (10px сверху/снизу, при высоте самой
-       линии/точек 16px) — запас, чтобы та же обрезка не резала точки-поезда
-       над/под линией и свечение активной станции: паддинг симметричный, так что
-       центрирование линии и точек не сдвигается, просто у обрезки больше места
-       по вертикали. Если увеличите смещение .train-marker над/под линией —
-       увеличьте и этот padding. */
-  }
+  .line-track{ position:relative; display:flex; justify-content:space-between; align-items:center; padding:10px 6px; height:36px; overflow:hidden; }
   .line-track::before{
     content:''; position:absolute; left:6px; right:6px; top:50%; height:2px; margin-top:-1px;
-    background:linear-gradient(90deg, var(--accent), var(--accent2)); opacity:.35; border-radius:2px;
+    background:var(--border); border-radius:2px;
   }
-  .line-dot{
-    position:relative; width:7px; height:7px; border-radius:50%; background:var(--muted); opacity:.4;
-    transition:all .2s; cursor:pointer;
-  }
-  .line-dot::before{
-    /* Увеличивает область клика/тапа, не меняя видимый размер точки. */
-    content:''; position:absolute; top:50%; left:50%; width:22px; height:22px;
-    transform:translate(-50%, -50%);
-  }
-  .line-dot:hover{ opacity:.75; transform:scale(1.3); }
+  .line-dot{ position:relative; width:7px; height:7px; border-radius:50%; background:var(--muted); opacity:.5; transition:all .2s; cursor:pointer; }
+  .line-dot::before{ content:''; position:absolute; top:50%; left:50%; width:22px; height:22px; transform:translate(-50%, -50%); }
+  .line-dot:hover{ opacity:.85; transform:scale(1.3); }
   .line-dot.active{
-    width:15px; height:15px; opacity:1; background:linear-gradient(120deg, var(--accent), var(--accent2));
-    box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent), 0 0 14px -2px var(--accent);
+    width:15px; height:15px; opacity:1; background:var(--accent);
+    box-shadow:0 0 0 4px var(--accent-soft), 0 0 14px -2px var(--accent);
   }
   .line-dot.active:hover{ transform:none; }
-  .line-ends{ display:flex; justify-content:space-between; margin:6px 2px 0; font-size:10.5px; color:var(--muted); font-weight:600; }
-  .line-ends span{ max-width:44%; }
-  .line-ends span:last-child{ text-align:right; }
+  .line-ends{ display:flex; justify-content:space-between; margin:6px 2px 0; font-size:10.5px; color:var(--muted2); font-weight:600; }
+  .line-ends span{ max-width:44%; } .line-ends span:last-child{ text-align:right; }
 
-  /* Точки-"поезда" — примерное положение едущих сейчас поездов, посчитанное по
-     расписанию (не GPS). Силуэт вагончика одним залитым цветом (clip-path):
-     плоская "корма", заострённый нос по ходу движения; вперёд — над линией,
-     назад — под линией. У двух направлений разные оттенки зелёного (--train /
-     --train2, оба не в тон общей синей палитры), чтобы соседние точки над и
-     под линией не сливались друг с другом. См. renderTrainMarkers() в JS. */
   .train-marker{
     position:absolute; top:50%; left:0; width:16px; height:8px; margin-top:-4px;
-    pointer-events:none; z-index:2;
-    transition:left .95s linear, top .3s ease; animation:trainPulse 1.7s ease-in-out infinite;
+    pointer-events:none; z-index:2; transition:left .95s linear, top .3s ease; animation:trainPulse 1.7s ease-in-out infinite;
   }
   .train-marker.fwd{
-    /* Координата — это НОС (передняя точка по ходу движения), а не центр
-       прямоугольника: иначе на стоянке кажется, что поезд уже отъехал от
-       станции (нос торчит за неё), а на конечных — что вылезает за линию.
-       Поэтому весь прямоугольник сдвинут так, что именно правый край (нос)
-       стоит ровно в точке координаты, margin-left:-100% ширины. */
-    top:calc(50% - 7px); margin-left:-16px;
-    background:linear-gradient(100deg, #d6fff0, var(--train) 55%);
-    box-shadow:0 0 0 2px color-mix(in srgb, var(--train) 20%, transparent),
-               0 0 8px 1px color-mix(in srgb, var(--train) 60%, transparent);
+    top:calc(50% - 7px); margin-left:-16px; background:var(--accent);
+    box-shadow:0 0 8px 1px color-mix(in oklch, var(--accent) 50%, transparent);
     clip-path:polygon(0 0, 62% 0, 84% 14%, 100% 50%, 84% 86%, 62% 100%, 0 100%);
   }
   .train-marker.bwd{
-    /* Здесь нос — левый край прямоугольника, он и так стоит в точке координаты
-       (margin-left не нужен), см. комментарий у .fwd. */
-    top:calc(50% + 7px);
-    background:linear-gradient(260deg, #f2ffd6, var(--train2) 55%);
-    box-shadow:0 0 0 2px color-mix(in srgb, var(--train2) 20%, transparent),
-               0 0 8px 1px color-mix(in srgb, var(--train2) 60%, transparent);
+    top:calc(50% + 7px); background:color-mix(in oklch, var(--accent) 55%, transparent);
+    box-shadow:0 0 8px 1px color-mix(in oklch, var(--accent) 35%, transparent);
     clip-path:polygon(100% 0, 38% 0, 16% 14%, 0 50%, 16% 86%, 38% 100%, 100% 100%);
   }
+  .train-marker.fwd::before,.train-marker.fwd::after,.train-marker.bwd::before,.train-marker.bwd::after{
+    content:''; position:absolute; top:2px; width:4px; height:4px; background:oklch(0.16 0.012 255 / .55);
+  }
+  .train-marker.fwd::before{ left:3px; } .train-marker.fwd::after{ left:9px; }
+  .train-marker.bwd::before{ left:5px; } .train-marker.bwd::after{ left:11px; }
   @keyframes trainPulse{ 0%,100%{ opacity:.75; transform:scale(.9); } 50%{ opacity:1; transform:scale(1); } }
 
   .directions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:400px){ .directions{ grid-template-columns:1fr; } }
 
-  /* Цвет карточки = сколько ждать поезд ("тир") — красит верхнюю полоску всегда,
-     а рамку и пульсацию — только когда поезд вот-вот придёт. Цифры отсчёта тира не
-     знают, всегда акцентного цвета. Классы вешает tickCountdowns():
-       .wait-long   (долго для текущего интервала) — приглушённый (--muted), спокойно
-       .wait-normal (обычное ожидание)              — синий (--accent/--accent2)
-       .wait-soon   (< 1 мин)                        — зелёный + рамка + пульсация
-     "Долго" — не фиксированные минуты, а доля от текущего интервала между поездами
-     в этом направлении (см. WAIT_LONG_FRACTION в JS): одни и те же 5 минут — долго
-     в час пик (интервал 6 мин) и норма ночью (интервал 15 мин).
-     Полоска также служит прогресс-баром: --progress (0..1, ставит JS каждую
-     секунду) — доля УЖЕ прошедшего времени от текущего интервала, полоска
-     "наполняется" от пустой (только уехал предыдущий) к полной (подъезжает
-     следующий) — так понятнее, чем наоборот.
-     .wait-pulse — последние секунды перед приходом, лёгкая пульсация свечения.
-     Без класса (метро закрыто / нет данных / конечная) — нейтральный вид, полоска
-     на всю ширину (--progress по умолчанию = 1). */
   .dir-card{
-    position:relative; overflow:hidden; background:var(--accent-soft);
-    border-radius:16px; padding:16px 14px; text-align:center;
-    border:2px solid transparent; transition:border-color .3s;
-    --tier:var(--accent); --tier2:var(--accent2);
+    position:relative; overflow:hidden; background:var(--card); border-radius:18px; padding:16px 14px;
+    text-align:center; border:1.5px solid var(--border); transition:border-color .3s; min-height:118px;
+    display:flex; flex-direction:column; justify-content:center;
+    --tier:var(--muted); --tier2:var(--muted);
   }
-  .dir-card.wait-long{   --tier:var(--muted);   --tier2:var(--muted); }
-  .dir-card.wait-normal{ --tier:var(--accent);   --tier2:var(--accent2); }
-  .dir-card.wait-soon{   --tier:var(--success);  --tier2:var(--success); }
-  .dir-card.wait-soon{ border-color:var(--tier); }
+  .dir-card.wait-normal{ --tier:var(--accent); --tier2:var(--accent); }
+  .dir-card.wait-soon{ --tier:var(--success); --tier2:var(--success); border-color:var(--tier); }
   .dir-card::before{
-    content:''; position:absolute; top:0; left:0; height:3px;
-    width:calc(var(--progress, 1) * 100%);
-    background:linear-gradient(90deg, var(--tier), var(--tier2));
-    transition:width 1s linear, background .3s;
+    content:''; position:absolute; top:0; left:0; height:3px; width:calc(var(--progress, 1) * 100%);
+    background:var(--tier); transition:width 1s linear, background .3s;
   }
-  /* У обратного направления полоска растёт справа налево — в ту же сторону, что и
-     стрелка "←" над ней. */
-  .dir-card-backward::before{
-    left:auto; right:0;
-    background:linear-gradient(-90deg, var(--tier), var(--tier2));
-  }
+  .dir-card-backward::before{ left:auto; right:0; }
   @keyframes waitPulseGlow{
-    0%, 100%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--tier) 45%, transparent); }
-    50%{ box-shadow:0 0 16px 3px color-mix(in srgb, var(--tier) 55%, transparent); }
+    0%, 100%{ box-shadow:0 0 0 0 oklch(0.82 0.19 132 / .35); }
+    50%{ box-shadow:0 0 16px 3px oklch(0.82 0.19 132 / .45); }
   }
   .dir-card.wait-pulse{ animation:waitPulseGlow 1s ease-in-out infinite; }
 
-  /* Пасхалка: в момент, когда зелёное "скоро" домигало и на счётчике появился уже
-     следующий поезд — на мгновение "закрываются двери" поверх карточки. Чисто
-     декоративный одноразовый оверлей, добавляется/удаляется JS-ом (playDoorsFx). */
-  .doors-fx{
-    position:absolute; inset:0; z-index:5; display:flex; pointer-events:none;
-    animation:doorsFadeOut 1.5s ease-in forwards;
-  }
+  .doors-fx{ position:absolute; inset:0; z-index:5; display:flex; pointer-events:none; animation:doorsFadeOut 1.5s ease-in forwards; }
   .doors-fx .door{ position:relative; flex:1; background:var(--success); }
-  /* Окошко в створке — как на настоящих дверях метро. */
   .doors-fx .door::after{
     content:''; position:absolute; top:16%; bottom:38%; left:18%; right:18%;
-    background:rgba(255,255,255,.22);
-    border:1px solid rgba(255,255,255,.4);
-    border-radius:3px;
+    background:oklch(0.16 0.012 255 / .3); border:1px solid oklch(0.16 0.012 255 / .4); border-radius:3px;
   }
-  .doors-fx .door.left{
-    animation:doorCloseLeft 1.5s cubic-bezier(.3,.9,.3,1) forwards;
-    border-right:1px solid rgba(255,255,255,.35);
-  }
-  .doors-fx .door.right{
-    animation:doorCloseRight 1.5s cubic-bezier(.3,.9,.3,1) forwards;
-    border-left:1px solid rgba(255,255,255,.35);
-  }
+  .doors-fx .door.left{ animation:doorCloseLeft 1.5s cubic-bezier(.3,.9,.3,1) forwards; }
+  .doors-fx .door.right{ animation:doorCloseRight 1.5s cubic-bezier(.3,.9,.3,1) forwards; }
   @keyframes doorCloseLeft{ 0%{ transform:translateX(-100%); } 35%, 60%{ transform:translateX(0); } }
   @keyframes doorCloseRight{ 0%{ transform:translateX(100%); } 35%, 60%{ transform:translateX(0); } }
   @keyframes doorsFadeOut{ 0%, 60%{ opacity:1; } 100%{ opacity:0; } }
-  /* Направление = стрелка + название конечной. Стрелка отдельной строкой сверху и
-     направлена так же, как линия станций выше (Райымбек батыра слева → Б. Момышулы
-     справа): "туда" — вправо, "обратно" — влево. Раньше у обеих карточек стояла
-     одинаковая "→" в значении "в сторону", и она противоречила схеме. */
-  .dir-card .dir-label{
-    margin-bottom:10px; display:flex; flex-direction:column; align-items:center; gap:3px;
-  }
-  .dir-card .dir-arrow{
-    font-size:16px; font-weight:800; line-height:1; color:var(--accent);
-  }
+
+  .dir-card .dir-label{ margin-bottom:8px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .dir-card .dir-arrow{ font-size:15px; font-weight:700; line-height:1; color:var(--accent); }
   .dir-card .dir-name{
-    font-size:15px; font-weight:800; color:var(--text); line-height:1.25;
-    letter-spacing:-.2px;
-    /* Обе карточки рядом: у одной название в строку, у другой может переноситься —
-       min-height держит отсчёты под ними на одной высоте. */
-    min-height:38px; display:flex; align-items:center; justify-content:center;
+    font-size:15px; font-weight:600; color:var(--text); line-height:1.25; letter-spacing:-.1px;
+    min-height:36px; display:flex; align-items:center; justify-content:center;
   }
   .dir-card.unavailable .dir-arrow{ color:var(--muted); }
+  .dir-card.unavailable .dir-name{ color:var(--muted); }
   .dir-card .countdown{
-    font-size:32px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.5px;
-    background:linear-gradient(120deg, var(--accent), var(--accent2));
-    -webkit-background-clip:text; background-clip:text; color:transparent;
+    font-size:34px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.5px; color:var(--text);
   }
-  .dir-card .countdown small{ font-size:13px; font-weight:700; -webkit-text-fill-color:var(--muted); }
-  .dir-card .next-after{ font-size:12px; color:var(--muted); margin-top:7px; font-weight:600; }
-  .dir-card .closed{ font-size:13px; color:var(--muted); line-height:1.4; font-weight:600; }
-  .dir-card.unavailable{ opacity:.45; }
+  .dir-card.wait-soon .countdown{ color:var(--accent); }
+  .dir-card .countdown small{ font-size:13px; font-weight:600; color:var(--muted); font-family:"Inter",sans-serif; }
+  .dir-card .next-after{ font-size:11.5px; color:var(--muted2); margin-top:6px; font-weight:500; }
+  .dir-card .closed{ font-size:12.5px; color:var(--muted); line-height:1.4; font-weight:500; }
+  .dir-card.unavailable{ opacity:.5; }
   .dir-card.unavailable::before{ opacity:.3; }
 
   .note{ font-size:12px; color:var(--muted); margin-top:12px; line-height:1.5; }
   .note.warn{ color:var(--warn); }
   .note.holiday{ color:var(--accent); font-weight:600; }
 
-  /* Общий баннер-напоминание (не привязан к конкретной станции/дню) — стоит
-     один раз, отдельно от <main>, между обеими вкладками и кнопкой "О метро",
-     поэтому сам задаёт себе ширину/центрирование как у main. */
   .disclaimer{
-    display:flex; gap:9px; align-items:flex-start; background:var(--accent-soft);
+    display:flex; gap:9px; align-items:flex-start; background:var(--card);
     border-radius:14px; padding:11px 14px; margin:0 auto 12px;
-    max-width:640px; width:calc(100% - 32px);
-    font-size:12.5px; color:var(--text); line-height:1.45;
+    max-width:640px; width:calc(100% - 32px); font-size:12.5px; color:var(--muted); line-height:1.45;
   }
-  .disclaimer .icon{ flex:none; font-size:15px; line-height:1.3; }
+  .disclaimer .icon{ display:none; }
 
-  /* вкладка "О метро" */
-  .about-h2{ font-size:15px; font-weight:800; margin:0 0 10px; letter-spacing:-.2px; }
+  .about-h2{ font-size:14px; font-weight:600; margin:0 0 10px; letter-spacing:-.2px; }
   .about-text{ font-size:13.5px; color:var(--muted); line-height:1.6; margin:0; }
-  .about-list{ margin:0; padding:0 0 0 18px; }
-  .about-list li{ font-size:13.5px; color:var(--muted); line-height:1.6; margin-bottom:8px; }
+  .about-list{ margin:0; padding:0; list-style:none; }
+  .about-list li{ font-size:13.5px; color:var(--muted); line-height:1.55; margin-bottom:10px; padding-left:16px; position:relative; }
+  .about-list li::before{ content:''; position:absolute; left:0; top:7px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
   .about-list li:last-child{ margin-bottom:0; }
-  .about-scheme-link{
-    display:block; text-align:center; text-decoration:none; margin:0 0 12px; font-size:14px;
-  }
+  .about-scheme-link{ display:block; text-align:center; text-decoration:none; margin:0 0 12px; font-size:14px; padding:13px; border-radius:14px; }
 
-  footer.meta{
-    text-align:center; color:var(--muted); font-size:11px; padding:10px 16px 22px; line-height:1.7; font-weight:500;
-  }
+  footer.meta{ text-align:center; color:var(--muted2); font-size:11px; padding:10px 16px 22px; line-height:1.7; font-weight:500; max-width:640px; margin:0 auto; }
 
-  /* full schedule view */
   .sched-controls{ display:flex; gap:8px; margin-bottom:12px; }
   .sched-controls select{ margin-top:0; }
   .daytype-toggle{ display:flex; gap:6px; }
   .daytype-toggle .btn{ flex:1; }
-  .daytype-toggle .btn.active{ background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff; border-color:transparent; }
+  .daytype-toggle .btn.active{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
 
   .sched-cols{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:400px){ .sched-cols{ grid-template-columns:1fr; } }
-  .sched-col-header{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    cursor:pointer; user-select:none; margin:0 0 10px; padding:2px 0;
-  }
-  .sched-col-header h3{ font-size:12.5px; color:var(--muted); margin:0; font-weight:700; }
-  .sched-col-header .chevron{
-    width:16px; height:16px; flex:none; color:var(--muted);
-    transition:transform .2s; display:flex; align-items:center; justify-content:center;
-  }
+  .sched-col-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; user-select:none; margin:0 0 10px; padding:2px 0; }
+  .sched-col-header h3{ font-size:12px; color:var(--muted); margin:0; font-weight:600; font-family:"Inter",sans-serif; }
+  .sched-col-header .chevron{ width:16px; height:16px; flex:none; color:var(--muted); transition:transform .2s; display:flex; align-items:center; justify-content:center; }
   .sched-col-body{ display:block; }
   .sched-col.collapsed .sched-col-body{ display:none; }
   .sched-col.collapsed .chevron{ transform:rotate(-90deg); }
   .hour-block{ margin-bottom:12px; }
-  .hour-block .hour{ font-size:11px; color:var(--muted); margin-bottom:5px; font-weight:700; }
+  .hour-block .hour{ font-size:11px; color:var(--muted2); margin-bottom:5px; font-weight:700; }
   .chip-row{ display:flex; flex-wrap:wrap; gap:5px; }
-  .chip{
-    font-size:12px; font-variant-numeric:tabular-nums; font-weight:600; padding:4px 8px;
-    border-radius:9px; background:var(--card-solid); border:1px solid var(--border);
-  }
-  .chip.past{ opacity:.32; }
-  .chip.next{
-    background:linear-gradient(120deg, var(--accent), var(--accent2)); color:#fff;
-    border-color:transparent; font-weight:800; box-shadow:0 4px 12px -4px color-mix(in srgb, var(--accent) 60%, transparent);
-  }
+  .chip{ font-size:12px; font-variant-numeric:tabular-nums; font-weight:600; padding:4px 8px; border-radius:8px; background:var(--card2); border:1px solid var(--border); color:var(--text); }
+  .chip.past{ opacity:.3; }
+  .chip.next{ background:var(--accent); color:var(--accent-ink); border-color:transparent; font-weight:700; }
 
-  .spinner{
-    width:18px;height:18px;border-radius:50%;border:2.5px solid var(--border);
-    border-top-color:var(--accent); animation:spin .8s linear infinite; flex:none;
-  }
+  .spinner{ width:16px;height:16px;border-radius:50%;border:2.5px solid var(--border); border-top-color:var(--accent); animation:spin .8s linear infinite; flex:none; }
   @keyframes spin{ to{ transform:rotate(360deg);} }
+
+  /* bottom nav — три вкладки (те же .tab-btn, что и раньше), теперь снизу */
+  .bottom-nav{
+    position:fixed; left:0; right:0; bottom:0; z-index:10; display:flex; justify-content:center;
+    background:var(--card); border-top:1px solid var(--border);
+  }
+  .bottom-nav-inner{ width:100%; max-width:640px; display:flex; gap:6px; padding:9px 14px calc(9px + env(safe-area-inset-bottom)); }
+  .tab-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:2px 0; border:none; background:transparent; color:var(--muted);
+    font-family:"Inter",sans-serif; font-size:10.5px; font-weight:600; cursor:pointer; border-radius:12px;
+  }
+  .tab-btn.active{ color:var(--accent); }
+  .tab-btn::before{ width:16px; height:16px; box-sizing:border-box; }
+  .tab-btn[data-tab="nearest"]::before{ content:''; border-radius:50%; border:2px solid currentColor; }
+  .tab-btn[data-tab="full"]::before{
+    content:''; border-radius:3px;
+    background-image:linear-gradient(currentColor 0 2px, transparent 2px 4px);
+    background-size:100% 4px; background-repeat:repeat-y;
+  }
+  .tab-btn[data-tab="about"]::before{
+    content:'i'; border-radius:50%; border:2px solid currentColor;
+    display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; font-family:"Unbounded",sans-serif;
+  }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="trainGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#1d4ed8"/>
-          <stop offset="1" stop-color="#3b82f6"/>
-        </linearGradient>
-      </defs>
-      <rect x="4" y="3" width="16" height="13" rx="5" fill="url(#trainGrad)"/>
-      <rect x="7" y="6" width="4.2" height="4.2" rx="1.1" fill="#fff" fill-opacity=".92"/>
-      <rect x="12.8" y="6" width="4.2" height="4.2" rx="1.1" fill="#fff" fill-opacity=".92"/>
-      <circle cx="8" cy="19.5" r="1.6" fill="url(#trainGrad)"/>
-      <circle cx="16" cy="19.5" r="1.6" fill="url(#trainGrad)"/>
-      <path d="M5 16.5L3.3 20M19 16.5l1.7 3.5" stroke="url(#trainGrad)" stroke-width="1.4" stroke-linecap="round"/>
-    </svg>
+    <img class="logo-mark" src="android-chrome-192x192.png" alt="" width="28" height="28" />
     <h1 id="appTitle">Метро Алматы</h1>
   </div>
-  <p id="appSubtitle">Онлайн-расписание — сколько ждать до поезда</p>
   <div class="lang-toggle" id="langToggle">
     <button class="lang-btn" data-lang="kk">ҚАЗ</button>
     <button class="lang-btn" data-lang="ru">RU</button>
     <button class="lang-btn" data-lang="en">EN</button>
   </div>
 </header>
-
-<div class="tabs">
-  <button class="tab-btn active" data-tab="nearest">Ближайший поезд</button>
-  <button class="tab-btn" data-tab="full">Всё расписание</button>
-</div>
+<p id="appSubtitle" style="display:none;">Онлайн-расписание — сколько ждать до поезда</p>
 
 <main>
 
@@ -511,9 +375,15 @@
   <span id="scheduleDisclaimer">Поезда чаще всего отправляются ровно по расписанию, указанному на этом сайте. Но иногда метро добавляет дополнительные составы.</span>
 </div>
 
-<button class="tab-btn about-link-btn" data-tab="about" id="aboutLinkBtn">О метро</button>
-
 <footer class="meta" id="metaFooter">Загрузка данных…</footer>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="tab-btn active" data-tab="nearest">Ближайший поезд</button>
+    <button class="tab-btn" data-tab="full">Всё расписание</button>
+    <button class="tab-btn about-link-btn" data-tab="about" id="aboutLinkBtn">О метро</button>
+  </div>
+</nav>
 
 <script>
 (function(){

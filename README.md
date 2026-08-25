@@ -19,13 +19,14 @@
 index.html                     — всё приложение (разметка + стили + JS, 3 языка)
 data/stations.json             — координаты + названия станций (ru/kk/en)
 data/schedule.json             — расписание (перегенерируется ежечасно, 06:00–21:00)
-data/icon-source.svg           — исходник иконки (для перегенерации favicon)
 data/holidays.json             — даты праздников (обновлять раз в год, см. CLAUDE.md)
 scripts/update_schedule.py     — скрипт обновления расписания
 .github/workflows/update-schedule.yml — автозапуск скрипта ежечасно (06:00–21:00)
 favicon*, apple-touch-icon.png,
-web-app-manifest-*.png, site.webmanifest — иконки (сгенерированы на
-                                            realfavicongenerator.net)
+android-chrome-*.png, site.webmanifest — иконки (сгенерированы на favicon.io,
+                                          исходника-картинки в репозитории нет —
+                                          при желании перегенерировать/поменять
+                                          дизайн иконки заново на favicon.io)
 CLAUDE.md                      — техническая документация для разработки
 ```
 

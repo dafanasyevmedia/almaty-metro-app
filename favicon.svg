@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="512" height="512"><metadata><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/"><rdf:Description><dc:creator>RealFaviconGenerator</dc:creator><dc:source>https://realfavicongenerator.net</dc:source></rdf:Description></rdf:RDF></metadata><defs>
-    <linearGradient id="trainGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1d4ed8"></stop>
-      <stop offset="1" stop-color="#3b82f6"></stop>
-    </linearGradient>
-  </defs><rect x="4" y="3" width="16" height="13" rx="5" fill="url(#trainGrad)"></rect><rect x="7" y="6" width="4.2" height="4.2" rx="1.1" fill="#fff" fill-opacity=".92"></rect><rect x="12.8" y="6" width="4.2" height="4.2" rx="1.1" fill="#fff" fill-opacity=".92"></rect><circle cx="8" cy="19.5" r="1.6" fill="url(#trainGrad)"></circle><circle cx="16" cy="19.5" r="1.6" fill="url(#trainGrad)"></circle><path d="M5 16.5L3.3 20M19 16.5l1.7 3.5" stroke="url(#trainGrad)" stroke-width="1.4" stroke-linecap="round"></path></svg>
