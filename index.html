@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <script>
-  if (window.location.hostname !== 'ala-metro.org' && window.location.hostname !== 'localhost') {
-    window.location.href = 'https://ala-metro.org' + window.location.pathname;
-  }
-</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Метро Алматы — расписание</title>
@@ -108,6 +103,22 @@
   }
   .btn:active{ transform:scale(.96); opacity:.85; }
   .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
+
+  /* Заглушка "мы переехали" — показывается только на старом адресе
+     dafanasyevmedia.github.io (см. проверку hostname в начале <script> внизу).
+     Оверлей на весь экран поверх остального содержимого — само приложение при
+     этом даже не инициализируется (early return), чтобы не запрашивать
+     геолокацию и не тратить время зря у тех, кто сюда случайно/по старой
+     закладке зашёл. */
+  .moved-notice{
+    position:fixed; inset:0; z-index:9999; display:flex; align-items:center;
+    justify-content:center; background:var(--bg); padding:24px;
+  }
+  .moved-card{ max-width:340px; text-align:center; }
+  .moved-card img{ border-radius:50%; margin-bottom:18px; }
+  .moved-card h1{ font-size:21px; margin:0 0 8px; color:var(--text); }
+  .moved-card p{ color:var(--muted); margin:0 0 22px; font-size:14px; line-height:1.5; }
+  .moved-card a.btn{ text-decoration:none; font-size:14px; padding:12px 20px; }
 
   select{
     width:100%; padding:12px 36px 12px 14px; border-radius:13px; border:1px solid var(--border);
@@ -282,6 +293,15 @@
 </head>
 <body>
 
+<div class="moved-notice" id="movedNotice" style="display:none">
+  <div class="moved-card">
+    <img src="android-chrome-192x192.png" alt="" width="64" height="64" />
+    <h1>Мы переехали 🚇</h1>
+    <p>Это приложение теперь живёт по новому адресу — ala-metro.org. Обновите закладку.</p>
+    <a class="btn primary" href="https://ala-metro.org/">Перейти на ala-metro.org →</a>
+  </div>
+</div>
+
 <header>
   <div class="brand">
     <img class="logo-mark" src="android-chrome-192x192.png" alt="" width="28" height="28" />
@@ -393,6 +413,17 @@
 <script>
 (function(){
   "use strict";
+
+  // Старый адрес (GitHub Pages) — вместо приложения показываем заглушку
+  // "мы переехали" со ссылкой на ala-metro.org и не инициализируем ничего
+  // остальное (не спрашиваем геолокацию и т.п. у тех, кто сюда случайно/по
+  // старой закладке попал). Проверяем только этот конкретный домен, а не
+  // "всё, что не ala-metro.org" — иначе задело бы и предпросмотровые адреса
+  // Vercel (*.vercel.app), и локальную разработку.
+  if (window.location.hostname === 'dafanasyevmedia.github.io') {
+    document.getElementById('movedNotice').style.display = '';
+    return;
+  }
 
   /* ---------- Telegram Mini App bootstrap ---------- */
   var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;

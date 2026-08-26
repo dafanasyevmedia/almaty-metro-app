@@ -6,7 +6,9 @@
 скриптом `scripts/update_schedule.py` из официального API metroalmaty.kz. Три
 языка интерфейса (қазақша / русский / English).
 
-**Работает здесь:** https://dafanasyevmedia.github.io/almaty-metro-app/
+**Работает здесь:** https://ala-metro.org (хостинг Vercel; старый адрес
+GitHub Pages оставлен как страница-заглушка со ссылкой сюда — подробности
+в [CLAUDE.md](CLAUDE.md))
 
 > Хотите разобраться в устройстве кода или продолжить разработку (сами
 > или с помощью AI-ассистента) — см. [CLAUDE.md](CLAUDE.md). Там —
