@@ -1223,6 +1223,12 @@
   var WAIT_LONG_FALLBACK_MIN = 5;
   var WAIT_PULSE_SEC = 15; // последние секунды перед приходом — лёгкая пульсация
 
+  // За PRE_OPEN_COUNTDOWN_MIN минут до самого первого поезда дня уже показываем
+  // обычный вид с отсчётом (а не статичную заглушку "метро закрыто, откроется в…") —
+  // человеку, который открыл приложение почти к открытию метро, интереснее видеть
+  // живой отсчёт до первого поезда, чем неизменную надпись до последней секунды.
+  var PRE_OPEN_COUNTDOWN_MIN = 15;
+
   function setWaitTier(cardEl, tier) {
     cardEl.classList.remove('wait-soon', 'wait-normal', 'wait-long', 'wait-pulse');
     if (tier) cardEl.classList.add('wait-' + tier);
@@ -1287,8 +1293,10 @@
       var first = res.trains[0];
       var mins = first.minutes - res.nowMinutes;
       var cardEl = el.closest('.dir-card');
-      if (first.dayOffset === 1 || mins > 6 * 60) {
-        // метро закрыто — следующий поезд относится к следующему дню (или очень нескоро)
+      if ((first.dayOffset === 1 || mins > 6 * 60) && mins > PRE_OPEN_COUNTDOWN_MIN) {
+        // метро закрыто — следующий поезд относится к следующему дню (или очень нескоро),
+        // и до него ещё больше PRE_OPEN_COUNTDOWN_MIN минут (иначе ниже уже пошёл бы
+        // обычный отсчёт, см. комментарий у константы)
         var arrivalClock = new Date(res.serviceStart.getTime() + first.minutes * 60000);
         el.innerHTML = '<small>' + t('metroClosed', fmtHHMM(arrivalClock)) + '</small>';
         if (cardEl) setWaitTier(cardEl, null);
