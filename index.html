@@ -105,7 +105,7 @@
 
   header{ position:relative; padding:22px 16px 4px; display:flex; align-items:center; justify-content:space-between; max-width:640px; margin:0 auto; }
   .brand{ display:flex; align-items:center; gap:9px; }
-  .logo-mark{ width:28px; height:28px; flex:none; display:block; border-radius:50%; }
+  .logo-mark{ width:28px; height:28px; flex:none; display:block; object-fit:contain; }
   header h1{ font-size:15px; margin:0; font-weight:600; letter-spacing:-.2px; color:var(--text); }
   header p{ display:none; }
 
@@ -124,6 +124,10 @@
 
   .card{ background:var(--card); border-radius:18px; padding:18px; margin-bottom:12px; }
 
+  .locate-block{ display:flex; align-items:center; gap:14px; }
+  .locate-content{ flex:1; min-width:0; }
+  .locate-mascot{ width:72px; height:72px; flex:none; display:none; object-fit:contain; }
+  .locate-mascot.show{ display:block; }
   .locate-row{ display:flex; align-items:center; gap:10px; }
   .locate-row .dot{ width:9px; height:9px; border-radius:50%; background:var(--muted); flex:none; }
   .locate-row .dot.ok{ background:var(--success); }
@@ -150,7 +154,7 @@
     justify-content:center; background:var(--bg); padding:24px;
   }
   .moved-card{ max-width:340px; text-align:center; }
-  .moved-card img{ border-radius:50%; margin-bottom:18px; }
+  .moved-card img{ margin-bottom:18px; }
   .moved-card h1{ font-size:21px; margin:0 0 8px; color:var(--text); }
   .moved-card p{ color:var(--muted); margin:0 0 22px; font-size:14px; line-height:1.5; }
   .moved-card a.btn{ text-decoration:none; font-size:14px; padding:12px 20px; }
@@ -206,6 +210,13 @@
 
   .directions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:400px){ .directions{ grid-template-columns:1fr; } }
+
+  /* Ночью, когда закрыты все направления сразу — одна общая полоса со спящим
+     маскотом вместо двух одинаковых "метро закрыто" в карточках (см. tickCountdowns). */
+  .closed-banner{ display:flex; align-items:center; gap:14px; padding:6px 4px 14px; }
+  .closed-banner img{ width:72px; height:72px; flex:none; object-fit:contain; }
+  .closed-banner-text{ font-size:14px; color:var(--muted); line-height:1.4; }
+  .closed-banner-text b{ color:var(--text); font-weight:700; }
 
   .dir-card{
     position:relative; overflow:hidden; background:var(--card); border-radius:18px; padding:16px 14px;
@@ -330,7 +341,7 @@
 
 <div class="moved-notice" id="movedNotice" style="display:none">
   <div class="moved-card">
-    <img src="android-chrome-192x192.png?v=4" alt="" width="64" height="64" />
+    <img src="mascot/waving.png" alt="" width="201" height="250" />
     <h1>Мы переехали 🚇</h1>
     <p>Это приложение теперь живёт по новому адресу — ala-metro.org. Обновите закладку.</p>
     <a class="btn primary" href="https://ala-metro.org/">Перейти на ala-metro.org →</a>
@@ -339,7 +350,7 @@
 
 <header>
   <div class="brand">
-    <img class="logo-mark" src="android-chrome-192x192.png?v=4" alt="" width="28" height="28" />
+    <img class="logo-mark" src="mascot/logo.png" alt="" width="28" height="28" />
     <h1 id="appTitle">Метро Алматы</h1>
   </div>
   <div class="lang-toggle" id="langToggle">
@@ -356,13 +367,18 @@
   <section class="view active" id="view-nearest">
 
     <div class="card">
-      <div class="locate-row" id="locateRow">
-        <div class="spinner" id="locateSpinner"></div>
-        <div class="dot" id="locateDot" style="display:none"></div>
-        <div class="locate-text" id="locateText">Определяем ваше местоположение…</div>
-        <button class="btn" id="locateBtn" style="display:none">Станция вручную</button>
+      <div class="locate-block">
+        <img class="locate-mascot" id="locateMascot" src="mascot/idle.png" alt="" />
+        <div class="locate-content">
+          <div class="locate-row" id="locateRow">
+            <div class="spinner" id="locateSpinner"></div>
+            <div class="dot" id="locateDot" style="display:none"></div>
+            <div class="locate-text" id="locateText">Определяем ваше местоположение…</div>
+            <button class="btn" id="locateBtn" style="display:none">Станция вручную</button>
+          </div>
+          <select id="stationSelect" style="display:none"></select>
+        </div>
       </div>
-      <select id="stationSelect" style="display:none"></select>
     </div>
 
     <div class="card" id="stationCard" style="display:none">
@@ -373,6 +389,10 @@
       <div class="line-wrap">
         <div class="line-track" id="lineTrack"><!-- заполняется JS --></div>
         <div class="line-ends" id="lineEnds"><span></span><span></span></div>
+      </div>
+      <div class="closed-banner" id="closedBanner" style="display:none">
+        <img src="mascot/sleeping.png" alt="" />
+        <div class="closed-banner-text" id="closedBannerText"></div>
       </div>
       <div class="directions" id="directions"><!-- заполняется JS --></div>
       <div class="note holiday" id="holidayNote" style="display:none"></div>
@@ -972,15 +992,29 @@
   var locateSpinner = document.getElementById('locateSpinner');
   var locateText = document.getElementById('locateText');
   var locateBtn = document.getElementById('locateBtn');
+  var locateMascot = document.getElementById('locateMascot');
   var stationSelect = document.getElementById('stationSelect');
 
   var selectedSlug = null;
 
+  // Маскот в строке геолокации: подбадривает на двух самых "неловких" для
+  // пользователя моментах (идёт определение / геолокация не сработала, нужно
+  // выбрать станцию вручную) — как только станция найдена ("ok"/"far", там уже
+  // есть результат), прячем его обратно, не мешает дальнейшему чистому виду.
   function setLocateStatusDOM(kind, html) {
     locateSpinner.style.display = kind === 'loading' ? '' : 'none';
     locateDot.style.display = kind === 'loading' ? 'none' : '';
     locateDot.className = 'dot' + (kind === 'ok' ? ' ok' : kind === 'err' ? ' err' : kind === 'far' ? ' far' : '');
     locateText.innerHTML = html;
+    if (kind === 'loading') {
+      locateMascot.src = 'mascot/idle.png';
+      locateMascot.classList.add('show');
+    } else if (kind === 'err') {
+      locateMascot.src = 'mascot/searching.png';
+      locateMascot.classList.add('show');
+    } else {
+      locateMascot.classList.remove('show');
+    }
   }
 
   // Состояние строки геолокации хранится отдельно от DOM, чтобы при смене языка
@@ -1127,6 +1161,8 @@
     var st = SCHEDULE.stations[selectedSlug];
     var container = document.getElementById('directions');
     container.innerHTML = '';
+    container.style.display = '';
+    document.getElementById('closedBanner').style.display = 'none';
     // Карточки пересоздаются с нуля — прошлые "first"-значения относятся к другой
     // станции, сравнивать их дальше нельзя (иначе ложно сыграет doors-fx).
     lastFirstMinutes.forward = null;
@@ -1230,10 +1266,18 @@
       var serviceStartForMarkers = serviceDayStart(nowForMarkers);
       renderTrainMarkers((nowForMarkers - serviceStartForMarkers) / 60000, serviceStartForMarkers);
     }
+    // Считаем, сколько реально существующих направлений (не "конечная станция,
+    // поездов нет") сейчас закрыты — если закрыты все до одного, ночью вместо двух
+    // одинаковых "метро закрыто" в тесных карточках показываем один общий баннер
+    // со спящим маскотом (см. ниже, после forEach) вместо самих карточек.
+    var closedDirsCount = 0;
+    var totalDirsCount = 0;
+    var closedArrivals = [];
     ['forward', 'backward'].forEach(function (dirKey) {
       var el = document.querySelector('.countdown[data-dir="' + dirKey + '"]');
       var elAfter = document.querySelector('[data-dir-after="' + dirKey + '"]');
       if (!el) return;
+      totalDirsCount++;
       var res = nextTrains(selectedSlug, dirKey, 2);
       if (res.trains.length === 0) {
         el.innerHTML = '<small>' + t('noData') + '</small>';
@@ -1249,6 +1293,8 @@
         el.innerHTML = '<small>' + t('metroClosed', fmtHHMM(arrivalClock)) + '</small>';
         if (cardEl) setWaitTier(cardEl, null);
         lastFirstMinutes[dirKey] = null;
+        closedDirsCount++;
+        closedArrivals.push(arrivalClock);
       } else if (cardEl && lastFirstMinutes[dirKey] != null && lastFirstMinutes[dirKey] !== first.minutes) {
         // Тот самый поезд, до которого шёл отсчёт, только что отправился — двери ещё
         // только начинают закрываться, ничего толком не прикрывая. Поэтому в этот тик
@@ -1286,6 +1332,17 @@
         }
       }
     });
+    var closedBanner = document.getElementById('closedBanner');
+    var directionsEl = document.getElementById('directions');
+    if (totalDirsCount > 0 && closedDirsCount === totalDirsCount) {
+      var soonestArrival = closedArrivals.reduce(function (a, b) { return a < b ? a : b; });
+      document.getElementById('closedBannerText').innerHTML = t('metroClosed', fmtHHMM(soonestArrival));
+      closedBanner.style.display = '';
+      directionsEl.style.display = 'none';
+    } else {
+      closedBanner.style.display = 'none';
+      directionsEl.style.display = '';
+    }
     tickTimer = setTimeout(tickCountdowns, 1000);
   }
 
