@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ala-metro.org/sitemap.xml
