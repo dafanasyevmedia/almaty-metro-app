@@ -140,6 +140,38 @@ android-chrome-*.png, site.webmanifest  — иконка (2026-08-26, favicon.io
 `fetch()` при загрузке — то есть локально его нужно открывать через HTTP-сервер
 (`python3 -m http.server`), не через `file://` (см. README).
 
+## Надёжность автообновления расписания — cron-job.org вместо GitHub `schedule:` (2026-08-27)
+
+`.github/workflows/update-schedule.yml` изначально запускался по встроенному
+`schedule:` (`cron: "0 1-16 * * *"`, потом сдвинули на `"13 1-16 * * *"`,
+чтобы не попадать в перегруженный "ровный час") — но и это не помогло:
+по факту из ~15 ожидаемых часовых запусков в сутки реально срабатывал
+в лучшем случае один-два. Это официально задокументированное поведение
+GitHub Actions — `schedule:`-триггер "best effort", при высокой нагрузке
+запуск может задержаться или **вообще не произойти**, без ошибки в
+логах (потому что джоба просто не стартует, писать не о чем).
+
+**Решение:** сам workflow и скрипт не тронуты — они у GitHub Actions
+отрабатывают без единой ошибки каждый раз, когда их реально запускают.
+Вместо `schedule:` теперь дёргает `workflow_dispatch` (та же кнопка
+"Run workflow") **внешний планировщик cron-job.org**, раз в час
+06:00–21:00 по Алматы:
+
+- POST на `https://api.github.com/repos/dafanasyevmedia/almaty-metro-app/actions/workflows/update-schedule.yml/dispatches`
+- Заголовки: `Authorization: Bearer <fine-grained PAT>` (только этот
+  репозиторий, права только Actions: write), `Accept:
+  application/vnd.github+json`, `Content-Type: application/json`
+- Тело: `{"ref":"main"}`
+- Успешный ответ — `204 No Content` (это не ошибка, у этого эндпоинта
+  просто нет тела ответа)
+
+**Токен истекает 2027-08-26 19:00:00 UTC (см. заголовок ответа
+`github-authentication-token-expiration`) — нужно будет пересоздать
+fine-grained token на GitHub и обновить его в настройках job на
+cron-job.org, иначе обновление расписания снова молча остановится.**
+Старый `schedule:` в workflow-файле оставили как бесплатный запасной
+вариант — иногда всё равно сработает сам, лишним не мешает.
+
 ## Откуда данные и как работает update_schedule.py
 
 Официальный сайт metroalmaty.kz красивый, но неудобный. Реальные данные
