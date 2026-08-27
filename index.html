@@ -249,6 +249,23 @@
   @keyframes doorCloseRight{ 0%{ transform:translateX(100%); } 35%, 60%{ transform:translateX(0); } }
   @keyframes doorsFadeOut{ 0%, 60%{ opacity:1; } 100%{ opacity:0; } }
 
+  /* Маскот выезжает с края карточки в последние PEEK_ARRIVE_SEC секунд перед
+     отправлением (см. tickCountdowns) — z-index НИЖЕ doors-fx (5), поэтому когда
+     поезд отправляется и играет анимация дверей, она перекрывает маскота сверху;
+     сам элемент удаляется в этот же момент (см. playDoorsFx), так что к моменту,
+     когда двери исчезают, маскота там уже нет. Карточка (.dir-card) обрезает
+     лишнее через overflow:hidden — этим и создаётся эффект "выезжает из-за края",
+     без необходимости рисовать дверь на самой картинке маскота. */
+  .peek-mascot-wait{
+    position:absolute; z-index:4; right:-6px; bottom:0; width:64px; height:auto;
+    pointer-events:none; transform:translateX(55px); opacity:0;
+    animation:peekArrive .45s ease-out forwards;
+  }
+  @keyframes peekArrive{
+    0%{ transform:translateX(55px); opacity:0; }
+    100%{ transform:translateX(0); opacity:1; }
+  }
+
   .dir-card .dir-label{ margin-bottom:8px; display:flex; flex-direction:column; align-items:center; gap:4px; }
   .dir-card .dir-arrow{ font-size:15px; font-weight:700; line-height:1; color:var(--accent); }
   .dir-card .dir-name{
@@ -997,10 +1014,10 @@
 
   var selectedSlug = null;
 
-  // Маскот в строке геолокации: подбадривает на двух самых "неловких" для
-  // пользователя моментах (идёт определение / геолокация не сработала, нужно
-  // выбрать станцию вручную) — как только станция найдена ("ok"/"far", там уже
-  // есть результат), прячем его обратно, не мешает дальнейшему чистому виду.
+  // Маскот в строке геолокации: подбадривает на моментах, где человеку нужно
+  // подождать или самому что-то выбрать (идёт определение / геолокация не
+  // сработала / далеко от Алматы) — как только станция найдена по геолокации
+  // рядом ("ok"), прячем его обратно, не мешает дальнейшему чистому виду.
   function setLocateStatusDOM(kind, html) {
     locateSpinner.style.display = kind === 'loading' ? '' : 'none';
     locateDot.style.display = kind === 'loading' ? 'none' : '';
@@ -1011,6 +1028,9 @@
       locateMascot.classList.add('show');
     } else if (kind === 'err') {
       locateMascot.src = 'mascot/searching.png';
+      locateMascot.classList.add('show');
+    } else if (kind === 'far') {
+      locateMascot.src = 'mascot/far.png';
       locateMascot.classList.add('show');
     } else {
       locateMascot.classList.remove('show');
@@ -1167,6 +1187,8 @@
     // станции, сравнивать их дальше нельзя (иначе ложно сыграет doors-fx).
     lastFirstMinutes.forward = null;
     lastFirstMinutes.backward = null;
+    peekChance.forward = { forMinutes: null, show: false };
+    peekChance.backward = { forMinutes: null, show: false };
 
     var order = STATIONS_BY_SLUG[selectedSlug].order;
     var toBM = STATIONS_BY_SLUG['BM'];
@@ -1255,7 +1277,22 @@
   // Сбрасывается при смене станции (selectStation) и при закрытии метро, чтобы не
   // сработать ложно на неродственных значениях.
   var lastFirstMinutes = { forward: null, backward: null };
+  // Секунд до отправления, начиная с которых маскот выезжает с края карточки
+  // (см. .peek-mascot-wait в CSS и вызов ниже в tickCountdowns).
+  var PEEK_ARRIVE_SEC = 5;
+  // Не каждое отправление — иначе не сюрприз, а рутина. Решение "покажется ли
+  // маскот" принимается один раз на каждый новый ожидаемый поезд (когда он
+  // становится "first"), а не каждый тик — иначе он мог бы то появиться, то
+  // исчезнуть посреди тех же пяти секунд из-за перебрасывания монетки заново.
+  var PEEK_MASCOT_CHANCE = 0.2;
+  var peekChance = { forward: { forMinutes: null, show: false }, backward: { forMinutes: null, show: false } };
   function playDoorsFx(cardEl) {
+    // Маскот, если успел выехать в последние секунды ожидания — убираем в тот же
+    // момент, когда начинают закрываться двери: визуально дверь "закрывается
+    // поверх него", а к моменту, когда сама дверь исчезнет, его уже не будет.
+    var waitingPeek = cardEl.querySelector('.peek-mascot-wait');
+    if (waitingPeek) waitingPeek.remove();
+
     var fx = document.createElement('div');
     fx.className = 'doors-fx';
     fx.innerHTML = '<div class="door left"></div><div class="door right"></div>';
@@ -1329,6 +1366,22 @@
             : Math.max(0, Math.min(1, mins / (longThreshold * 2)));
           cardEl.style.setProperty('--progress', 1 - remainingFraction);
           cardEl.classList.toggle('wait-pulse', tier === 'soon' && mins < WAIT_PULSE_SEC / 60);
+
+          // Решаем (один раз на этот конкретный поезд), выпадет ли в этот раз маскот.
+          if (peekChance[dirKey].forMinutes !== first.minutes) {
+            peekChance[dirKey] = { forMinutes: first.minutes, show: Math.random() < PEEK_MASCOT_CHANCE };
+          }
+          // Маскот выезжает с края в последние PEEK_ARRIVE_SEC секунд ожидания —
+          // только если выпало (см. выше), создаём один раз (проверяем, что его
+          // там ещё нет) и оставляем стоять, playDoorsFx уберёт его сам в момент
+          // отправления.
+          if (peekChance[dirKey].show && mins * 60 <= PEEK_ARRIVE_SEC && !cardEl.querySelector('.peek-mascot-wait')) {
+            var peekWait = document.createElement('img');
+            peekWait.className = 'peek-mascot-wait';
+            peekWait.src = 'mascot/peek.png';
+            peekWait.alt = '';
+            cardEl.appendChild(peekWait);
+          }
         }
       }
       if (elAfter) {
