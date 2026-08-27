@@ -521,7 +521,11 @@
         <input type="text" id="feedbackName" name="name" autocomplete="name" />
       </div>
       <div class="feedback-field">
-        <label for="feedbackEmail" id="feedbackEmailLabel">Почта (необязательно, если ждёте ответ)</label>
+        <label for="feedbackPhone" id="feedbackPhoneLabel">Телефон — WhatsApp/Telegram (необязательно)</label>
+        <input type="tel" id="feedbackPhone" name="phone" autocomplete="tel" />
+      </div>
+      <div class="feedback-field">
+        <label for="feedbackEmail" id="feedbackEmailLabel">Почта (необязательно)</label>
         <input type="email" id="feedbackEmail" name="email" autocomplete="email" />
       </div>
       <div class="feedback-field">
@@ -620,7 +624,8 @@
       feedbackTitle: 'Написать нам',
       feedbackIntro: 'Нашли ошибку в расписании или есть идея? Напишите — читаем всё.',
       feedbackNameLabel: 'Имя (необязательно)',
-      feedbackEmailLabel: 'Почта (необязательно, если ждёте ответ)',
+      feedbackPhoneLabel: 'Телефон — WhatsApp/Telegram (необязательно)',
+      feedbackEmailLabel: 'Почта (необязательно)',
       feedbackMessageLabel: 'Сообщение',
       feedbackSubmit: 'Отправить',
       feedbackSending: 'Отправляем…',
@@ -682,7 +687,8 @@
       feedbackTitle: 'Бізге жазыңыз',
       feedbackIntro: 'Кестеде қате таптыңыз ба немесе идеяңыз бар ма? Жазыңыз — бәрін оқимыз.',
       feedbackNameLabel: 'Аты-жөні (міндетті емес)',
-      feedbackEmailLabel: 'Пошта (жауап күтсеңіз, міндетті емес)',
+      feedbackPhoneLabel: 'Телефон — WhatsApp/Telegram (міндетті емес)',
+      feedbackEmailLabel: 'Пошта (міндетті емес)',
       feedbackMessageLabel: 'Хабарлама',
       feedbackSubmit: 'Жіберу',
       feedbackSending: 'Жіберілуде…',
@@ -744,7 +750,8 @@
       feedbackTitle: 'Send feedback',
       feedbackIntro: 'Found a schedule error or have an idea? Write to us — we read everything.',
       feedbackNameLabel: 'Name (optional)',
-      feedbackEmailLabel: 'Email (optional, if you want a reply)',
+      feedbackPhoneLabel: 'Phone — WhatsApp/Telegram (optional)',
+      feedbackEmailLabel: 'Email (optional)',
       feedbackMessageLabel: 'Message',
       feedbackSubmit: 'Send',
       feedbackSending: 'Sending…',
@@ -1552,6 +1559,7 @@
   feedbackForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var name = document.getElementById('feedbackName').value.trim();
+    var phone = document.getElementById('feedbackPhone').value.trim();
     var email = document.getElementById('feedbackEmail').value.trim();
     var message = document.getElementById('feedbackMessage').value.trim();
     var honey = feedbackForm.querySelector('[name="_honey"]').value;
@@ -1572,6 +1580,7 @@
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
         name: name || '(не указано)',
+        phone: phone || '(не указан)',
         email: email || '(не указана)',
         message: message,
         _subject: 'Обратная связь — Метро Алматы',
@@ -1804,6 +1813,7 @@
     document.getElementById('feedbackTitle').textContent = t('feedbackTitle');
     document.getElementById('feedbackIntro').textContent = t('feedbackIntro');
     document.getElementById('feedbackNameLabel').textContent = t('feedbackNameLabel');
+    document.getElementById('feedbackPhoneLabel').textContent = t('feedbackPhoneLabel');
     document.getElementById('feedbackEmailLabel').textContent = t('feedbackEmailLabel');
     document.getElementById('feedbackMessageLabel').textContent = t('feedbackMessageLabel');
     document.getElementById('feedbackSubmit').textContent = t('feedbackSubmit');
