@@ -305,6 +305,41 @@
 
   footer.meta{ text-align:center; color:var(--muted2); font-size:11px; padding:10px 16px 22px; line-height:1.7; font-weight:500; max-width:640px; margin:0 auto; }
 
+  .feedback-link{
+    display:block; text-align:center; margin:-12px auto 22px; font-size:11.5px;
+    color:var(--muted2); text-decoration:underline; text-underline-offset:2px;
+    background:none; border:none; cursor:pointer; font-family:inherit; padding:4px;
+  }
+  .feedback-link:hover{ color:var(--muted); }
+
+  .feedback-modal{
+    position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center;
+    background:oklch(0.05 0.01 255 / .6); padding:20px;
+  }
+  .feedback-card{
+    background:var(--card); border-radius:18px; padding:22px; max-width:380px; width:100%;
+    max-height:90vh; overflow-y:auto; position:relative;
+  }
+  .feedback-close{
+    position:absolute; top:12px; right:12px; background:none; border:none; color:var(--muted);
+    font-size:22px; line-height:1; cursor:pointer; padding:6px; font-family:inherit;
+  }
+  .feedback-card h2{ font-size:17px; margin:0 0 6px; padding-right:26px; color:var(--text); }
+  .feedback-card .feedback-intro{ font-size:13px; color:var(--muted); margin:0 0 16px; line-height:1.5; }
+  .feedback-field{ margin-bottom:12px; }
+  .feedback-field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:5px; font-weight:600; }
+  .feedback-field input, .feedback-field textarea{
+    width:100%; background:var(--bg); border:1px solid var(--border); border-radius:11px;
+    padding:10px 12px; color:var(--text); font-family:inherit; font-size:14px;
+  }
+  .feedback-field textarea{ min-height:90px; resize:vertical; }
+  .feedback-field input:focus, .feedback-field textarea:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .feedback-submit{ width:100%; margin-top:4px; padding:12px; font-size:14px; text-align:center; }
+  .feedback-submit:disabled{ opacity:.6; cursor:default; }
+  .feedback-status{ font-size:13px; margin-top:12px; text-align:center; line-height:1.5; }
+  .feedback-status.ok{ color:var(--success); }
+  .feedback-status.err{ color:var(--danger); }
+
   .sched-controls{ display:flex; gap:8px; margin-bottom:12px; }
   .sched-controls select{ margin-top:0; }
   .daytype-toggle{ display:flex; gap:6px; }
@@ -473,6 +508,32 @@
 </div>
 
 <footer class="meta" id="metaFooter">Загрузка данных…</footer>
+<button class="feedback-link" id="feedbackLink">Написать нам</button>
+
+<div class="feedback-modal" id="feedbackModal" style="display:none">
+  <div class="feedback-card">
+    <button class="feedback-close" id="feedbackClose" aria-label="Закрыть">×</button>
+    <h2 id="feedbackTitle">Написать нам</h2>
+    <p class="feedback-intro" id="feedbackIntro">Нашли ошибку в расписании или есть идея? Напишите — читаем всё.</p>
+    <form id="feedbackForm">
+      <div class="feedback-field">
+        <label for="feedbackName" id="feedbackNameLabel">Имя (необязательно)</label>
+        <input type="text" id="feedbackName" name="name" autocomplete="name" />
+      </div>
+      <div class="feedback-field">
+        <label for="feedbackEmail" id="feedbackEmailLabel">Почта (необязательно, если ждёте ответ)</label>
+        <input type="email" id="feedbackEmail" name="email" autocomplete="email" />
+      </div>
+      <div class="feedback-field">
+        <label for="feedbackMessage" id="feedbackMessageLabel">Сообщение</label>
+        <textarea id="feedbackMessage" name="message" required></textarea>
+      </div>
+      <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" />
+      <button type="submit" class="btn primary feedback-submit" id="feedbackSubmit">Отправить</button>
+      <div class="feedback-status" id="feedbackStatus" style="display:none"></div>
+    </form>
+  </div>
+</div>
 
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
@@ -555,6 +616,17 @@
       noDepartures: 'Нет отправлений (конечная станция или нет данных).',
       footerUpdated: function (date) { return 'Последнее обновление: ' + date + ' · источник metroalmaty.kz'; },
       footerStatic: 'Расписание статическое (не GPS-трекинг поездов), как и на официальном сайте',
+      feedbackLink: 'Написать нам',
+      feedbackTitle: 'Написать нам',
+      feedbackIntro: 'Нашли ошибку в расписании или есть идея? Напишите — читаем всё.',
+      feedbackNameLabel: 'Имя (необязательно)',
+      feedbackEmailLabel: 'Почта (необязательно, если ждёте ответ)',
+      feedbackMessageLabel: 'Сообщение',
+      feedbackSubmit: 'Отправить',
+      feedbackSending: 'Отправляем…',
+      feedbackSuccess: 'Спасибо, сообщение отправлено!',
+      feedbackError: 'Не получилось отправить. Попробуйте ещё раз чуть позже.',
+      feedbackEmptyError: 'Напишите текст сообщения.',
       aboutTab: 'О метро',
       aboutHistoryTitle: 'История',
       aboutHistoryText: 'Метро в Алматы работает с декабря 2011 года — первую очередь линии (7 станций) открыли после многолетней паузы, вызванной распадом СССР. Сеть расширяли постепенно: в 2015 году добавили «Сайран» и «Москву», в 2022-м — «Сарыарку» и «Б. Момышулы». Сейчас в системе 11 станций на одной линии, строительство продолжается в сторону будущей станции «Калкаман».',
@@ -606,6 +678,17 @@
       noDepartures: 'Рейстер жоқ (соңғы бекет немесе деректер жоқ).',
       footerUpdated: function (date) { return 'Соңғы жаңарту: ' + date + ' · дереккөзі metroalmaty.kz'; },
       footerStatic: 'Статикалық кесте (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай',
+      feedbackLink: 'Бізге жазыңыз',
+      feedbackTitle: 'Бізге жазыңыз',
+      feedbackIntro: 'Кестеде қате таптыңыз ба немесе идеяңыз бар ма? Жазыңыз — бәрін оқимыз.',
+      feedbackNameLabel: 'Аты-жөні (міндетті емес)',
+      feedbackEmailLabel: 'Пошта (жауап күтсеңіз, міндетті емес)',
+      feedbackMessageLabel: 'Хабарлама',
+      feedbackSubmit: 'Жіберу',
+      feedbackSending: 'Жіберілуде…',
+      feedbackSuccess: 'Рақмет, хабарлама жіберілді!',
+      feedbackError: 'Жіберу мүмкін болмады. Сәл кейін қайталап көріңіз.',
+      feedbackEmptyError: 'Хабарлама мәтінін жазыңыз.',
       aboutTab: 'Метро туралы',
       aboutHistoryTitle: 'Тарихы',
       aboutHistoryText: 'Алматы метросы 2011 жылдың желтоқсанынан бері жұмыс істейді — желінің бірінші кезегі (7 бекет) КСРО ыдырауынан кейінгі көпжылдық үзілістен соң ашылды. Желі бірте-бірте кеңейтілді: 2015 жылы «Сайран» мен «Мәскеу» қосылды, 2022 жылы — «Сарыарқа» мен «Б. Момышұлы». Қазір жүйеде бір желіде 11 бекет бар, құрылыс болашақтағы «Қалқаман» бекетіне қарай жалғасуда.',
@@ -657,6 +740,17 @@
       noDepartures: 'No departures (terminus station or no data).',
       footerUpdated: function (date) { return 'Last update: ' + date + ' · source metroalmaty.kz'; },
       footerStatic: 'Static schedule (not live GPS train tracking), same as on the official site',
+      feedbackLink: 'Send feedback',
+      feedbackTitle: 'Send feedback',
+      feedbackIntro: 'Found a schedule error or have an idea? Write to us — we read everything.',
+      feedbackNameLabel: 'Name (optional)',
+      feedbackEmailLabel: 'Email (optional, if you want a reply)',
+      feedbackMessageLabel: 'Message',
+      feedbackSubmit: 'Send',
+      feedbackSending: 'Sending…',
+      feedbackSuccess: 'Thanks, your message has been sent!',
+      feedbackError: 'Could not send it. Please try again in a bit.',
+      feedbackEmptyError: 'Please write a message.',
       aboutTab: 'About',
       aboutHistoryTitle: 'History',
       aboutHistoryText: 'Almaty Metro has been running since December 2011, when the first stretch of the line (7 stations) opened after decades of delay caused by the collapse of the USSR. The network has grown gradually: Sayran and Moskva stations were added in 2015, and Saryarqa and Bauyrjan Momyshuly in 2022. The system currently has 11 stations on a single line, with construction continuing toward the future Qalqaman station.',
@@ -1424,6 +1518,84 @@
     });
   });
 
+  /* ---------- Форма обратной связи ----------
+     Без бэкенда — POST через AJAX-эндпоинт FormSubmit.co прямо на почту
+     a-dima-v@yandex.kz. Важно: первое сообщение с нового FormSubmit-адреса
+     требует одного подтверждения по ссылке из письма-активации — иначе
+     дальнейшие отправки молча не будут доходить. Скрытое поле _honey —
+     простая защита от ботов (FormSubmit сам отбрасывает отправки, где оно
+     заполнено, настоящий пользователь его никогда не видит). */
+  var FEEDBACK_ENDPOINT = 'https://formsubmit.co/ajax/a-dima-v@yandex.kz';
+  var feedbackModal = document.getElementById('feedbackModal');
+  var feedbackForm = document.getElementById('feedbackForm');
+  var feedbackSubmitBtn = document.getElementById('feedbackSubmit');
+  var feedbackStatus = document.getElementById('feedbackStatus');
+
+  function openFeedback() {
+    feedbackModal.style.display = '';
+    feedbackStatus.style.display = 'none';
+    feedbackStatus.className = 'feedback-status';
+    trackEvent('feedback_open', {});
+  }
+  function closeFeedback() {
+    feedbackModal.style.display = 'none';
+  }
+  document.getElementById('feedbackLink').addEventListener('click', openFeedback);
+  document.getElementById('feedbackClose').addEventListener('click', closeFeedback);
+  feedbackModal.addEventListener('click', function (e) {
+    if (e.target === feedbackModal) closeFeedback(); // клик по тёмному фону, не по карточке
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && feedbackModal.style.display !== 'none') closeFeedback();
+  });
+
+  feedbackForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('feedbackName').value.trim();
+    var email = document.getElementById('feedbackEmail').value.trim();
+    var message = document.getElementById('feedbackMessage').value.trim();
+    var honey = feedbackForm.querySelector('[name="_honey"]').value;
+
+    if (!message) {
+      feedbackStatus.textContent = t('feedbackEmptyError');
+      feedbackStatus.className = 'feedback-status err';
+      feedbackStatus.style.display = '';
+      return;
+    }
+
+    feedbackSubmitBtn.disabled = true;
+    feedbackSubmitBtn.textContent = t('feedbackSending');
+    feedbackStatus.style.display = 'none';
+
+    fetch(FEEDBACK_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        name: name || '(не указано)',
+        email: email || '(не указана)',
+        message: message,
+        _subject: 'Обратная связь — Метро Алматы',
+        _honey: honey
+      })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('bad status');
+      feedbackStatus.textContent = t('feedbackSuccess');
+      feedbackStatus.className = 'feedback-status ok';
+      feedbackStatus.style.display = '';
+      trackEvent('feedback_submit', { status: 'ok' });
+      feedbackForm.reset();
+      setTimeout(closeFeedback, 1800);
+    }).catch(function () {
+      feedbackStatus.textContent = t('feedbackError');
+      feedbackStatus.className = 'feedback-status err';
+      feedbackStatus.style.display = '';
+      trackEvent('feedback_submit', { status: 'error' });
+    }).finally(function () {
+      feedbackSubmitBtn.disabled = false;
+      feedbackSubmitBtn.textContent = t('feedbackSubmit');
+    });
+  });
+
   /* ---------- Полное расписание ---------- */
   var fullStationSelect = document.getElementById('fullStationSelect');
   var fullDayType = null; // выставится после загрузки данных
@@ -1627,6 +1799,14 @@
     var schemeLink = document.getElementById('aboutSchemeLink');
     schemeLink.textContent = t('aboutSchemeLinkText');
     schemeLink.href = t('aboutSchemeUrl');
+
+    document.getElementById('feedbackLink').textContent = t('feedbackLink');
+    document.getElementById('feedbackTitle').textContent = t('feedbackTitle');
+    document.getElementById('feedbackIntro').textContent = t('feedbackIntro');
+    document.getElementById('feedbackNameLabel').textContent = t('feedbackNameLabel');
+    document.getElementById('feedbackEmailLabel').textContent = t('feedbackEmailLabel');
+    document.getElementById('feedbackMessageLabel').textContent = t('feedbackMessageLabel');
+    document.getElementById('feedbackSubmit').textContent = t('feedbackSubmit');
 
     if (STATIONS.length) {
       populateStationSelects();
