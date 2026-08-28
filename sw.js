@@ -18,6 +18,15 @@
  *
  * Версию CACHE_NAME нужно поднимать при заметных изменениях набора
  * закешированных файлов (activate удаляет все кеши с другим именем).
+ *
+ * Шрифты (fonts/*.woff2) — свои файлы, не Google Fonts CDN (см. <head>
+ * index.html) — поэтому отдельная логика на кросс-доменные шрифты тут не
+ * нужна: это обычные same-origin статичные файлы, precache/stale-while-
+ * revalidate уже их покрывает наравне с иконками. Раньше пытались кешировать
+ * Google Fonts налету через отдельный кеш и mode:'no-cors' — оказалось
+ * ненадёжно (гонка между регистрацией SW и самым первым запросом шрифта из
+ * <head> — то срабатывало, то нет), поэтому отказались от этого подхода
+ * целиком в пользу самостоятельного размещения файлов.
  */
 
 var CACHE_NAME = 'almaty-metro-v1';
@@ -49,7 +58,12 @@ var PRECACHE_URLS = [
   'mascot/far.png',
   'mascot/sleeping.png',
   'mascot/waving.png',
-  'mascot/peek.png'
+  'mascot/peek.png',
+  'fonts/unbounded-latin.woff2',
+  'fonts/unbounded-cyrillic.woff2',
+  'fonts/inter-latin.woff2',
+  'fonts/inter-cyrillic.woff2',
+  'fonts/inter-cyrillic-ext.woff2'
 ];
 
 self.addEventListener('install', function (event) {
@@ -154,7 +168,7 @@ self.addEventListener('fetch', function (event) {
   if (request.method !== 'GET') return; // POST формы обратной связи и т.п. не трогаем
 
   var url = new URL(request.url);
-  if (url.origin !== self.location.origin) return; // шрифты/GA/Telegram/FormSubmit — не наша забота
+  if (url.origin !== self.location.origin) return; // GA/Telegram/FormSubmit — не наша забота, свои шрифты уже same-origin
 
   if (isDataRequest(url)) {
     event.respondWith(networkFirst(request));

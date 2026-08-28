@@ -55,10 +55,45 @@
 <meta name="apple-mobile-web-app-title" content="Almaty Metro" />
 <link rel="manifest" href="site.webmanifest" />
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Шрифты — свои файлы (fonts/*.woff2), не Google Fonts CDN (2026-08-28).
+     Причина: офлайн (см. sw.js) кросс-доменный кеш шрифтов оказался
+     ненадёжным (гонка между регистрацией Service Worker и самым первым,
+     самым ранним запросом шрифта из <head> — то срабатывает, то нет), плюс
+     так на один внешний домен меньше вообще всегда (актуально у входа в
+     метро при слабом сигнале). Unbounded и Inter у Google — variable fonts:
+     один файл покрывает весь диапазон начертаний, поэтому весов в src не
+     указано — font-weight ниже задан диапазоном, а не одним числом.
+     Подмножества unicode-range — ровно те, что реально нужны интерфейсу
+     (см. CLAUDE.md "Свои файлы шрифтов"): latin (цифры/английский),
+     cyrillic (русский), и отдельно cyrillic-ext только для Inter — там
+     живут специфичные казахские буквы (ә/ғ/қ/ң/ө/ұ/ү), которых нет в
+     Unbounded (он и не используется для казахского текста, см. ниже). */
+  @font-face{
+    font-family:"Unbounded"; font-style:normal; font-weight:500 700; font-display:swap;
+    src:url("fonts/unbounded-latin.woff2") format("woff2");
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face{
+    font-family:"Unbounded"; font-style:normal; font-weight:500 700; font-display:swap;
+    src:url("fonts/unbounded-cyrillic.woff2") format("woff2");
+    unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
+  }
+  @font-face{
+    font-family:"Inter"; font-style:normal; font-weight:400 700; font-display:swap;
+    src:url("fonts/inter-latin.woff2") format("woff2");
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face{
+    font-family:"Inter"; font-style:normal; font-weight:400 700; font-display:swap;
+    src:url("fonts/inter-cyrillic.woff2") format("woff2");
+    unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
+  }
+  @font-face{
+    font-family:"Inter"; font-style:normal; font-weight:400 700; font-display:swap;
+    src:url("fonts/inter-cyrillic-ext.woff2") format("woff2");
+    unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F;
+  }
   :root{
     --bg:oklch(0.16 0.012 255); --card:oklch(0.20 0.014 255); --card2:oklch(0.24 0.016 255);
     --text:oklch(0.95 0.006 255); --muted:oklch(0.62 0.02 255); --muted2:oklch(0.5 0.015 255);
