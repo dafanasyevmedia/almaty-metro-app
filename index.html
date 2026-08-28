@@ -295,6 +295,15 @@
   }
   .disclaimer .icon{ display:none; }
 
+  /* Показывается, только если Service Worker реально отдал JSON из офлайн-кеша
+     (см. sw.js + X-From-SW-Cache в fetchJSON ниже) — не просто "давно не
+     обновлялось", а именно "прямо сейчас нет сети". */
+  .offline-note{
+    display:flex; align-items:flex-start; background:var(--card); border:1px solid var(--warn);
+    border-radius:14px; padding:11px 14px; margin:0 auto 12px;
+    max-width:640px; width:calc(100% - 32px); font-size:12.5px; color:var(--warn); line-height:1.45; font-weight:600;
+  }
+
   .about-h2{ font-size:14px; font-weight:600; margin:0 0 10px; letter-spacing:-.2px; }
   .about-text{ font-size:13.5px; color:var(--muted); line-height:1.6; margin:0; }
   .about-list{ margin:0; padding:0; list-style:none; }
@@ -502,6 +511,10 @@
   </section>
 </main>
 
+<div class="offline-note" id="offlineNote" style="display:none">
+  <span id="offlineNoteText">Нет соединения — показаны сохранённые данные</span>
+</div>
+
 <div class="disclaimer">
   <span class="icon">ℹ️</span>
   <span id="scheduleDisclaimer">Поезда чаще всего отправляются ровно по расписанию, указанному на этом сайте. Но иногда метро добавляет дополнительные составы.</span>
@@ -560,6 +573,17 @@
   if (window.location.hostname === 'dafanasyevmedia.github.io') {
     document.getElementById('movedNotice').style.display = '';
     return;
+  }
+
+  // Офлайн-доступ (см. sw.js + CLAUDE.md) — регистрируем после полной загрузки
+  // страницы, чтобы не соревноваться за сеть с основными ресурсами. Внутри
+  // самого Telegram (WebView) Service Worker может быть недоступен вовсе —
+  // особенно на iOS — тогда просто ничего не произойдёт, приложение работает
+  // как обычно, просто без офлайн-кеша.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* нет офлайна — не критично */ });
+    });
   }
 
   /* ---------- Telegram Mini App bootstrap ---------- */
@@ -632,6 +656,7 @@
       feedbackSuccess: 'Спасибо, сообщение отправлено!',
       feedbackError: 'Не получилось отправить. Попробуйте ещё раз чуть позже.',
       feedbackEmptyError: 'Напишите текст сообщения.',
+      offlineNote: 'Нет соединения — показаны сохранённые данные',
       aboutTab: 'О метро',
       aboutHistoryTitle: 'История',
       aboutHistoryText: 'Метро в Алматы работает с декабря 2011 года — первую очередь линии (7 станций) открыли после многолетней паузы, вызванной распадом СССР. Сеть расширяли постепенно: в 2015 году добавили «Сайран» и «Москву», в 2022-м — «Сарыарку» и «Б. Момышулы». Сейчас в системе 11 станций на одной линии, строительство продолжается в сторону будущей станции «Калкаман».',
@@ -695,6 +720,7 @@
       feedbackSuccess: 'Рақмет, хабарлама жіберілді!',
       feedbackError: 'Жіберу мүмкін болмады. Сәл кейін қайталап көріңіз.',
       feedbackEmptyError: 'Хабарлама мәтінін жазыңыз.',
+      offlineNote: 'Байланыс жоқ — сақталған деректер көрсетілді',
       aboutTab: 'Метро туралы',
       aboutHistoryTitle: 'Тарихы',
       aboutHistoryText: 'Алматы метросы 2011 жылдың желтоқсанынан бері жұмыс істейді — желінің бірінші кезегі (7 бекет) КСРО ыдырауынан кейінгі көпжылдық үзілістен соң ашылды. Желі бірте-бірте кеңейтілді: 2015 жылы «Сайран» мен «Мәскеу» қосылды, 2022 жылы — «Сарыарқа» мен «Б. Момышұлы». Қазір жүйеде бір желіде 11 бекет бар, құрылыс болашақтағы «Қалқаман» бекетіне қарай жалғасуда.',
@@ -758,6 +784,7 @@
       feedbackSuccess: 'Thanks, your message has been sent!',
       feedbackError: 'Could not send it. Please try again in a bit.',
       feedbackEmptyError: 'Please write a message.',
+      offlineNote: 'No connection — showing saved data',
       aboutTab: 'About',
       aboutHistoryTitle: 'History',
       aboutHistoryText: 'Almaty Metro has been running since December 2011, when the first stretch of the line (7 stations) opened after decades of delay caused by the collapse of the USSR. The network has grown gradually: Sayran and Moskva stations were added in 2015, and Saryarqa and Bauyrjan Momyshuly in 2022. The system currently has 11 stations on a single line, with construction continuing toward the future Qalqaman station.',
@@ -1817,6 +1844,7 @@
     document.getElementById('feedbackEmailLabel').textContent = t('feedbackEmailLabel');
     document.getElementById('feedbackMessageLabel').textContent = t('feedbackMessageLabel');
     document.getElementById('feedbackSubmit').textContent = t('feedbackSubmit');
+    document.getElementById('offlineNoteText').textContent = t('offlineNote');
 
     if (STATIONS.length) {
       populateStationSelects();
@@ -1850,10 +1878,22 @@
   applyLanguage(currentLang);
 
   /* ---------- Загрузка данных ---------- */
+  // Если Service Worker (sw.js) не смог достучаться до сети и отдал JSON из
+  // офлайн-кеша — он помечает ответ заголовком X-From-SW-Cache. Отличаем это
+  // от обычного "давно не обновлялось" (когда сеть есть, просто джоба давно
+  // не запускалась) — там заголовка не будет, а generated_at всё равно может
+  // быть старым, это два разных, независимых случая.
+  var dataFromOfflineCache = false;
+  function fetchJSON(url) {
+    return fetch(url).then(function (r) {
+      if (r.headers.get('X-From-SW-Cache') === '1') dataFromOfflineCache = true;
+      return r.json();
+    });
+  }
   Promise.all([
-    fetch('data/stations.json').then(function (r) { return r.json(); }),
-    fetch('data/schedule.json').then(function (r) { return r.json(); }),
-    fetch('data/holidays.json').then(function (r) { return r.json(); }).catch(function () { return { dates: [], workingWeekends: [] }; })
+    fetchJSON('data/stations.json'),
+    fetchJSON('data/schedule.json'),
+    fetchJSON('data/holidays.json').catch(function () { return { dates: [], workingWeekends: [] }; })
   ]).then(function (results) {
     STATIONS = results[0].slice().sort(function (a,b) { return a.order - b.order; });
     SCHEDULE = results[1];
@@ -1871,6 +1911,7 @@
     fullStationSelect.value = 'RMBK';
 
     renderFooter();
+    document.getElementById('offlineNote').style.display = dataFromOfflineCache ? '' : 'none';
 
     // геолокация
     if (!tryTelegramLocation()) tryBrowserGeolocation();
