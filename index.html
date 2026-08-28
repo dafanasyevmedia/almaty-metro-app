@@ -142,7 +142,11 @@
   .brand{ display:flex; align-items:center; gap:9px; }
   .logo-mark{ width:28px; height:28px; flex:none; display:block; object-fit:contain; }
   header h1{ font-size:15px; margin:0; font-weight:600; letter-spacing:-.2px; color:var(--text); }
-  header p{ display:none; }
+
+  #appSubtitle{
+    max-width:640px; margin:0 auto; padding:2px 16px 14px;
+    font-size:12.5px; color:var(--muted); font-weight:500;
+  }
 
   .lang-toggle{ display:inline-flex; gap:3px; background:var(--card2); border-radius:10px; padding:3px; }
   .lang-btn{
@@ -210,12 +214,6 @@
   .field{ margin-bottom:14px; }
   .field:last-of-type{ margin-bottom:0; }
   .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:2px; }
-  .wtg-origin{ font-size:14px; color:var(--text); line-height:1.5; }
-  .wtg-origin b{ font-weight:700; }
-  .wtg-origin-change{
-    background:none; border:none; color:var(--accent); font-family:inherit; font-size:12.5px;
-    font-weight:700; padding:0; margin-left:6px; cursor:pointer; text-decoration:underline;
-  }
 
   .result{ display:none; }
   .result.show{ display:block; }
@@ -230,6 +228,7 @@
   }
   .result.fail .result-countdown{ color:var(--danger); font-size:22px; }
   .result-sub{ font-size:13px; color:var(--muted); margin-top:10px; line-height:1.5; }
+  .result-countdown img.wtg-taxi-mascot{ width:64px; height:64px; object-fit:contain; }
 
   .route-toggle{
     display:flex; align-items:center; justify-content:center; gap:6px; width:100%; margin-top:14px;
@@ -250,9 +249,8 @@
     vertical-align:2px; line-height:1.3;
   }
   .tab-btn[data-tab="whentogo"]::before{
-    content:''; border-radius:50%; border:2px solid currentColor;
-    background-image:linear-gradient(currentColor, currentColor), linear-gradient(currentColor, currentColor);
-    background-size:1.4px 5px, 4.5px 1.4px; background-position:center 3px, 8.5px 8px; background-repeat:no-repeat;
+    -webkit-mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTExIDJDOS4wMjIxOCAyIDcuMDg4NzkgMi41ODY0OSA1LjQ0NDI5IDMuNjg1M0MzLjc5OTggNC43ODQxMiAyLjUxODA4IDYuMzQ1OSAxLjc2MTIgOC4xNzMxN0MxLjAwNDMzIDEwLjAwMDQgMC44MDYyOTIgMTIuMDExMSAxLjE5MjE0IDEzLjk1MDlDMS41NzggMTUuODkwNyAyLjUzMDQgMTcuNjcyNSAzLjkyODkzIDE5LjA3MTFDNS4zMjc0NSAyMC40Njk2IDcuMTA5MjggMjEuNDIyIDkuMDQ5MDkgMjEuODA3OUMxMC45ODg5IDIyLjE5MzcgMTIuOTk5NiAyMS45OTU3IDE0LjgyNjggMjEuMjM4OEMxNi42NTQxIDIwLjQ4MTkgMTguMjE1OSAxOS4yMDAyIDE5LjMxNDcgMTcuNTU1N0MyMC40MTM1IDE1LjkxMTIgMjEgMTMuOTc3OCAyMSAxMkMyMSAxMC42ODY4IDIwLjc0MTMgOS4zODY0MiAyMC4yMzg4IDguMTczMTdDMTkuNzM2MiA2Ljk1OTkxIDE4Ljk5OTYgNS44NTc1MiAxOC4wNzExIDQuOTI4OTNDMTcuMTQyNSA0LjAwMDM1IDE2LjA0MDEgMy4yNjM3NSAxNC44MjY4IDIuNzYxMkMxMy42MTM2IDIuMjU4NjYgMTIuMzEzMiAyIDExIDJWMlpNMTEgMjBDOS40MTc3NSAyMCA3Ljg3MTAzIDE5LjUzMDggNi41NTU0MyAxOC42NTE4QzUuMjM5ODQgMTcuNzcyNyA0LjIxNDQ2IDE2LjUyMzMgMy42MDg5NiAxNS4wNjE1QzMuMDAzNDYgMTMuNTk5NyAyLjg0NTAzIDExLjk5MTEgMy4xNTM3MSAxMC40MzkzQzMuNDYyNCA4Ljg4NzQzIDQuMjI0MzIgNy40NjE5NyA1LjM0MzE0IDYuMzQzMTVDNi40NjE5NiA1LjIyNDMzIDcuODg3NDMgNC40NjI0IDkuNDM5MjcgNC4xNTM3MkMxMC45OTExIDMuODQ1MDQgMTIuNTk5NyA0LjAwMzQ2IDE0LjA2MTUgNC42MDg5NkMxNS41MjMzIDUuMjE0NDcgMTYuNzcyNyA2LjIzOTg0IDE3LjY1MTggNy41NTU0NEMxOC41MzA4IDguODcxMDMgMTkgMTAuNDE3NyAxOSAxMkMxOSAxNC4xMjE3IDE4LjE1NzEgMTYuMTU2NiAxNi42NTY5IDE3LjY1NjlDMTUuMTU2NiAxOS4xNTcxIDEzLjEyMTcgMjAgMTEgMjBWMjBaTTEyIDExLjkzVjdDMTIgNi43MzQ3OCAxMS44OTQ2IDYuNDgwNDMgMTEuNzA3MSA2LjI5Mjg5QzExLjUxOTYgNi4xMDUzNiAxMS4yNjUyIDYgMTEgNkMxMC43MzQ4IDYgMTAuNDgwNCA2LjEwNTM2IDEwLjI5MjkgNi4yOTI4OUMxMC4xMDU0IDYuNDgwNDMgMTAgNi43MzQ3OCAxMCA3VjEyQzEwIDEyIDEwIDEyLjA3IDEwIDEyLjExQzkuOTc1MzkgMTIuMzEzMyAxMC4wMTM4IDEyLjUxOTIgMTAuMTEgMTIuN0wxMS42MSAxNS4zQzExLjc0MjYgMTUuNTMwNyAxMS45NjE0IDE1LjY5OTMgMTIuMjE4NCAxNS43Njg3QzEyLjQ3NTMgMTUuODM4MSAxMi43NDkzIDE1LjgwMjYgMTIuOTggMTUuNjdDMTMuMjEwNyAxNS41Mzc0IDEzLjM3OTMgMTUuMzE4NiAxMy40NDg3IDE1LjA2MTZDMTMuNTE4MSAxNC44MDQ3IDEzLjQ4MjYgMTQuNTMwNyAxMy4zNSAxNC4zTDEyIDExLjkzWiIgZmlsbD0iYmxhY2siLz4KPC9zdmc+Cg==');
+    mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTExIDJDOS4wMjIxOCAyIDcuMDg4NzkgMi41ODY0OSA1LjQ0NDI5IDMuNjg1M0MzLjc5OTggNC43ODQxMiAyLjUxODA4IDYuMzQ1OSAxLjc2MTIgOC4xNzMxN0MxLjAwNDMzIDEwLjAwMDQgMC44MDYyOTIgMTIuMDExMSAxLjE5MjE0IDEzLjk1MDlDMS41NzggMTUuODkwNyAyLjUzMDQgMTcuNjcyNSAzLjkyODkzIDE5LjA3MTFDNS4zMjc0NSAyMC40Njk2IDcuMTA5MjggMjEuNDIyIDkuMDQ5MDkgMjEuODA3OUMxMC45ODg5IDIyLjE5MzcgMTIuOTk5NiAyMS45OTU3IDE0LjgyNjggMjEuMjM4OEMxNi42NTQxIDIwLjQ4MTkgMTguMjE1OSAxOS4yMDAyIDE5LjMxNDcgMTcuNTU1N0MyMC40MTM1IDE1LjkxMTIgMjEgMTMuOTc3OCAyMSAxMkMyMSAxMC42ODY4IDIwLjc0MTMgOS4zODY0MiAyMC4yMzg4IDguMTczMTdDMTkuNzM2MiA2Ljk1OTkxIDE4Ljk5OTYgNS44NTc1MiAxOC4wNzExIDQuOTI4OTNDMTcuMTQyNSA0LjAwMDM1IDE2LjA0MDEgMy4yNjM3NSAxNC44MjY4IDIuNzYxMkMxMy42MTM2IDIuMjU4NjYgMTIuMzEzMiAyIDExIDJWMlpNMTEgMjBDOS40MTc3NSAyMCA3Ljg3MTAzIDE5LjUzMDggNi41NTU0MyAxOC42NTE4QzUuMjM5ODQgMTcuNzcyNyA0LjIxNDQ2IDE2LjUyMzMgMy42MDg5NiAxNS4wNjE1QzMuMDAzNDYgMTMuNTk5NyAyLjg0NTAzIDExLjk5MTEgMy4xNTM3MSAxMC40MzkzQzMuNDYyNCA4Ljg4NzQzIDQuMjI0MzIgNy40NjE5NyA1LjM0MzE0IDYuMzQzMTVDNi40NjE5NiA1LjIyNDMzIDcuODg3NDMgNC40NjI0IDkuNDM5MjcgNC4xNTM3MkMxMC45OTExIDMuODQ1MDQgMTIuNTk5NyA0LjAwMzQ2IDE0LjA2MTUgNC42MDg5NkMxNS41MjMzIDUuMjE0NDcgMTYuNzcyNyA2LjIzOTg0IDE3LjY1MTggNy41NTU0NEMxOC41MzA4IDguODcxMDMgMTkgMTAuNDE3NyAxOSAxMkMxOSAxNC4xMjE3IDE4LjE1NzEgMTYuMTU2NiAxNi42NTY5IDE3LjY1NjlDMTUuMTU2NiAxOS4xNTcxIDEzLjEyMTcgMjAgMTEgMjBWMjBaTTEyIDExLjkzVjdDMTIgNi43MzQ3OCAxMS44OTQ2IDYuNDgwNDMgMTEuNzA3MSA2LjI5Mjg5QzExLjUxOTYgNi4xMDUzNiAxMS4yNjUyIDYgMTEgNkMxMC43MzQ4IDYgMTAuNDgwNCA2LjEwNTM2IDEwLjI5MjkgNi4yOTI4OUMxMC4xMDU0IDYuNDgwNDMgMTAgNi43MzQ3OCAxMCA3VjEyQzEwIDEyIDEwIDEyLjA3IDEwIDEyLjExQzkuOTc1MzkgMTIuMzEzMyAxMC4wMTM4IDEyLjUxOTIgMTAuMTEgMTIuN0wxMS42MSAxNS4zQzExLjc0MjYgMTUuNTMwNyAxMS45NjE0IDE1LjY5OTMgMTIuMjE4NCAxNS43Njg3QzEyLjQ3NTMgMTUuODM4MSAxMi43NDkzIDE1LjgwMjYgMTIuOTggMTUuNjdDMTMuMjEwNyAxNS41Mzc0IDEzLjM3OTMgMTUuMzE4NiAxMy40NDg3IDE1LjA2MTZDMTMuNTE4MSAxNC44MDQ3IDEzLjQ4MjYgMTQuNTMwNyAxMy4zNSAxNC4zTDEyIDExLjkzWiIgZmlsbD0iYmxhY2siLz4KPC9zdmc+Cg==');
   }
 
   .station-title{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:14px;}
@@ -474,16 +472,26 @@
     font-family:"Inter",sans-serif; font-size:10.5px; font-weight:600; cursor:pointer; border-radius:12px;
   }
   .tab-btn.active{ color:var(--accent); }
-  .tab-btn::before{ width:16px; height:16px; box-sizing:border-box; }
-  .tab-btn[data-tab="nearest"]::before{ content:''; border-radius:50%; border:2px solid currentColor; }
+  /* Иконки вкладок — SVG-маски (icons/*.svg), однотонные, красятся через
+     currentColor: неактивная вкладка серая, активная — зелёная, без лишних
+     файлов-запросов (зашиты как data-URI, доступны и офлайн через SW). */
+  .tab-btn::before{
+    content:''; width:19px; height:19px; box-sizing:border-box; background-color:currentColor;
+    -webkit-mask-size:contain; mask-size:contain;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    -webkit-mask-position:center; mask-position:center;
+  }
+  .tab-btn[data-tab="nearest"]::before{
+    -webkit-mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE0IDkuNDVIMTNWOC40NUMxMyA4LjE4NDc4IDEyLjg5NDYgNy45MzA0MyAxMi43MDcxIDcuNzQyODlDMTIuNTE5NiA3LjU1NTM2IDEyLjI2NTIgNy40NSAxMiA3LjQ1QzExLjczNDggNy40NSAxMS40ODA0IDcuNTU1MzYgMTEuMjkyOSA3Ljc0Mjg5QzExLjEwNTQgNy45MzA0MyAxMSA4LjE4NDc4IDExIDguNDVWOS40NUgxMEM5LjczNDc4IDkuNDUgOS40ODA0MyA5LjU1NTM2IDkuMjkyODkgOS43NDI4OUM5LjEwNTM2IDkuOTMwNDMgOSAxMC4xODQ4IDkgMTAuNDVDOSAxMC43MTUyIDkuMTA1MzYgMTAuOTY5NiA5LjI5Mjg5IDExLjE1NzFDOS40ODA0MyAxMS4zNDQ2IDkuNzM0NzggMTEuNDUgMTAgMTEuNDVIMTFWMTIuNDVDMTEgMTIuNzE1MiAxMS4xMDU0IDEyLjk2OTYgMTEuMjkyOSAxMy4xNTcxQzExLjQ4MDQgMTMuMzQ0NiAxMS43MzQ4IDEzLjQ1IDEyIDEzLjQ1QzEyLjI2NTIgMTMuNDUgMTIuNTE5NiAxMy4zNDQ2IDEyLjcwNzEgMTMuMTU3MUMxMi44OTQ2IDEyLjk2OTYgMTMgMTIuNzE1MiAxMyAxMi40NVYxMS40NUgxNEMxNC4yNjUyIDExLjQ1IDE0LjUxOTYgMTEuMzQ0NiAxNC43MDcxIDExLjE1NzFDMTQuODk0NiAxMC45Njk2IDE1IDEwLjcxNTIgMTUgMTAuNDVDMTUgMTAuMTg0OCAxNC44OTQ2IDkuOTMwNDMgMTQuNzA3MSA5Ljc0Mjg5QzE0LjUxOTYgOS41NTUzNiAxNC4yNjUyIDkuNDUgMTQgOS40NVpNMjAuNDYgOS42M0MyMC4zMzA0IDguMjcxODMgMTkuODc1NyA2Ljk2NDgyIDE5LjEzNDQgNS44MTk0MkMxOC4zOTMxIDQuNjc0MDIgMTcuMzg3IDMuNzIzODkgMTYuMjAxMSAzLjA0OTMyQzE1LjAxNTIgMi4zNzQ3NSAxMy42ODQzIDEuOTk1NTYgMTIuMzIxIDEuOTQzNzlDMTAuOTU3NiAxLjg5MjAyIDkuNjAxODMgMi4xNjkyIDguMzY4MTggMi43NTE5QzcuMTM0NTMgMy4zMzQ1OSA2LjA1OTI3IDQuMjA1NjkgNS4yMzMyNyA1LjI5MTU4QzQuNDA3MjcgNi4zNzc0NyAzLjg1NDc5IDcuNjQ2MjMgMy42MjI1MyA4Ljk5MDY2QzMuMzkwMjcgMTAuMzM1MSAzLjQ4NTA1IDExLjcxNTcgMy44OTg4NiAxMy4wMTU3QzQuMzEyNjcgMTQuMzE1OCA1LjAzMzM1IDE1LjQ5NzIgNiAxNi40NkwxMS4zIDIxLjc3QzExLjM5MyAyMS44NjM3IDExLjUwMzYgMjEuOTM4MSAxMS42MjU0IDIxLjk4ODlDMTEuNzQ3MyAyMi4wMzk3IDExLjg3OCAyMi4wNjU4IDEyLjAxIDIyLjA2NThDMTIuMTQyIDIyLjA2NTggMTIuMjcyNyAyMi4wMzk3IDEyLjM5NDYgMjEuOTg4OUMxMi41MTY0IDIxLjkzODEgMTIuNjI3IDIxLjg2MzcgMTIuNzIgMjEuNzdMMTggMTYuNDZDMTguODkxMiAxNS41NzU1IDE5LjU3NDMgMTQuNTAzNiAxOS45OTk4IDEzLjMyMjNDMjAuNDI1MyAxMi4xNDA5IDIwLjU4MjUgMTAuODc5NyAyMC40NiA5LjYzVjkuNjNaTTE2LjYgMTUuMDVMMTIgMTkuNjVMNy40IDE1LjA1QzYuNzIyMDkgMTQuMzcyMSA2LjIwMjggMTMuNTUyMyA1Ljg3OTQ3IDEyLjY0OThDNS41NTYxMyAxMS43NDcyIDUuNDM2NzkgMTAuNzg0MiA1LjUzIDkuODNDNS42MjM4MiA4Ljg2MTEgNS45MzE3NiA3LjkyNTE2IDYuNDMxNTcgNy4wODk4NEM2LjkzMTM4IDYuMjU0NTIgNy42MTA1NiA1LjU0MDcxIDguNDIgNUM5LjQ4MDk1IDQuMjk1MjMgMTAuNzI2MyAzLjkxOTI5IDEyIDMuOTE5MjlDMTMuMjczNyAzLjkxOTI5IDE0LjUxOTEgNC4yOTUyMyAxNS41OCA1QzE2LjM4NyA1LjUzODYyIDE3LjA2NDcgNi4yNDkyOCAxNy41NjQ0IDcuMDgwOTRDMTguMDY0IDcuOTEyNTkgMTguMzczMyA4Ljg0NDYgMTguNDcgOS44MUMxOC41NjYzIDEwLjc2NzQgMTguNDQ4NCAxMS43MzQzIDE4LjEyNSAxMi42NDA1QzE3LjgwMTYgMTMuNTQ2OCAxNy4yODA3IDE0LjM2OTggMTYuNiAxNS4wNVYxNS4wNVoiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=');
+    mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE0IDkuNDVIMTNWOC40NUMxMyA4LjE4NDc4IDEyLjg5NDYgNy45MzA0MyAxMi43MDcxIDcuNzQyODlDMTIuNTE5NiA3LjU1NTM2IDEyLjI2NTIgNy40NSAxMiA3LjQ1QzExLjczNDggNy40NSAxMS40ODA0IDcuNTU1MzYgMTEuMjkyOSA3Ljc0Mjg5QzExLjEwNTQgNy45MzA0MyAxMSA4LjE4NDc4IDExIDguNDVWOS40NUgxMEM5LjczNDc4IDkuNDUgOS40ODA0MyA5LjU1NTM2IDkuMjkyODkgOS43NDI4OUM5LjEwNTM2IDkuOTMwNDMgOSAxMC4xODQ4IDkgMTAuNDVDOSAxMC43MTUyIDkuMTA1MzYgMTAuOTY5NiA5LjI5Mjg5IDExLjE1NzFDOS40ODA0MyAxMS4zNDQ2IDkuNzM0NzggMTEuNDUgMTAgMTEuNDVIMTFWMTIuNDVDMTEgMTIuNzE1MiAxMS4xMDU0IDEyLjk2OTYgMTEuMjkyOSAxMy4xNTcxQzExLjQ4MDQgMTMuMzQ0NiAxMS43MzQ4IDEzLjQ1IDEyIDEzLjQ1QzEyLjI2NTIgMTMuNDUgMTIuNTE5NiAxMy4zNDQ2IDEyLjcwNzEgMTMuMTU3MUMxMi44OTQ2IDEyLjk2OTYgMTMgMTIuNzE1MiAxMyAxMi40NVYxMS40NUgxNEMxNC4yNjUyIDExLjQ1IDE0LjUxOTYgMTEuMzQ0NiAxNC43MDcxIDExLjE1NzFDMTQuODk0NiAxMC45Njk2IDE1IDEwLjcxNTIgMTUgMTAuNDVDMTUgMTAuMTg0OCAxNC44OTQ2IDkuOTMwNDMgMTQuNzA3MSA5Ljc0Mjg5QzE0LjUxOTYgOS41NTUzNiAxNC4yNjUyIDkuNDUgMTQgOS40NVpNMjAuNDYgOS42M0MyMC4zMzA0IDguMjcxODMgMTkuODc1NyA2Ljk2NDgyIDE5LjEzNDQgNS44MTk0MkMxOC4zOTMxIDQuNjc0MDIgMTcuMzg3IDMuNzIzODkgMTYuMjAxMSAzLjA0OTMyQzE1LjAxNTIgMi4zNzQ3NSAxMy42ODQzIDEuOTk1NTYgMTIuMzIxIDEuOTQzNzlDMTAuOTU3NiAxLjg5MjAyIDkuNjAxODMgMi4xNjkyIDguMzY4MTggMi43NTE5QzcuMTM0NTMgMy4zMzQ1OSA2LjA1OTI3IDQuMjA1NjkgNS4yMzMyNyA1LjI5MTU4QzQuNDA3MjcgNi4zNzc0NyAzLjg1NDc5IDcuNjQ2MjMgMy42MjI1MyA4Ljk5MDY2QzMuMzkwMjcgMTAuMzM1MSAzLjQ4NTA1IDExLjcxNTcgMy44OTg4NiAxMy4wMTU3QzQuMzEyNjcgMTQuMzE1OCA1LjAzMzM1IDE1LjQ5NzIgNiAxNi40NkwxMS4zIDIxLjc3QzExLjM5MyAyMS44NjM3IDExLjUwMzYgMjEuOTM4MSAxMS42MjU0IDIxLjk4ODlDMTEuNzQ3MyAyMi4wMzk3IDExLjg3OCAyMi4wNjU4IDEyLjAxIDIyLjA2NThDMTIuMTQyIDIyLjA2NTggMTIuMjcyNyAyMi4wMzk3IDEyLjM5NDYgMjEuOTg4OUMxMi41MTY0IDIxLjkzODEgMTIuNjI3IDIxLjg2MzcgMTIuNzIgMjEuNzdMMTggMTYuNDZDMTguODkxMiAxNS41NzU1IDE5LjU3NDMgMTQuNTAzNiAxOS45OTk4IDEzLjMyMjNDMjAuNDI1MyAxMi4xNDA5IDIwLjU4MjUgMTAuODc5NyAyMC40NiA5LjYzVjkuNjNaTTE2LjYgMTUuMDVMMTIgMTkuNjVMNy40IDE1LjA1QzYuNzIyMDkgMTQuMzcyMSA2LjIwMjggMTMuNTUyMyA1Ljg3OTQ3IDEyLjY0OThDNS41NTYxMyAxMS43NDcyIDUuNDM2NzkgMTAuNzg0MiA1LjUzIDkuODNDNS42MjM4MiA4Ljg2MTEgNS45MzE3NiA3LjkyNTE2IDYuNDMxNTcgNy4wODk4NEM2LjkzMTM4IDYuMjU0NTIgNy42MTA1NiA1LjU0MDcxIDguNDIgNUM5LjQ4MDk1IDQuMjk1MjMgMTAuNzI2MyAzLjkxOTI5IDEyIDMuOTE5MjlDMTMuMjczNyAzLjkxOTI5IDE0LjUxOTEgNC4yOTUyMyAxNS41OCA1QzE2LjM4NyA1LjUzODYyIDE3LjA2NDcgNi4yNDkyOCAxNy41NjQ0IDcuMDgwOTRDMTguMDY0IDcuOTEyNTkgMTguMzczMyA4Ljg0NDYgMTguNDcgOS44MUMxOC41NjYzIDEwLjc2NzQgMTguNDQ4NCAxMS43MzQzIDE4LjEyNSAxMi42NDA1QzE3LjgwMTYgMTMuNTQ2OCAxNy4yODA3IDE0LjM2OTggMTYuNiAxNS4wNVYxNS4wNVoiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=');
+  }
   .tab-btn[data-tab="full"]::before{
-    content:''; border-radius:3px;
-    background-image:linear-gradient(currentColor 0 2px, transparent 2px 4px);
-    background-size:100% 4px; background-repeat:repeat-y;
+    -webkit-mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMuNzEgMTYuMjlDMy42MTQ5IDE2LjE5OSAzLjUwMjc2IDE2LjEyNzYgMy4zOCAxNi4wOEMzLjEzNjU0IDE1Ljk4IDIuODYzNDYgMTUuOTggMi42MiAxNi4wOEMyLjQ5NzI1IDE2LjEyNzYgMi4zODUxMSAxNi4xOTkgMi4yOSAxNi4yOUMyLjE5ODk2IDE2LjM4NTEgMi4xMjc2IDE2LjQ5NzIgMi4wOCAxNi42MkMyLjAwMzQyIDE2LjgwMjEgMS45ODI1IDE3LjAwMjggMi4wMTk4OCAxNy4xOTY4QzIuMDU3MjUgMTcuMzkwOCAyLjE1MTI1IDE3LjU2OTQgMi4yOSAxNy43MUMyLjM4NzIgMTcuNzk4MyAyLjQ5ODgyIDE3Ljg2OTQgMi42MiAxNy45MkMyLjczOTcgMTcuOTcyOSAyLjg2OTEzIDE4LjAwMDIgMyAxOC4wMDAyQzMuMTMwODcgMTguMDAwMiAzLjI2MDMgMTcuOTcyOSAzLjM4IDE3LjkyQzMuNTAxMTkgMTcuODY5NCAzLjYxMjggMTcuNzk4MyAzLjcxIDE3LjcxQzMuODQ4NzYgMTcuNTY5NCAzLjk0Mjc2IDE3LjM5MDggMy45ODAxMyAxNy4xOTY4QzQuMDE3NTEgMTcuMDAyOCAzLjk5NjU4IDE2LjgwMjEgMy45MiAxNi42MkMzLjg3MjQxIDE2LjQ5NzIgMy44MDEwNCAxNi4zODUxIDMuNzEgMTYuMjlWMTYuMjlaTTcgOEgyMUMyMS4yNjUyIDggMjEuNTE5NiA3Ljg5NDY0IDIxLjcwNzEgNy43MDcxMUMyMS44OTQ2IDcuNTE5NTcgMjIgNy4yNjUyMiAyMiA3QzIyIDYuNzM0NzggMjEuODk0NiA2LjQ4MDQzIDIxLjcwNzEgNi4yOTI4OUMyMS41MTk2IDYuMTA1MzYgMjEuMjY1MiA2IDIxIDZIN0M2LjczNDc5IDYgNi40ODA0MyA2LjEwNTM2IDYuMjkyOSA2LjI5Mjg5QzYuMTA1MzYgNi40ODA0MyA2IDYuNzM0NzggNiA3QzYgNy4yNjUyMiA2LjEwNTM2IDcuNTE5NTcgNi4yOTI5IDcuNzA3MTFDNi40ODA0MyA3Ljg5NDY0IDYuNzM0NzkgOCA3IDhaTTMuNzEgMTEuMjlDMy41NjkzOCAxMS4xNTEyIDMuMzkwODEgMTEuMDU3MiAzLjE5NjgyIDExLjAxOTlDMy4wMDI4MyAxMC45ODI1IDIuODAyMTEgMTEuMDAzNCAyLjYyIDExLjA4QzIuNDk4ODIgMTEuMTMwNiAyLjM4NzIgMTEuMjAxNyAyLjI5IDExLjI5QzIuMTk4OTYgMTEuMzg1MSAyLjEyNzYgMTEuNDk3MiAyLjA4IDExLjYyQzIuMDI3MSAxMS43Mzk3IDEuOTk5NzcgMTEuODY5MSAxLjk5OTc3IDEyQzEuOTk5NzcgMTIuMTMwOSAyLjAyNzEgMTIuMjYwMyAyLjA4IDEyLjM4QzIuMTMwNjUgMTIuNTAxMiAyLjIwMTY3IDEyLjYxMjggMi4yOSAxMi43MUMyLjM4NzIgMTIuNzk4MyAyLjQ5ODgyIDEyLjg2OTQgMi42MiAxMi45MkMyLjczOTcgMTIuOTcyOSAyLjg2OTEzIDEzLjAwMDIgMyAxMy4wMDAyQzMuMTMwODcgMTMuMDAwMiAzLjI2MDMgMTIuOTcyOSAzLjM4IDEyLjkyQzMuNTAxMTkgMTIuODY5NCAzLjYxMjggMTIuNzk4MyAzLjcxIDEyLjcxQzMuNzk4MzMgMTIuNjEyOCAzLjg2OTM2IDEyLjUwMTIgMy45MiAxMi4zOEMzLjk3MjkxIDEyLjI2MDMgNC4wMDAyNCAxMi4xMzA5IDQuMDAwMjQgMTJDNC4wMDAyNCAxMS44NjkxIDMuOTcyOTEgMTEuNzM5NyAzLjkyIDExLjYyQzMuODcyNDEgMTEuNDk3MiAzLjgwMTA0IDExLjM4NTEgMy43MSAxMS4yOVYxMS4yOVpNMjEgMTFIN0M2LjczNDc5IDExIDYuNDgwNDMgMTEuMTA1NCA2LjI5MjkgMTEuMjkyOUM2LjEwNTM2IDExLjQ4MDQgNiAxMS43MzQ4IDYgMTJDNiAxMi4yNjUyIDYuMTA1MzYgMTIuNTE5NiA2LjI5MjkgMTIuNzA3MUM2LjQ4MDQzIDEyLjg5NDYgNi43MzQ3OSAxMyA3IDEzSDIxQzIxLjI2NTIgMTMgMjEuNTE5NiAxMi44OTQ2IDIxLjcwNzEgMTIuNzA3MUMyMS44OTQ2IDEyLjUxOTYgMjIgMTIuMjY1MiAyMiAxMkMyMiAxMS43MzQ4IDIxLjg5NDYgMTEuNDgwNCAyMS43MDcxIDExLjI5MjlDMjEuNTE5NiAxMS4xMDU0IDIxLjI2NTIgMTEgMjEgMTFaTTMuNzEgNi4yOUMzLjYxNDkgNi4xOTg5NiAzLjUwMjc2IDYuMTI3NTkgMy4zOCA2LjA4QzMuMTk3ODkgNi4wMDM0MiAyLjk5NzE4IDUuOTgyNSAyLjgwMzE5IDYuMDE5ODdDMi42MDkyIDYuMDU3MjUgMi40MzA2MyA2LjE1MTI0IDIuMjkgNi4yOUMyLjIwMTY3IDYuMzg3MiAyLjEzMDY1IDYuNDk4ODEgMi4wOCA2LjYyQzIuMDI3MSA2LjczOTcgMS45OTk3NyA2Ljg2OTEzIDEuOTk5NzcgN0MxLjk5OTc3IDcuMTMwODcgMi4wMjcxIDcuMjYwMyAyLjA4IDcuMzhDMi4xMzA2NSA3LjUwMTE5IDIuMjAxNjcgNy42MTI4IDIuMjkgNy43MUMyLjM4NzIgNy43OTgzMyAyLjQ5ODgyIDcuODY5MzYgMi42MiA3LjkyQzIuODAyMTEgNy45OTY1OCAzLjAwMjgzIDguMDE3NSAzLjE5NjgyIDcuOTgwMTNDMy4zOTA4MSA3Ljk0Mjc1IDMuNTY5MzggNy44NDg3NiAzLjcxIDcuNzFDMy43OTgzMyA3LjYxMjggMy44NjkzNiA3LjUwMTE5IDMuOTIgNy4zOEMzLjk3MjkxIDcuMjYwMyA0LjAwMDI0IDcuMTMwODcgNC4wMDAyNCA3QzQuMDAwMjQgNi44NjkxMyAzLjk3MjkxIDYuNzM5NyAzLjkyIDYuNjJDMy44NjkzNiA2LjQ5ODgxIDMuNzk4MzMgNi4zODcyIDMuNzEgNi4yOVY2LjI5Wk0yMSAxNkg3QzYuNzM0NzkgMTYgNi40ODA0MyAxNi4xMDU0IDYuMjkyOSAxNi4yOTI5QzYuMTA1MzYgMTYuNDgwNCA2IDE2LjczNDggNiAxN0M2IDE3LjI2NTIgNi4xMDUzNiAxNy41MTk2IDYuMjkyOSAxNy43MDcxQzYuNDgwNDMgMTcuODk0NiA2LjczNDc5IDE4IDcgMThIMjFDMjEuMjY1MiAxOCAyMS41MTk2IDE3Ljg5NDYgMjEuNzA3MSAxNy43MDcxQzIxLjg5NDYgMTcuNTE5NiAyMiAxNy4yNjUyIDIyIDE3QzIyIDE2LjczNDggMjEuODk0NiAxNi40ODA0IDIxLjcwNzEgMTYuMjkyOUMyMS41MTk2IDE2LjEwNTQgMjEuMjY1MiAxNiAyMSAxNloiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=');
+    mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMuNzEgMTYuMjlDMy42MTQ5IDE2LjE5OSAzLjUwMjc2IDE2LjEyNzYgMy4zOCAxNi4wOEMzLjEzNjU0IDE1Ljk4IDIuODYzNDYgMTUuOTggMi42MiAxNi4wOEMyLjQ5NzI1IDE2LjEyNzYgMi4zODUxMSAxNi4xOTkgMi4yOSAxNi4yOUMyLjE5ODk2IDE2LjM4NTEgMi4xMjc2IDE2LjQ5NzIgMi4wOCAxNi42MkMyLjAwMzQyIDE2LjgwMjEgMS45ODI1IDE3LjAwMjggMi4wMTk4OCAxNy4xOTY4QzIuMDU3MjUgMTcuMzkwOCAyLjE1MTI1IDE3LjU2OTQgMi4yOSAxNy43MUMyLjM4NzIgMTcuNzk4MyAyLjQ5ODgyIDE3Ljg2OTQgMi42MiAxNy45MkMyLjczOTcgMTcuOTcyOSAyLjg2OTEzIDE4LjAwMDIgMyAxOC4wMDAyQzMuMTMwODcgMTguMDAwMiAzLjI2MDMgMTcuOTcyOSAzLjM4IDE3LjkyQzMuNTAxMTkgMTcuODY5NCAzLjYxMjggMTcuNzk4MyAzLjcxIDE3LjcxQzMuODQ4NzYgMTcuNTY5NCAzLjk0Mjc2IDE3LjM5MDggMy45ODAxMyAxNy4xOTY4QzQuMDE3NTEgMTcuMDAyOCAzLjk5NjU4IDE2LjgwMjEgMy45MiAxNi42MkMzLjg3MjQxIDE2LjQ5NzIgMy44MDEwNCAxNi4zODUxIDMuNzEgMTYuMjlWMTYuMjlaTTcgOEgyMUMyMS4yNjUyIDggMjEuNTE5NiA3Ljg5NDY0IDIxLjcwNzEgNy43MDcxMUMyMS44OTQ2IDcuNTE5NTcgMjIgNy4yNjUyMiAyMiA3QzIyIDYuNzM0NzggMjEuODk0NiA2LjQ4MDQzIDIxLjcwNzEgNi4yOTI4OUMyMS41MTk2IDYuMTA1MzYgMjEuMjY1MiA2IDIxIDZIN0M2LjczNDc5IDYgNi40ODA0MyA2LjEwNTM2IDYuMjkyOSA2LjI5Mjg5QzYuMTA1MzYgNi40ODA0MyA2IDYuNzM0NzggNiA3QzYgNy4yNjUyMiA2LjEwNTM2IDcuNTE5NTcgNi4yOTI5IDcuNzA3MTFDNi40ODA0MyA3Ljg5NDY0IDYuNzM0NzkgOCA3IDhaTTMuNzEgMTEuMjlDMy41NjkzOCAxMS4xNTEyIDMuMzkwODEgMTEuMDU3MiAzLjE5NjgyIDExLjAxOTlDMy4wMDI4MyAxMC45ODI1IDIuODAyMTEgMTEuMDAzNCAyLjYyIDExLjA4QzIuNDk4ODIgMTEuMTMwNiAyLjM4NzIgMTEuMjAxNyAyLjI5IDExLjI5QzIuMTk4OTYgMTEuMzg1MSAyLjEyNzYgMTEuNDk3MiAyLjA4IDExLjYyQzIuMDI3MSAxMS43Mzk3IDEuOTk5NzcgMTEuODY5MSAxLjk5OTc3IDEyQzEuOTk5NzcgMTIuMTMwOSAyLjAyNzEgMTIuMjYwMyAyLjA4IDEyLjM4QzIuMTMwNjUgMTIuNTAxMiAyLjIwMTY3IDEyLjYxMjggMi4yOSAxMi43MUMyLjM4NzIgMTIuNzk4MyAyLjQ5ODgyIDEyLjg2OTQgMi42MiAxMi45MkMyLjczOTcgMTIuOTcyOSAyLjg2OTEzIDEzLjAwMDIgMyAxMy4wMDAyQzMuMTMwODcgMTMuMDAwMiAzLjI2MDMgMTIuOTcyOSAzLjM4IDEyLjkyQzMuNTAxMTkgMTIuODY5NCAzLjYxMjggMTIuNzk4MyAzLjcxIDEyLjcxQzMuNzk4MzMgMTIuNjEyOCAzLjg2OTM2IDEyLjUwMTIgMy45MiAxMi4zOEMzLjk3MjkxIDEyLjI2MDMgNC4wMDAyNCAxMi4xMzA5IDQuMDAwMjQgMTJDNC4wMDAyNCAxMS44NjkxIDMuOTcyOTEgMTEuNzM5NyAzLjkyIDExLjYyQzMuODcyNDEgMTEuNDk3MiAzLjgwMTA0IDExLjM4NTEgMy43MSAxMS4yOVYxMS4yOVpNMjEgMTFIN0M2LjczNDc5IDExIDYuNDgwNDMgMTEuMTA1NCA2LjI5MjkgMTEuMjkyOUM2LjEwNTM2IDExLjQ4MDQgNiAxMS43MzQ4IDYgMTJDNiAxMi4yNjUyIDYuMTA1MzYgMTIuNTE5NiA2LjI5MjkgMTIuNzA3MUM2LjQ4MDQzIDEyLjg5NDYgNi43MzQ3OSAxMyA3IDEzSDIxQzIxLjI2NTIgMTMgMjEuNTE5NiAxMi44OTQ2IDIxLjcwNzEgMTIuNzA3MUMyMS44OTQ2IDEyLjUxOTYgMjIgMTIuMjY1MiAyMiAxMkMyMiAxMS43MzQ4IDIxLjg5NDYgMTEuNDgwNCAyMS43MDcxIDExLjI5MjlDMjEuNTE5NiAxMS4xMDU0IDIxLjI2NTIgMTEgMjEgMTFaTTMuNzEgNi4yOUMzLjYxNDkgNi4xOTg5NiAzLjUwMjc2IDYuMTI3NTkgMy4zOCA2LjA4QzMuMTk3ODkgNi4wMDM0MiAyLjk5NzE4IDUuOTgyNSAyLjgwMzE5IDYuMDE5ODdDMi42MDkyIDYuMDU3MjUgMi40MzA2MyA2LjE1MTI0IDIuMjkgNi4yOUMyLjIwMTY3IDYuMzg3MiAyLjEzMDY1IDYuNDk4ODEgMi4wOCA2LjYyQzIuMDI3MSA2LjczOTcgMS45OTk3NyA2Ljg2OTEzIDEuOTk5NzcgN0MxLjk5OTc3IDcuMTMwODcgMi4wMjcxIDcuMjYwMyAyLjA4IDcuMzhDMi4xMzA2NSA3LjUwMTE5IDIuMjAxNjcgNy42MTI4IDIuMjkgNy43MUMyLjM4NzIgNy43OTgzMyAyLjQ5ODgyIDcuODY5MzYgMi42MiA3LjkyQzIuODAyMTEgNy45OTY1OCAzLjAwMjgzIDguMDE3NSAzLjE5NjgyIDcuOTgwMTNDMy4zOTA4MSA3Ljk0Mjc1IDMuNTY5MzggNy44NDg3NiAzLjcxIDcuNzFDMy43OTgzMyA3LjYxMjggMy44NjkzNiA3LjUwMTE5IDMuOTIgNy4zOEMzLjk3MjkxIDcuMjYwMyA0LjAwMDI0IDcuMTMwODcgNC4wMDAyNCA3QzQuMDAwMjQgNi44NjkxMyAzLjk3MjkxIDYuNzM5NyAzLjkyIDYuNjJDMy44NjkzNiA2LjQ5ODgxIDMuNzk4MzMgNi4zODcyIDMuNzEgNi4yOVY2LjI5Wk0yMSAxNkg3QzYuNzM0NzkgMTYgNi40ODA0MyAxNi4xMDU0IDYuMjkyOSAxNi4yOTI5QzYuMTA1MzYgMTYuNDgwNCA2IDE2LjczNDggNiAxN0M2IDE3LjI2NTIgNi4xMDUzNiAxNy41MTk2IDYuMjkyOSAxNy43MDcxQzYuNDgwNDMgMTcuODk0NiA2LjczNDc5IDE4IDcgMThIMjFDMjEuMjY1MiAxOCAyMS41MTk2IDE3Ljg5NDYgMjEuNzA3MSAxNy43MDcxQzIxLjg5NDYgMTcuNTE5NiAyMiAxNy4yNjUyIDIyIDE3QzIyIDE2LjczNDggMjEuODk0NiAxNi40ODA0IDIxLjcwNzEgMTYuMjkyOUMyMS41MTk2IDE2LjEwNTQgMjEuMjY1MiAxNiAyMSAxNloiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=');
   }
   .tab-btn[data-tab="about"]::before{
-    content:'i'; border-radius:50%; border:2px solid currentColor;
-    display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; font-family:"Unbounded",sans-serif;
+    -webkit-mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDExQzExLjczNDggMTEgMTEuNDgwNCAxMS4xMDU0IDExLjI5MjkgMTEuMjkyOUMxMS4xMDU0IDExLjQ4MDQgMTEgMTEuNzM0OCAxMSAxMlYxNUMxMSAxNS4yNjUyIDExLjEwNTQgMTUuNTE5NiAxMS4yOTI5IDE1LjcwNzFDMTEuNDgwNCAxNS44OTQ2IDExLjczNDggMTYgMTIgMTZDMTIuMjY1MiAxNiAxMi41MTk2IDE1Ljg5NDYgMTIuNzA3MSAxNS43MDcxQzEyLjg5NDYgMTUuNTE5NiAxMyAxNS4yNjUyIDEzIDE1VjEyQzEzIDExLjczNDggMTIuODk0NiAxMS40ODA0IDEyLjcwNzEgMTEuMjkyOUMxMi41MTk2IDExLjEwNTQgMTIuMjY1MiAxMSAxMiAxMVpNMTIgOEMxMS44MDIyIDggMTEuNjA4OSA4LjA1ODY1IDExLjQ0NDQgOC4xNjg1M0MxMS4yOCA4LjI3ODQxIDExLjE1MTggOC40MzQ1OSAxMS4wNzYxIDguNjE3MzJDMTEuMDAwNCA4LjgwMDA0IDEwLjk4MDYgOS4wMDExMSAxMS4wMTkyIDkuMTk1MDlDMTEuMDU3OCA5LjM4OTA3IDExLjE1MyA5LjU2NzI1IDExLjI5MjkgOS43MDcxMUMxMS40MzI3IDkuODQ2OTYgMTEuNjEwOSA5Ljk0MjIgMTEuODA0OSA5Ljk4MDc5QzExLjk5ODkgMTAuMDE5NCAxMi4yIDkuOTk5NTcgMTIuMzgyNyA5LjkyMzg4QzEyLjU2NTQgOS44NDgxOSAxMi43MjE2IDkuNzIwMDIgMTIuODMxNSA5LjU1NTU3QzEyLjk0MTQgOS4zOTExMiAxMyA5LjE5Nzc4IDEzIDlDMTMgOC43MzQ3OCAxMi44OTQ2IDguNDgwNDMgMTIuNzA3MSA4LjI5Mjg5QzEyLjUxOTYgOC4xMDUzNiAxMi4yNjUyIDggMTIgOFpNMTIgMkMxMC42ODY4IDIgOS4zODY0MiAyLjI1ODY2IDguMTczMTcgMi43NjEyQzYuOTU5OTEgMy4yNjM3NSA1Ljg1NzUyIDQuMDAwMzUgNC45Mjg5NCA0LjkyODkzQzMuMDUzNTcgNi44MDQzIDIgOS4zNDc4NCAyIDEyQzEuOTkxMjYgMTQuMzA5MSAyLjc5MDggMTYuNTQ4NSA0LjI2IDE4LjMzTDIuMjYgMjAuMzNDMi4xMjEyNSAyMC40NzA2IDIuMDI3MjUgMjAuNjQ5MiAxLjk4OTg4IDIwLjg0MzJDMS45NTI1IDIxLjAzNzIgMS45NzM0MiAyMS4yMzc5IDIuMDUgMjEuNDJDMi4xMzMwNiAyMS41OTk5IDIuMjY3NzEgMjEuNzUxMSAyLjQzNjg1IDIxLjg1NDRDMi42MDU5OSAyMS45NTc3IDIuODAyIDIyLjAwODMgMyAyMkgxMkMxNC42NTIyIDIyIDE3LjE5NTcgMjAuOTQ2NCAxOS4wNzExIDE5LjA3MTFDMjAuOTQ2NCAxNy4xOTU3IDIyIDE0LjY1MjIgMjIgMTJDMjIgOS4zNDc4NCAyMC45NDY0IDYuODA0MyAxOS4wNzExIDQuOTI4OTNDMTcuMTk1NyAzLjA1MzU3IDE0LjY1MjIgMiAxMiAyVjJaTTEyIDIwSDUuNDFMNi4zNCAxOS4wN0M2LjQzNDQ5IDE4Ljk3NzQgNi41MDk2NiAxOC44NjY5IDYuNTYxMTYgMTguNzQ1MUM2LjYxMjY1IDE4LjYyMzIgNi42Mzk0NSAxOC40OTIzIDYuNjQgMTguMzZDNi42MzYyNSAxOC4wOTYyIDYuNTI4NDIgMTcuODQ0NiA2LjM0IDE3LjY2QzUuMDMwNTkgMTYuMzUyIDQuMjE1MTggMTQuNjMwNSA0LjAzMjY5IDEyLjc4ODhDMy44NTAyMSAxMC45NDcgNC4zMTE5NSA5LjA5OTAxIDUuMzM5MjMgNy41NTk1MkM2LjM2NjUyIDYuMDIwMDQgNy44OTU3OSA0Ljg4NDM2IDkuNjY2NTIgNC4zNDU5N0MxMS40MzcyIDMuODA3NTkgMTMuMzM5OSAzLjg5OTggMTUuMDUwMiA0LjYwNjkxQzE2Ljc2MDYgNS4zMTQwMiAxOC4xNzI5IDYuNTkyMjcgMTkuMDQ2NCA4LjIyMzg5QzE5LjkyIDkuODU1NTEgMjAuMjAwOSAxMS43Mzk1IDE5Ljg0MTEgMTMuNTU1QzE5LjQ4MTQgMTUuMzcwNSAxOC41MDMzIDE3LjAwNSAxNy4wNzM1IDE4LjE4MDJDMTUuNjQzOCAxOS4zNTU0IDEzLjg1MDggMTkuOTk4NSAxMiAyMFYyMFoiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=');
+    mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDExQzExLjczNDggMTEgMTEuNDgwNCAxMS4xMDU0IDExLjI5MjkgMTEuMjkyOUMxMS4xMDU0IDExLjQ4MDQgMTEgMTEuNzM0OCAxMSAxMlYxNUMxMSAxNS4yNjUyIDExLjEwNTQgMTUuNTE5NiAxMS4yOTI5IDE1LjcwNzFDMTEuNDgwNCAxNS44OTQ2IDExLjczNDggMTYgMTIgMTZDMTIuMjY1MiAxNiAxMi41MTk2IDE1Ljg5NDYgMTIuNzA3MSAxNS43MDcxQzEyLjg5NDYgMTUuNTE5NiAxMyAxNS4yNjUyIDEzIDE1VjEyQzEzIDExLjczNDggMTIuODk0NiAxMS40ODA0IDEyLjcwNzEgMTEuMjkyOUMxMi41MTk2IDExLjEwNTQgMTIuMjY1MiAxMSAxMiAxMVpNMTIgOEMxMS44MDIyIDggMTEuNjA4OSA4LjA1ODY1IDExLjQ0NDQgOC4xNjg1M0MxMS4yOCA4LjI3ODQxIDExLjE1MTggOC40MzQ1OSAxMS4wNzYxIDguNjE3MzJDMTEuMDAwNCA4LjgwMDA0IDEwLjk4MDYgOS4wMDExMSAxMS4wMTkyIDkuMTk1MDlDMTEuMDU3OCA5LjM4OTA3IDExLjE1MyA5LjU2NzI1IDExLjI5MjkgOS43MDcxMUMxMS40MzI3IDkuODQ2OTYgMTEuNjEwOSA5Ljk0MjIgMTEuODA0OSA5Ljk4MDc5QzExLjk5ODkgMTAuMDE5NCAxMi4yIDkuOTk5NTcgMTIuMzgyNyA5LjkyMzg4QzEyLjU2NTQgOS44NDgxOSAxMi43MjE2IDkuNzIwMDIgMTIuODMxNSA5LjU1NTU3QzEyLjk0MTQgOS4zOTExMiAxMyA5LjE5Nzc4IDEzIDlDMTMgOC43MzQ3OCAxMi44OTQ2IDguNDgwNDMgMTIuNzA3MSA4LjI5Mjg5QzEyLjUxOTYgOC4xMDUzNiAxMi4yNjUyIDggMTIgOFpNMTIgMkMxMC42ODY4IDIgOS4zODY0MiAyLjI1ODY2IDguMTczMTcgMi43NjEyQzYuOTU5OTEgMy4yNjM3NSA1Ljg1NzUyIDQuMDAwMzUgNC45Mjg5NCA0LjkyODkzQzMuMDUzNTcgNi44MDQzIDIgOS4zNDc4NCAyIDEyQzEuOTkxMjYgMTQuMzA5MSAyLjc5MDggMTYuNTQ4NSA0LjI2IDE4LjMzTDIuMjYgMjAuMzNDMi4xMjEyNSAyMC40NzA2IDIuMDI3MjUgMjAuNjQ5MiAxLjk4OTg4IDIwLjg0MzJDMS45NTI1IDIxLjAzNzIgMS45NzM0MiAyMS4yMzc5IDIuMDUgMjEuNDJDMi4xMzMwNiAyMS41OTk5IDIuMjY3NzEgMjEuNzUxMSAyLjQzNjg1IDIxLjg1NDRDMi42MDU5OSAyMS45NTc3IDIuODAyIDIyLjAwODMgMyAyMkgxMkMxNC42NTIyIDIyIDE3LjE5NTcgMjAuOTQ2NCAxOS4wNzExIDE5LjA3MTFDMjAuOTQ2NCAxNy4xOTU3IDIyIDE0LjY1MjIgMjIgMTJDMjIgOS4zNDc4NCAyMC45NDY0IDYuODA0MyAxOS4wNzExIDQuOTI4OTNDMTcuMTk1NyAzLjA1MzU3IDE0LjY1MjIgMiAxMiAyVjJaTTEyIDIwSDUuNDFMNi4zNCAxOS4wN0M2LjQzNDQ5IDE4Ljk3NzQgNi41MDk2NiAxOC44NjY5IDYuNTYxMTYgMTguNzQ1MUM2LjYxMjY1IDE4LjYyMzIgNi42Mzk0NSAxOC40OTIzIDYuNjQgMTguMzZDNi42MzYyNSAxOC4wOTYyIDYuNTI4NDIgMTcuODQ0NiA2LjM0IDE3LjY2QzUuMDMwNTkgMTYuMzUyIDQuMjE1MTggMTQuNjMwNSA0LjAzMjY5IDEyLjc4ODhDMy44NTAyMSAxMC45NDcgNC4zMTE5NSA5LjA5OTAxIDUuMzM5MjMgNy41NTk1MkM2LjM2NjUyIDYuMDIwMDQgNy44OTU3OSA0Ljg4NDM2IDkuNjY2NTIgNC4zNDU5N0MxMS40MzcyIDMuODA3NTkgMTMuMzM5OSAzLjg5OTggMTUuMDUwMiA0LjYwNjkxQzE2Ljc2MDYgNS4zMTQwMiAxOC4xNzI5IDYuNTkyMjcgMTkuMDQ2NCA4LjIyMzg5QzE5LjkyIDkuODU1NTEgMjAuMjAwOSAxMS43Mzk1IDE5Ljg0MTEgMTMuNTU1QzE5LjQ4MTQgMTUuMzcwNSAxOC41MDMzIDE3LjAwNSAxNy4wNzM1IDE4LjE4MDJDMTUuNjQzOCAxOS4zNTU0IDEzLjg1MDggMTkuOTk4NSAxMiAyMFYyMFoiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=');
   }
 </style>
 </head>
@@ -509,7 +517,7 @@
     <button class="lang-btn" data-lang="en">EN</button>
   </div>
 </header>
-<p id="appSubtitle" style="display:none;">Онлайн-расписание — сколько ждать до поезда</p>
+<p id="appSubtitle">Онлайн-расписание — сколько ждать до поезда</p>
 
 <main>
 
@@ -558,18 +566,17 @@
   <section class="view" id="view-whentogo">
     <div class="card">
       <div class="field">
-        <label>От станции</label>
-        <div class="wtg-origin" id="wtgOrigin">Станция ещё не определена</div>
-        <button class="wtg-origin-change" id="wtgOriginChange" style="display:none">изменить на вкладке "Ближайший поезд"</button>
+        <label for="wtgOriginSelect" id="wtgFieldOriginLabel">От станции</label>
+        <select id="wtgOriginSelect"></select>
       </div>
 
       <div class="field">
-        <label for="wtgDestSelect">До станции</label>
+        <label for="wtgDestSelect" id="wtgFieldDestLabel">До станции</label>
         <select id="wtgDestSelect"></select>
       </div>
 
       <div class="field">
-        <label for="wtgTargetTime">К какому времени</label>
+        <label for="wtgTargetTime" id="wtgFieldTimeLabel">К какому времени</label>
         <input type="time" id="wtgTargetTime" />
       </div>
 
@@ -678,7 +685,7 @@
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
     <button class="tab-btn active" data-tab="nearest">Ближайший поезд</button>
-    <button class="tab-btn" data-tab="whentogo" id="whentogoTabBtn">Когда выезжать<span class="new-badge" id="whentogoNewBadge">NEW</span></button>
+    <button class="tab-btn" data-tab="whentogo" id="whentogoTabBtn"><span id="whentogoTabLabel">Когда выезжать</span><span class="new-badge" id="whentogoNewBadge">NEW</span></button>
     <button class="tab-btn" data-tab="full">Всё расписание</button>
     <button class="tab-btn about-link-btn" data-tab="about" id="aboutLinkBtn">О метро</button>
   </div>
@@ -741,6 +748,27 @@
       scheduleDisclaimer: 'Поезда чаще всего отправляются ровно по расписанию, указанному на этом сайте. Но иногда метро добавляет дополнительные составы.',
       tabNearest: 'Ближайший поезд',
       tabFull: 'Всё расписание',
+      tabWhentogo: 'Когда выезжать',
+      wtgFieldOrigin: 'От станции',
+      wtgFieldDest: 'До станции',
+      wtgFieldTime: 'К какому времени',
+      wtgCalcBtn: 'Посчитать',
+      wtgShowAllStations: 'Показать все станции',
+      wtgHideStations: 'Скрыть станции',
+      wtgWaitLabel: 'Подождите',
+      wtgOriginNotReady: function (tabName) { return 'Станция отправления ещё не определена — откройте вкладку "' + tabName + '".'; },
+      wtgErrorLabel: 'Ошибка',
+      wtgSameStationMsg: 'Станция отправления и назначения совпадают.',
+      wtgNoTimeMsg: 'Укажите время.',
+      wtgTowards: function (name) { return 'в сторону <b>' + name + '</b>'; },
+      wtgClosedTitle: 'В это время метро не работает',
+      wtgClosedMsg: function (closing, opening) { return 'Метро закрыто примерно с ' + closing + ' до ' + opening + ' — лучше поехать на такси.'; },
+      wtgBoardTrain: function (depClock, dirLabelHtml) { return 'Садитесь на поезд в ' + depClock + ' ' + dirLabelHtml; },
+      wtgArrivalMsg: function (estimated, destName, clock) { return (estimated ? 'Ориентировочно поезд' : 'Поезд') + ' будет на станции «<b>' + destName + '</b>» в ' + clock; },
+      wtgDepartsIn: 'Отправляется через',
+      wtgNextTrainTowards: function (dirLabelHtml) { return 'Ближайший поезд ' + dirLabelHtml + ' отправляется через'; },
+      wtgNotMakingIt: function (targetStr, destName) { return 'Не успеваете к ' + targetStr + ' быть на «<b>' + destName + '</b>»'; },
+      wtgNoDeparturesToday: 'Не нашлось подходящих рейсов в расписании на сегодня.',
       locating: 'Определяем ваше местоположение…',
       nearestStationMsg: function (name, dist) {
         return 'Ближайшая станция: <b>' + name + '</b> (≈' + dist + ' м)';
@@ -805,6 +833,27 @@
       scheduleDisclaimer: 'Пойыздар көбіне осы сайтта көрсетілген кесте бойынша дәл жүреді. Бірақ кейде метро қосымша құрам қосады.',
       tabNearest: 'Жақын пойыз',
       tabFull: 'Толық кесте',
+      tabWhentogo: 'Қашан шығу керек',
+      wtgFieldOrigin: 'Қай бекеттен',
+      wtgFieldDest: 'Қай бекетке',
+      wtgFieldTime: 'Қай уақытқа дейін',
+      wtgCalcBtn: 'Есептеу',
+      wtgShowAllStations: 'Барлық бекеттерді көрсету',
+      wtgHideStations: 'Бекеттерді жасыру',
+      wtgWaitLabel: 'Күте тұрыңыз',
+      wtgOriginNotReady: function (tabName) { return 'Шығу бекеті әлі анықталған жоқ — «' + tabName + '» бөліміне өтіңіз.'; },
+      wtgErrorLabel: 'Қате',
+      wtgSameStationMsg: 'Шығу және баратын бекет бірдей.',
+      wtgNoTimeMsg: 'Уақытты көрсетіңіз.',
+      wtgTowards: function (name) { return '<b>' + name + '</b> бағытына қарай'; },
+      wtgClosedTitle: 'Бұл уақытта метро жұмыс істемейді',
+      wtgClosedMsg: function (closing, opening) { return 'Метро шамамен ' + closing + '-ден ' + opening + '-ге дейін жабық — таксимен жеткен дұрыс.'; },
+      wtgBoardTrain: function (depClock, dirLabelHtml) { return dirLabelHtml + ' ' + depClock + ' пойызына отырыңыз'; },
+      wtgArrivalMsg: function (estimated, destName, clock) { return (estimated ? 'Болжам бойынша пойыз' : 'Пойыз') + ' «<b>' + destName + '</b>» бекетіне ' + clock + ' уақытында келеді'; },
+      wtgDepartsIn: 'Шығуына дейін',
+      wtgNextTrainTowards: function (dirLabelHtml) { return dirLabelHtml + ' ең жақын пойыз шығуына дейін'; },
+      wtgNotMakingIt: function (targetStr, destName) { return targetStr + ' уақытына «<b>' + destName + '</b>» бекетінде үлгермейсіз'; },
+      wtgNoDeparturesToday: 'Бүгінгі кестеде сәйкес рейс табылмады.',
       locating: 'Орналасқан жеріңізді анықтап жатырмыз…',
       nearestStationMsg: function (name, dist) {
         return 'Ең жақын бекет: <b>' + name + '</b> (≈' + dist + ' м)';
@@ -869,6 +918,27 @@
       scheduleDisclaimer: 'Trains usually depart exactly on the schedule shown here. But the metro sometimes adds extra trains.',
       tabNearest: 'Nearest train',
       tabFull: 'Full schedule',
+      tabWhentogo: 'When to leave',
+      wtgFieldOrigin: 'From station',
+      wtgFieldDest: 'To station',
+      wtgFieldTime: 'By what time',
+      wtgCalcBtn: 'Calculate',
+      wtgShowAllStations: 'Show all stations',
+      wtgHideStations: 'Hide stations',
+      wtgWaitLabel: 'Please wait',
+      wtgOriginNotReady: function (tabName) { return 'Departure station not determined yet — open the "' + tabName + '" tab.'; },
+      wtgErrorLabel: 'Error',
+      wtgSameStationMsg: 'Departure and destination stations are the same.',
+      wtgNoTimeMsg: 'Please specify a time.',
+      wtgTowards: function (name) { return 'towards <b>' + name + '</b>'; },
+      wtgClosedTitle: 'The metro is closed at this time',
+      wtgClosedMsg: function (closing, opening) { return 'The metro is closed roughly from ' + closing + ' to ' + opening + ' — better to take a taxi.'; },
+      wtgBoardTrain: function (depClock, dirLabelHtml) { return 'Board the ' + depClock + ' train ' + dirLabelHtml; },
+      wtgArrivalMsg: function (estimated, destName, clock) { return (estimated ? 'The train should be at' : 'The train will be at') + ' «<b>' + destName + '</b>» at ' + clock; },
+      wtgDepartsIn: 'Departs in',
+      wtgNextTrainTowards: function (dirLabelHtml) { return 'The nearest train ' + dirLabelHtml + ' departs in'; },
+      wtgNotMakingIt: function (targetStr, destName) { return "You won't make it to «<b>" + destName + '</b>» by ' + targetStr; },
+      wtgNoDeparturesToday: "No suitable departures found in today's schedule.",
       locating: 'Locating you…',
       nearestStationMsg: function (name, dist) {
         return 'Nearest station: <b>' + name + '</b> (≈' + dist + ' m)';
@@ -1389,6 +1459,7 @@
   function selectStation(slug, viaGeo, distanceMeters, method) {
     selectedSlug = slug;
     stationSelect.value = slug;
+    wtgOriginSelect.value = slug;
     var st = STATIONS_BY_SLUG[slug];
     document.getElementById('stationCard').style.display = '';
     document.getElementById('stationName').textContent = stationName(st);
@@ -1733,7 +1804,6 @@
       if (btn.dataset.tab === 'whentogo') {
         try { localStorage.setItem('whentogoSeen', '1'); } catch (e) { /* приватный режим и т.п. */ }
         document.getElementById('whentogoNewBadge').style.display = 'none';
-        updateWtgOrigin();
       }
     });
   });
@@ -1747,8 +1817,7 @@
   } catch (e) { /* приватный режим и т.п. */ }
 
   /* ---------- Вкладка "Когда выезжать" ---------- */
-  var wtgOrigin = document.getElementById('wtgOrigin');
-  var wtgOriginChange = document.getElementById('wtgOriginChange');
+  var wtgOriginSelect = document.getElementById('wtgOriginSelect');
   var wtgDestSelect = document.getElementById('wtgDestSelect');
   var wtgTargetTime = document.getElementById('wtgTargetTime');
   var wtgCalcBtn = document.getElementById('wtgCalcBtn');
@@ -1762,21 +1831,18 @@
   var wtgRouteList = document.getElementById('wtgRouteList');
   var wtgCountdownTimer = null;
 
-  // "От станции" на этой вкладке — та же станция, что уже определена на
-  // "Ближайшем поезде" (geo или ручной выбор там), своей отдельной
-  // геолокации сознательно нет — не дублируем то, что уже есть на главном
-  // экране. Обновляется при каждом открытии вкладки (см. выше).
-  function updateWtgOrigin() {
-    if (selectedSlug && STATIONS_BY_SLUG[selectedSlug]) {
-      wtgOrigin.innerHTML = '<b>' + stationName(STATIONS_BY_SLUG[selectedSlug]) + '</b>';
-      wtgOriginChange.style.display = '';
-    } else {
-      wtgOrigin.textContent = 'Станция ещё не определена';
-      wtgOriginChange.style.display = 'none';
-    }
-  }
-  wtgOriginChange.addEventListener('click', function () {
-    document.querySelector('[data-tab="nearest"]').click();
+  // "От станции" на этой вкладке — общая "домашняя" станция с вкладки
+  // "Ближайший поезд" (своей отдельной геолокации сознательно нет — не
+  // дублируем то, что уже есть на главном экране), но поменять её можно
+  // прямо тут же: это тот же selectedSlug, что и на "Ближайшем поезде" —
+  // изменение в одном месте сразу отражается в другом (см. selectStation()
+  // и populateStationSelects()).
+  wtgOriginSelect.addEventListener('change', function () {
+    selectStation(wtgOriginSelect.value, false);
+    // старый результат расчёта относился к прежней станции — прячем, чтобы
+    // не вводить в заблуждение, пока не нажали "Посчитать" заново
+    wtgResultCard.className = 'card result';
+    wtgStopCountdown();
   });
 
 
@@ -1814,21 +1880,21 @@
     });
     wtgRouteToggle.style.display = '';
     wtgRouteToggle.classList.remove('open');
-    wtgRouteToggleText.textContent = 'Показать все станции';
+    wtgRouteToggleText.textContent = t('wtgShowAllStations');
     wtgRouteList.classList.remove('show');
   }
   wtgRouteToggle.addEventListener('click', function () {
     var open = wtgRouteList.classList.toggle('show');
     wtgRouteToggle.classList.toggle('open', open);
-    wtgRouteToggleText.textContent = open ? 'Скрыть станции' : 'Показать все станции';
+    wtgRouteToggleText.textContent = open ? t('wtgHideStations') : t('wtgShowAllStations');
   });
 
   function wtgCalculate() {
     if (!selectedSlug) {
       wtgResultCard.className = 'card result show fail';
       wtgResultDir.textContent = '';
-      wtgResultCountdown.textContent = 'Подождите';
-      wtgResultSub.textContent = 'Станция отправления ещё не определена — откройте вкладку "Ближайший поезд".';
+      wtgResultCountdown.textContent = t('wtgWaitLabel');
+      wtgResultSub.textContent = t('wtgOriginNotReady', t('tabNearest'));
       wtgStopCountdown();
       wtgRenderRoute(null);
       return;
@@ -1837,8 +1903,8 @@
     if (selectedSlug === destSlug) {
       wtgResultCard.className = 'card result show fail';
       wtgResultDir.textContent = '';
-      wtgResultCountdown.textContent = 'Ошибка';
-      wtgResultSub.textContent = 'Станция отправления и назначения совпадают.';
+      wtgResultCountdown.textContent = t('wtgErrorLabel');
+      wtgResultSub.textContent = t('wtgSameStationMsg');
       wtgStopCountdown();
       wtgRenderRoute(null);
       return;
@@ -1848,7 +1914,7 @@
     var direction = destIdx > originIdx ? 'forward' : 'backward';
     var toBM = STATIONS_BY_SLUG['BM'];
     var toRMBK = STATIONS_BY_SLUG['RMBK'];
-    var dirLabel = direction === 'forward' ? ('в сторону <b>' + stationName(toBM) + '</b>') : ('в сторону <b>' + stationName(toRMBK) + '</b>');
+    var dirLabel = t('wtgTowards', direction === 'forward' ? stationName(toBM) : stationName(toRMBK));
 
     var now = almatyNow();
     var serviceStart = serviceDayStart(now);
@@ -1858,8 +1924,8 @@
     if (!targetStr) {
       wtgResultCard.className = 'card result show fail';
       wtgResultDir.textContent = '';
-      wtgResultCountdown.textContent = 'Ошибка';
-      wtgResultSub.textContent = 'Укажите время.';
+      wtgResultCountdown.textContent = t('wtgErrorLabel');
+      wtgResultSub.textContent = t('wtgNoTimeMsg');
       wtgStopCountdown();
       wtgRenderRoute(null);
       return;
@@ -1874,9 +1940,9 @@
       var closingClock = fmtHHMM(new Date(serviceStart.getTime() + closedWindow.closing * 60000));
       var openingClock = fmtHHMM(new Date(serviceStart.getTime() + closedWindow.opening * 60000));
       wtgResultCard.className = 'card result show fail';
-      wtgResultDir.textContent = 'В это время метро не работает';
-      wtgResultSub.innerHTML = 'Метро закрыто примерно с ' + closingClock + ' до ' + openingClock + ' — лучше поехать на такси.';
-      wtgResultCountdown.textContent = '🚕';
+      wtgResultDir.textContent = t('wtgClosedTitle');
+      wtgResultSub.innerHTML = t('wtgClosedMsg', closingClock, openingClock);
+      wtgResultCountdown.innerHTML = '<img class="wtg-taxi-mascot" src="mascot/sleeping.png" alt="" />';
       wtgStopCountdown();
       wtgRenderRoute(null);
       return;
@@ -1905,24 +1971,23 @@
       var arrClock = fmtHHMM(new Date(serviceStart.getTime() + best.arrival.minutes * 60000));
       var depClock = fmtHHMM(new Date(depAbsoluteMs));
       wtgResultCard.className = 'card result show ok';
-      wtgResultDir.innerHTML = 'Садитесь на поезд в ' + depClock + ' ' + dirLabel;
-      wtgResultSub.innerHTML = (best.arrival.estimated ? 'Ориентировочно поезд' : 'Поезд') +
-        ' будет на станции «<b>' + destName + '</b>» в ' + arrClock;
-      wtgStartCountdown(depAbsoluteMs, 'Отправляется через');
+      wtgResultDir.innerHTML = t('wtgBoardTrain', depClock, dirLabel);
+      wtgResultSub.innerHTML = t('wtgArrivalMsg', best.arrival.estimated, destName, arrClock);
+      wtgStartCountdown(depAbsoluteMs, t('wtgDepartsIn'));
       wtgRenderRoute(best.arrival.path, serviceStart);
     } else if (firstEstimate) {
       var arrClock2 = fmtHHMM(new Date(serviceStart.getTime() + firstEstimate.arrival.minutes * 60000));
       var depAbsoluteMs2 = serviceStart.getTime() + firstEstimate.departure.minutes * 60000;
       wtgResultCard.className = 'card result show fail';
-      wtgResultDir.innerHTML = 'Не успеваете к ' + targetStr + ' быть на «<b>' + destName + '</b>»';
-      wtgResultSub.innerHTML = 'Поезд будет на станции «<b>' + destName + '</b>» в ' + arrClock2;
-      wtgStartCountdown(depAbsoluteMs2, 'Ближайший поезд ' + dirLabel + ' отправляется через');
+      wtgResultDir.innerHTML = t('wtgNotMakingIt', targetStr, destName);
+      wtgResultSub.innerHTML = t('wtgArrivalMsg', false, destName, arrClock2);
+      wtgStartCountdown(depAbsoluteMs2, t('wtgNextTrainTowards', dirLabel));
       wtgRenderRoute(firstEstimate.arrival.path, serviceStart);
     } else {
       wtgResultCard.className = 'card result show fail';
       wtgResultDir.textContent = '';
       wtgResultCountdown.textContent = '—';
-      wtgResultSub.textContent = 'Не нашлось подходящих рейсов в расписании на сегодня.';
+      wtgResultSub.textContent = t('wtgNoDeparturesToday');
       wtgStopCountdown();
       wtgRenderRoute(null);
     }
@@ -2133,7 +2198,7 @@
 
   /* ---------- Переключение языка ---------- */
   function populateStationSelects() {
-    [stationSelect, fullStationSelect, wtgDestSelect].forEach(function (sel) {
+    [stationSelect, fullStationSelect, wtgDestSelect, wtgOriginSelect].forEach(function (sel) {
       var prevValue = sel.value;
       sel.innerHTML = '';
       STATIONS.forEach(function (s) {
@@ -2144,6 +2209,14 @@
       });
       if (prevValue) sel.value = prevValue;
     });
+    // stationSelect и wtgOriginSelect — не независимый выбор (в отличие от
+    // fullStationSelect/wtgDestSelect, где можно смотреть расписание любой
+    // станции без смены "домашней"): оба должны всегда совпадать с
+    // selectedSlug, куда бы его ни поменяли.
+    if (selectedSlug) {
+      stationSelect.value = selectedSlug;
+      wtgOriginSelect.value = selectedSlug;
+    }
   }
 
   function fmtDateTime(almatyDate) {
@@ -2184,6 +2257,13 @@
     document.querySelector('[data-tab="nearest"]').textContent = t('tabNearest');
     document.querySelector('[data-tab="full"]').textContent = t('tabFull');
     document.querySelector('[data-tab="about"]').textContent = t('aboutTab');
+    document.getElementById('whentogoTabLabel').textContent = t('tabWhentogo');
+    document.getElementById('wtgFieldOriginLabel').textContent = t('wtgFieldOrigin');
+    document.getElementById('wtgFieldDestLabel').textContent = t('wtgFieldDest');
+    document.getElementById('wtgFieldTimeLabel').textContent = t('wtgFieldTime');
+    document.getElementById('wtgCalcBtn').textContent = t('wtgCalcBtn');
+    document.getElementById('wtgRouteToggleText').textContent =
+      wtgRouteToggle.classList.contains('open') ? t('wtgHideStations') : t('wtgShowAllStations');
     locateBtn.textContent = t('manualStationBtn');
     document.querySelector('[data-daytype="weekday"]').textContent = t('weekday');
     document.querySelector('[data-daytype="weekend"]').textContent = t('weekend');
@@ -2235,6 +2315,11 @@
       }
       if (document.getElementById('view-full').classList.contains('active')) {
         renderFullSchedule();
+      }
+      // если результат "Когда выезжать" уже показан — пересчитываем на новом
+      // языке (вход тот же: селекты/время не сбрасываются сменой языка)
+      if (wtgResultCard.classList.contains('show')) {
+        wtgCalculate();
       }
       renderFooter();
     }
