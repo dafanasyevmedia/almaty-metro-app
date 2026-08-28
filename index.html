@@ -200,6 +200,60 @@
     color:var(--text); font-size:15px; font-weight:600; font-family:inherit; margin-top:10px;
     appearance:none; -webkit-appearance:none;
   }
+  input[type="time"]{
+    width:100%; padding:12px 14px; border-radius:13px; border:1px solid var(--border);
+    background:var(--card2); color:var(--text); font-size:15px; font-weight:600; font-family:inherit;
+    margin-top:10px; appearance:none; -webkit-appearance:none;
+  }
+
+  /* ---------- Вкладка "Когда выезжать" ---------- */
+  .field{ margin-bottom:14px; }
+  .field:last-of-type{ margin-bottom:0; }
+  .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:2px; }
+  .wtg-origin{ font-size:14px; color:var(--text); line-height:1.5; }
+  .wtg-origin b{ font-weight:700; }
+  .wtg-origin-change{
+    background:none; border:none; color:var(--accent); font-family:inherit; font-size:12.5px;
+    font-weight:700; padding:0; margin-left:6px; cursor:pointer; text-decoration:underline;
+  }
+
+  .result{ display:none; }
+  .result.show{ display:block; }
+  .result.ok{ border:1px solid var(--success); }
+  .result.fail{ border:1px solid var(--danger); }
+  .result-dir{ font-size:13px; color:var(--muted); font-weight:600; margin-bottom:10px; }
+  .result-dir b, .result-sub b, .result-countdown-label b{ color:var(--text); font-weight:700; }
+  .result-countdown-label{ font-size:11.5px; color:var(--muted2); font-weight:600; margin-bottom:2px; }
+  .result-countdown{
+    font-family:"Unbounded","Inter",sans-serif; font-size:40px; font-weight:600; letter-spacing:-.5px;
+    color:var(--text); font-variant-numeric:tabular-nums;
+  }
+  .result.fail .result-countdown{ color:var(--danger); font-size:22px; }
+  .result-sub{ font-size:13px; color:var(--muted); margin-top:10px; line-height:1.5; }
+
+  .route-toggle{
+    display:flex; align-items:center; justify-content:center; gap:6px; width:100%; margin-top:14px;
+    padding:8px; border:none; border-top:1px solid var(--border); background:none; color:var(--muted);
+    font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .route-toggle .chevron{ display:inline-block; font-size:10px; transition:transform .2s; }
+  .route-toggle.open .chevron{ transform:rotate(180deg); }
+  .route-list{ display:none; padding-top:4px; }
+  .route-list.show{ display:block; }
+  .route-row{ display:flex; justify-content:space-between; gap:10px; padding:6px 2px; font-size:13px; color:var(--muted); }
+  .route-row.endpoint{ color:var(--text); font-weight:700; }
+  .route-row .route-time{ font-variant-numeric:tabular-nums; flex:none; }
+
+  .new-badge{
+    display:inline-block; background:var(--accent); color:var(--accent-ink); font-size:8.5px;
+    font-weight:800; letter-spacing:.3px; border-radius:5px; padding:1px 4px; margin-left:4px;
+    vertical-align:2px; line-height:1.3;
+  }
+  .tab-btn[data-tab="whentogo"]::before{
+    content:''; border-radius:50%; border:2px solid currentColor;
+    background-image:linear-gradient(currentColor, currentColor), linear-gradient(currentColor, currentColor);
+    background-size:1.4px 5px, 4.5px 1.4px; background-position:center 3px, 8.5px 8px; background-repeat:no-repeat;
+  }
 
   .station-title{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:14px;}
   .station-title h2{ font-size:22px; margin:0; font-weight:600; letter-spacing:-.3px; }
@@ -500,6 +554,40 @@
 
   </section>
 
+  <!-- ===== ВКЛАДКА: КОГДА ВЫЕЗЖАТЬ ===== -->
+  <section class="view" id="view-whentogo">
+    <div class="card">
+      <div class="field">
+        <label>От станции</label>
+        <div class="wtg-origin" id="wtgOrigin">Станция ещё не определена</div>
+        <button class="wtg-origin-change" id="wtgOriginChange" style="display:none">изменить на вкладке "Ближайший поезд"</button>
+      </div>
+
+      <div class="field">
+        <label for="wtgDestSelect">До станции</label>
+        <select id="wtgDestSelect"></select>
+      </div>
+
+      <div class="field">
+        <label for="wtgTargetTime">К какому времени</label>
+        <input type="time" id="wtgTargetTime" />
+      </div>
+
+      <button class="btn primary" id="wtgCalcBtn" style="width:100%; padding:12px 16px; font-size:14px; margin-top:4px;">Посчитать</button>
+    </div>
+
+    <div class="card result" id="wtgResultCard">
+      <div class="result-dir" id="wtgResultDir"></div>
+      <div class="result-countdown-label" id="wtgResultCountdownLabel" style="display:none"></div>
+      <div class="result-countdown" id="wtgResultCountdown"></div>
+      <div class="result-sub" id="wtgResultSub"></div>
+      <button class="route-toggle" id="wtgRouteToggle" style="display:none">
+        <span id="wtgRouteToggleText">Показать все станции</span><span class="chevron">▾</span>
+      </button>
+      <div class="route-list" id="wtgRouteList"></div>
+    </div>
+  </section>
+
   <!-- ===== ВКЛАДКА: ВСЁ РАСПИСАНИЕ ===== -->
   <section class="view" id="view-full">
     <div class="card">
@@ -590,6 +678,7 @@
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
     <button class="tab-btn active" data-tab="nearest">Ближайший поезд</button>
+    <button class="tab-btn" data-tab="whentogo" id="whentogoTabBtn">Когда выезжать<span class="new-badge" id="whentogoNewBadge">NEW</span></button>
     <button class="tab-btn" data-tab="full">Всё расписание</button>
     <button class="tab-btn about-link-btn" data-tab="about" id="aboutLinkBtn">О метро</button>
   </div>
@@ -1063,6 +1152,63 @@
     if (!samples.length) return null;
     samples.sort(function (a, b) { return a - b; });
     return samples[Math.floor(samples.length / 2)];
+  }
+
+  /* ---------- "Когда выезжать" — расчёт по цепочке станций ---------- */
+  // Сопоставляет тот же физический поезд между соседними станциями — та же
+  // идея, что и в renderTrainMarkers ниже (первое отправление соседней
+  // станции после текущего времени), вынесено в отдельную функцию, чтобы
+  // не дублировать. estimated:true — если пришлось оценивать через
+  // medianSegmentTravelMin (конечная станция), а не взяли точное время.
+  function matchNextArrival(depTime, curSlug, nextSlug, direction, serviceStart) {
+    var nextTimeline = buildTimeline(nextSlug, direction, serviceStart);
+    if (nextTimeline.length) {
+      var m = firstTimelineIndexAfter(nextTimeline, depTime);
+      if (m < nextTimeline.length && nextTimeline[m].minutes - depTime <= MAX_SEGMENT_MIN) {
+        return { minutes: nextTimeline[m].minutes, estimated: false };
+      }
+      return null;
+    }
+    var oppDir = direction === 'forward' ? 'backward' : 'forward';
+    var est = medianSegmentTravelMin(
+      buildTimeline(nextSlug, oppDir, serviceStart),
+      buildTimeline(curSlug, oppDir, serviceStart)
+    );
+    return est != null ? { minutes: depTime + est, estimated: true } : null;
+  }
+
+  // Цепочкой матчим через все промежуточные станции от origin до dest.
+  // path — время на каждой станции по пути (для списка станций под результатом).
+  function estimateArrival(originIdx, destIdx, direction, departureMinutes, serviceStart) {
+    var step = direction === 'forward' ? 1 : -1;
+    var i = originIdx, t = departureMinutes, estimated = false;
+    var path = [{ idx: i, minutes: t }];
+    while (i !== destIdx) {
+      var curSlug = STATIONS[i].slug;
+      var nextIdx = i + step;
+      var nextSlug = STATIONS[nextIdx].slug;
+      var res = matchNextArrival(t, curSlug, nextSlug, direction, serviceStart);
+      if (res == null) return null;
+      t = res.minutes;
+      if (res.estimated) estimated = true;
+      i = nextIdx;
+      path.push({ idx: i, minutes: t });
+    }
+    return { minutes: t, estimated: estimated, path: path };
+  }
+
+  // Ищет ночной перерыв (закрытие метро) в таймлайне одной станции — самый
+  // большой промежуток между соседними отправлениями (обычные интервалы —
+  // единицы минут, ночной перерыв — часы, порог 90 минут отличает надёжно).
+  var CLOSED_GAP_THRESHOLD_MIN = 90;
+  function findClosedWindow(timeline) {
+    for (var i = 0; i < timeline.length - 1; i++) {
+      var gap = timeline[i + 1].minutes - timeline[i].minutes;
+      if (gap > CLOSED_GAP_THRESHOLD_MIN) {
+        return { closing: timeline[i].minutes, opening: timeline[i + 1].minutes };
+      }
+    }
+    return null;
   }
 
   // Точки-стрелочки "где сейчас едут поезда" — чисто визуальная фишка, не GPS.
@@ -1584,8 +1730,204 @@
         if (selectedSlug) fullStationSelect.value = selectedSlug;
         renderFullSchedule();
       }
+      if (btn.dataset.tab === 'whentogo') {
+        try { localStorage.setItem('whentogoSeen', '1'); } catch (e) { /* приватный режим и т.п. */ }
+        document.getElementById('whentogoNewBadge').style.display = 'none';
+        updateWtgOrigin();
+      }
     });
   });
+  // NEW-бейдж у вкладки — скрываем сразу при загрузке, если человек уже
+  // открывал её раньше (не только по клику, см. выше) — иначе бейдж мелькнёт
+  // на долю секунды при каждом заходе, пока обработчик клика не сработает.
+  try {
+    if (localStorage.getItem('whentogoSeen') === '1') {
+      document.getElementById('whentogoNewBadge').style.display = 'none';
+    }
+  } catch (e) { /* приватный режим и т.п. */ }
+
+  /* ---------- Вкладка "Когда выезжать" ---------- */
+  var wtgOrigin = document.getElementById('wtgOrigin');
+  var wtgOriginChange = document.getElementById('wtgOriginChange');
+  var wtgDestSelect = document.getElementById('wtgDestSelect');
+  var wtgTargetTime = document.getElementById('wtgTargetTime');
+  var wtgCalcBtn = document.getElementById('wtgCalcBtn');
+  var wtgResultCard = document.getElementById('wtgResultCard');
+  var wtgResultDir = document.getElementById('wtgResultDir');
+  var wtgResultCountdownLabel = document.getElementById('wtgResultCountdownLabel');
+  var wtgResultCountdown = document.getElementById('wtgResultCountdown');
+  var wtgResultSub = document.getElementById('wtgResultSub');
+  var wtgRouteToggle = document.getElementById('wtgRouteToggle');
+  var wtgRouteToggleText = document.getElementById('wtgRouteToggleText');
+  var wtgRouteList = document.getElementById('wtgRouteList');
+  var wtgCountdownTimer = null;
+
+  // "От станции" на этой вкладке — та же станция, что уже определена на
+  // "Ближайшем поезде" (geo или ручной выбор там), своей отдельной
+  // геолокации сознательно нет — не дублируем то, что уже есть на главном
+  // экране. Обновляется при каждом открытии вкладки (см. выше).
+  function updateWtgOrigin() {
+    if (selectedSlug && STATIONS_BY_SLUG[selectedSlug]) {
+      wtgOrigin.innerHTML = '<b>' + stationName(STATIONS_BY_SLUG[selectedSlug]) + '</b>';
+      wtgOriginChange.style.display = '';
+    } else {
+      wtgOrigin.textContent = 'Станция ещё не определена';
+      wtgOriginChange.style.display = 'none';
+    }
+  }
+  wtgOriginChange.addEventListener('click', function () {
+    document.querySelector('[data-tab="nearest"]').click();
+  });
+
+
+  function wtgStopCountdown() {
+    if (wtgCountdownTimer) { clearInterval(wtgCountdownTimer); wtgCountdownTimer = null; }
+    wtgResultCountdownLabel.style.display = 'none';
+  }
+  function wtgStartCountdown(departureAbsoluteMs, labelHTML) {
+    wtgStopCountdown();
+    wtgResultCountdownLabel.innerHTML = labelHTML;
+    wtgResultCountdownLabel.style.display = '';
+    function tick() {
+      var diffMin = (departureAbsoluteMs - almatyNow().getTime()) / 60000;
+      wtgResultCountdown.textContent = fmtCountdown(diffMin);
+      if (diffMin <= 0) wtgStopCountdown();
+    }
+    tick();
+    wtgCountdownTimer = setInterval(tick, 1000);
+  }
+
+  function wtgRenderRoute(path, serviceStart) {
+    if (!path || !path.length) {
+      wtgRouteToggle.style.display = 'none';
+      wtgRouteList.classList.remove('show');
+      return;
+    }
+    wtgRouteList.innerHTML = '';
+    path.forEach(function (step, idx) {
+      var name = stationName(STATIONS[step.idx]);
+      var clock = fmtHHMM(new Date(serviceStart.getTime() + step.minutes * 60000));
+      var row = document.createElement('div');
+      row.className = 'route-row' + (idx === 0 || idx === path.length - 1 ? ' endpoint' : '');
+      row.innerHTML = '<span>' + name + '</span><span class="route-time">' + clock + '</span>';
+      wtgRouteList.appendChild(row);
+    });
+    wtgRouteToggle.style.display = '';
+    wtgRouteToggle.classList.remove('open');
+    wtgRouteToggleText.textContent = 'Показать все станции';
+    wtgRouteList.classList.remove('show');
+  }
+  wtgRouteToggle.addEventListener('click', function () {
+    var open = wtgRouteList.classList.toggle('show');
+    wtgRouteToggle.classList.toggle('open', open);
+    wtgRouteToggleText.textContent = open ? 'Скрыть станции' : 'Показать все станции';
+  });
+
+  function wtgCalculate() {
+    if (!selectedSlug) {
+      wtgResultCard.className = 'card result show fail';
+      wtgResultDir.textContent = '';
+      wtgResultCountdown.textContent = 'Подождите';
+      wtgResultSub.textContent = 'Станция отправления ещё не определена — откройте вкладку "Ближайший поезд".';
+      wtgStopCountdown();
+      wtgRenderRoute(null);
+      return;
+    }
+    var destSlug = wtgDestSelect.value;
+    if (selectedSlug === destSlug) {
+      wtgResultCard.className = 'card result show fail';
+      wtgResultDir.textContent = '';
+      wtgResultCountdown.textContent = 'Ошибка';
+      wtgResultSub.textContent = 'Станция отправления и назначения совпадают.';
+      wtgStopCountdown();
+      wtgRenderRoute(null);
+      return;
+    }
+    var originIdx = STATIONS.findIndex(function (s) { return s.slug === selectedSlug; });
+    var destIdx = STATIONS.findIndex(function (s) { return s.slug === destSlug; });
+    var direction = destIdx > originIdx ? 'forward' : 'backward';
+    var toBM = STATIONS_BY_SLUG['BM'];
+    var toRMBK = STATIONS_BY_SLUG['RMBK'];
+    var dirLabel = direction === 'forward' ? ('в сторону <b>' + stationName(toBM) + '</b>') : ('в сторону <b>' + stationName(toRMBK) + '</b>');
+
+    var now = almatyNow();
+    var serviceStart = serviceDayStart(now);
+    var nowMinutes = (now - serviceStart) / 60000;
+
+    var targetStr = wtgTargetTime.value;
+    if (!targetStr) {
+      wtgResultCard.className = 'card result show fail';
+      wtgResultDir.textContent = '';
+      wtgResultCountdown.textContent = 'Ошибка';
+      wtgResultSub.textContent = 'Укажите время.';
+      wtgStopCountdown();
+      wtgRenderRoute(null);
+      return;
+    }
+    var targetMinutes = timeStrToMinutes(targetStr);
+    if (nowMinutes - targetMinutes > 60) targetMinutes += 24 * 60;
+
+    var originTimeline = buildTimeline(selectedSlug, direction, serviceStart);
+
+    var closedWindow = findClosedWindow(originTimeline);
+    if (closedWindow && targetMinutes >= closedWindow.closing + 30 && targetMinutes <= closedWindow.opening - 30) {
+      var closingClock = fmtHHMM(new Date(serviceStart.getTime() + closedWindow.closing * 60000));
+      var openingClock = fmtHHMM(new Date(serviceStart.getTime() + closedWindow.opening * 60000));
+      wtgResultCard.className = 'card result show fail';
+      wtgResultDir.textContent = 'В это время метро не работает';
+      wtgResultSub.innerHTML = 'Метро закрыто примерно с ' + closingClock + ' до ' + openingClock + ' — лучше поехать на такси.';
+      wtgResultCountdown.textContent = '🚕';
+      wtgStopCountdown();
+      wtgRenderRoute(null);
+      return;
+    }
+
+    var upcoming = originTimeline.filter(function (e) { return e.minutes >= nowMinutes - 0.001; });
+
+    var best = null;
+    var firstEstimate = null;
+    for (var k = 0; k < upcoming.length; k++) {
+      var dep = upcoming[k];
+      var arr = estimateArrival(originIdx, destIdx, direction, dep.minutes, serviceStart);
+      if (arr == null) continue;
+      if (firstEstimate == null) firstEstimate = { departure: dep, arrival: arr };
+      if (Math.floor(arr.minutes) <= targetMinutes) {
+        best = { departure: dep, arrival: arr };
+      } else {
+        break;
+      }
+    }
+
+    var destName = stationName(STATIONS[destIdx]);
+
+    if (best) {
+      var depAbsoluteMs = serviceStart.getTime() + best.departure.minutes * 60000;
+      var arrClock = fmtHHMM(new Date(serviceStart.getTime() + best.arrival.minutes * 60000));
+      var depClock = fmtHHMM(new Date(depAbsoluteMs));
+      wtgResultCard.className = 'card result show ok';
+      wtgResultDir.innerHTML = 'Садитесь на поезд в ' + depClock + ' ' + dirLabel;
+      wtgResultSub.innerHTML = (best.arrival.estimated ? 'Ориентировочно поезд' : 'Поезд') +
+        ' будет на станции «<b>' + destName + '</b>» в ' + arrClock;
+      wtgStartCountdown(depAbsoluteMs, 'Отправляется через');
+      wtgRenderRoute(best.arrival.path, serviceStart);
+    } else if (firstEstimate) {
+      var arrClock2 = fmtHHMM(new Date(serviceStart.getTime() + firstEstimate.arrival.minutes * 60000));
+      var depAbsoluteMs2 = serviceStart.getTime() + firstEstimate.departure.minutes * 60000;
+      wtgResultCard.className = 'card result show fail';
+      wtgResultDir.innerHTML = 'Не успеваете к ' + targetStr + ' быть на «<b>' + destName + '</b>»';
+      wtgResultSub.innerHTML = 'Поезд будет на станции «<b>' + destName + '</b>» в ' + arrClock2;
+      wtgStartCountdown(depAbsoluteMs2, 'Ближайший поезд ' + dirLabel + ' отправляется через');
+      wtgRenderRoute(firstEstimate.arrival.path, serviceStart);
+    } else {
+      wtgResultCard.className = 'card result show fail';
+      wtgResultDir.textContent = '';
+      wtgResultCountdown.textContent = '—';
+      wtgResultSub.textContent = 'Не нашлось подходящих рейсов в расписании на сегодня.';
+      wtgStopCountdown();
+      wtgRenderRoute(null);
+    }
+  }
+  wtgCalcBtn.addEventListener('click', wtgCalculate);
 
   /* ---------- Форма обратной связи ----------
      Без бэкенда — POST через AJAX-эндпоинт FormSubmit.co прямо на почту
@@ -1791,7 +2133,7 @@
 
   /* ---------- Переключение языка ---------- */
   function populateStationSelects() {
-    [stationSelect, fullStationSelect].forEach(function (sel) {
+    [stationSelect, fullStationSelect, wtgDestSelect].forEach(function (sel) {
       var prevValue = sel.value;
       sel.innerHTML = '';
       STATIONS.forEach(function (s) {
@@ -1937,6 +2279,13 @@
     STATIONS.forEach(function (s) { STATIONS_BY_SLUG[s.slug] = s; });
 
     populateStationSelects();
+
+    // "Когда выезжать": станция назначения и время по умолчанию — один раз,
+    // сразу как только известен список станций (этот .then срабатывает
+    // ровно один раз при старте, повторно не перетирает выбор пользователя).
+    wtgDestSelect.value = STATIONS[STATIONS.length - 1].slug;
+    var wtgPlus30 = new Date(almatyNow().getTime() + 30 * 60000);
+    wtgTargetTime.value = String(wtgPlus30.getUTCHours()).padStart(2, '0') + ':' + String(wtgPlus30.getUTCMinutes()).padStart(2, '0');
 
     var now = almatyNow();
     fullDayType = dayTypeOf(serviceDayStart(now));
