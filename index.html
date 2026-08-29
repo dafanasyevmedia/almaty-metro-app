@@ -775,6 +775,8 @@
       pageTitle: 'Метро Алматы — расписание',
       appTitle: 'Метро Алматы',
       appSubtitle: 'Онлайн-расписание — сколько ждать до поезда',
+      appSubtitleWhentogo: 'На какой поезд успеть, чтобы быть на месте вовремя',
+      appSubtitleFull: 'Полное расписание по всем станциям',
       scheduleDisclaimer: 'Поезда чаще всего отправляются ровно по расписанию, указанному на этом сайте. Но иногда метро добавляет дополнительные составы.',
       tabNearest: 'Ближайший поезд',
       tabFull: 'Всё расписание',
@@ -860,6 +862,8 @@
       pageTitle: 'Алматы метросы — кесте',
       appTitle: 'Алматы метросы',
       appSubtitle: 'Онлайн-кесте — пойызды қанша күту керек',
+      appSubtitleWhentogo: 'Уақытында жету үшін қай пойызға үлгеру керек',
+      appSubtitleFull: 'Барлық бекеттердің толық кестесі',
       scheduleDisclaimer: 'Пойыздар көбіне осы сайтта көрсетілген кесте бойынша дәл жүреді. Бірақ кейде метро қосымша құрам қосады.',
       tabNearest: 'Жақын пойыз',
       tabFull: 'Толық кесте',
@@ -949,6 +953,8 @@
       pageTitle: 'Almaty Metro — Schedule',
       appTitle: 'Almaty Metro',
       appSubtitle: 'Live schedule — how long until the next train',
+      appSubtitleWhentogo: 'Which train to catch to make it there on time',
+      appSubtitleFull: 'Full schedule for every station',
       scheduleDisclaimer: 'Trains usually depart exactly on the schedule shown here. But the metro sometimes adds extra trains.',
       tabNearest: 'Nearest train',
       tabFull: 'Full schedule',
@@ -1822,12 +1828,22 @@
   }
 
   /* ---------- Вкладки ---------- */
+  // Подпись под шапкой (#appSubtitle) — своя на каждую вкладку, т.к. они
+  // делают разное: "сколько ждать" верно только для "Ближайшего поезда".
+  // На "О метро" подписи нет вовсе — это справочный раздел, не про ожидание.
+  function updateAppSubtitle(tab) {
+    var el = document.getElementById('appSubtitle');
+    if (tab === 'about') { el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.textContent = t(tab === 'whentogo' ? 'appSubtitleWhentogo' : tab === 'full' ? 'appSubtitleFull' : 'appSubtitle');
+  }
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
       document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
       btn.classList.add('active');
       document.getElementById('view-' + btn.dataset.tab).classList.add('active');
+      updateAppSubtitle(btn.dataset.tab);
       trackEvent('switch_tab', { tab: btn.dataset.tab });
       if (btn.dataset.tab === 'full') {
         // по умолчанию открываем ту же станцию, что выбрана на вкладке "Ближайший поезд" —
@@ -2286,7 +2302,8 @@
     document.documentElement.lang = lang;
     document.title = t('pageTitle');
     document.getElementById('appTitle').textContent = t('appTitle');
-    document.getElementById('appSubtitle').textContent = t('appSubtitle');
+    var activeTabBtn = document.querySelector('.tab-btn.active');
+    updateAppSubtitle(activeTabBtn ? activeTabBtn.dataset.tab : 'nearest');
     document.getElementById('scheduleDisclaimer').textContent = t('scheduleDisclaimer');
     document.querySelector('[data-tab="nearest"]').textContent = t('tabNearest');
     document.querySelector('[data-tab="full"]').textContent = t('tabFull');
