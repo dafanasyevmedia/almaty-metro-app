@@ -740,6 +740,36 @@
   /* ---------- Локализация (ru / kk) ---------- */
   var LANG_STORAGE_KEY = 'almatyMetroLang';
 
+  // Казахские падежные окончания у времени ("09:53-те", "22:34-ке") зависят
+  // от последнего произнесённого числительного — минут, а если минут "00",
+  // то часов (Kazakh: "елу үш" → последнее слово "үш" определяет и гармонию
+  // гласных, и звонкость окончания; для чисел вида X0 без единиц — по слову
+  // десятков: "жиырма" и т.п.). Разобрано и проверено на паре примеров
+  // вместе с пользователем 2026-08-29 (см. CLAUDE.md) — правило выведено из
+  // этих примеров и общей грамматики, не сверено целиком с носителем языка,
+  // так что для непроверенных значений стоит перепроверить при случае.
+  var KK_ONES_CLASS = { 1:'front-voiced', 2:'front-voiced', 3:'front-voiceless', 4:'front-voiceless', 5:'front-voiceless', 6:'back-voiced', 7:'front-voiced', 8:'front-voiced', 9:'back-voiced' };
+  var KK_TENS_CLASS = { 1:'back-voiced', 2:'back-voiced', 3:'back-voiced', 4:'back-voiceless', 5:'front-voiced' };
+  var KK_CASE_SUFFIX = {
+    'front-voiced':    { loc: 'де', dat: 'ге' },
+    'front-voiceless': { loc: 'те', dat: 'ке' },
+    'back-voiced':     { loc: 'да', dat: 'ға' },
+    'back-voiceless':  { loc: 'та', dat: 'қа' }
+  };
+  function kkNumClass(n) {
+    if (n === 0) return 'front-voiced'; // "нөл"
+    var ones = n % 10;
+    if (ones !== 0) return KK_ONES_CLASS[ones];
+    return KK_TENS_CLASS[Math.floor(n / 10)];
+  }
+  // caseType: 'loc' — "во сколько" (X-те/X-та келеді), 'dat' — "к скольки" (X-ке/X-қа үлгермейсіз)
+  function kkClockSuffix(hhmm, caseType) {
+    var parts = hhmm.split(':');
+    var hh = parseInt(parts[0], 10), mm = parseInt(parts[1], 10);
+    var cls = mm !== 0 ? kkNumClass(mm) : kkNumClass(hh);
+    return KK_CASE_SUFFIX[cls][caseType];
+  }
+
   var I18N = {
     ru: {
       pageTitle: 'Метро Алматы — расписание',
@@ -845,14 +875,18 @@
       wtgErrorLabel: 'Қате',
       wtgSameStationMsg: 'Шығу және баратын бекет бірдей.',
       wtgNoTimeMsg: 'Уақытты көрсетіңіз.',
-      wtgTowards: function (name) { return '<b>' + name + '</b> бағытына қарай'; },
+      // "бағытындағы" (не "бағытында") — этот кусок в реальном UI ни разу не
+      // стоит отдельным предложением, только как определение перед "пойыз"/
+      // "пойыздың" в wtgBoardTrain/wtgNextTrainTowards, поэтому нужна именно
+      // притяжательно-относительная форма.
+      wtgTowards: function (name) { return '«' + name + '» бағытындағы'; },
       wtgClosedTitle: 'Бұл уақытта метро жұмыс істемейді',
-      wtgClosedMsg: function (closing, opening) { return 'Метро шамамен ' + closing + '-ден ' + opening + '-ге дейін жабық — таксимен жеткен дұрыс.'; },
+      wtgClosedMsg: function (closing, opening) { return 'Метро шамамен ' + closing + ' – ' + opening + ' аралығында жабық — таксимен жүрген дұрыс.'; },
       wtgBoardTrain: function (depClock, dirLabelHtml) { return dirLabelHtml + ' ' + depClock + ' пойызына отырыңыз'; },
-      wtgArrivalMsg: function (estimated, destName, clock) { return (estimated ? 'Болжам бойынша пойыз' : 'Пойыз') + ' «<b>' + destName + '</b>» бекетіне ' + clock + ' уақытында келеді'; },
-      wtgDepartsIn: 'Шығуына дейін',
-      wtgNextTrainTowards: function (dirLabelHtml) { return dirLabelHtml + ' ең жақын пойыз шығуына дейін'; },
-      wtgNotMakingIt: function (targetStr, destName) { return targetStr + ' уақытына «<b>' + destName + '</b>» бекетінде үлгермейсіз'; },
+      wtgArrivalMsg: function (estimated, destName, clock) { return 'Пойыз «<b>' + destName + '</b>» бекетіне ' + (estimated ? 'болжам бойынша ' : '') + 'сағат ' + clock + '-' + kkClockSuffix(clock, 'loc') + ' келеді'; },
+      wtgDepartsIn: 'Жөнелуіне қалды',
+      wtgNextTrainTowards: function (dirLabelHtml) { return dirLabelHtml + ' ең жақын пойыздың жөнелуіне қалды'; },
+      wtgNotMakingIt: function (targetStr, destName) { return '«<b>' + destName + '</b>» бекетіне сағат ' + targetStr + '-' + kkClockSuffix(targetStr, 'dat') + ' үлгермейсіз'; },
       wtgNoDeparturesToday: 'Бүгінгі кестеде сәйкес рейс табылмады.',
       locating: 'Орналасқан жеріңізді анықтап жатырмыз…',
       nearestStationMsg: function (name, dist) {
