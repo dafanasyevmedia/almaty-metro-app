@@ -2110,6 +2110,17 @@
     return lines.join('\r\n');
   }
   function downloadIcs(content) {
+    // Внутри Telegram Mini App свой WebView без поддержки скачивания файлов —
+    // клик по blob-ссылке там просто ничего не делает (подтверждено на
+    // реальном устройстве). tg.openLink() открывает системный браузер
+    // (Safari/Chrome), а он уже умеет предложить "Добавить в календарь" как
+    // у обычного сайта. Нужен именно data: URI, а не blob: — blob-ссылка
+    // привязана к этому же WebView и снаружи, в другом приложении, попросту
+    // не откроется.
+    if (insideTelegram && tg.openLink) {
+      var dataUri = 'data:text/calendar;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(content)));
+      try { tg.openLink(dataUri); return; } catch (e) { /* пробуем обычный способ ниже */ }
+    }
     var blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
@@ -2343,6 +2354,21 @@
     routeModal.style.display = '';
     trackEvent('route_open', { station: slug });
   }
+  // Собственный WebView Telegram Mini App не умеет открывать чужие
+  // URL-схемы (dgis://, yandexmaps://) — обычный клик по ссылке там просто
+  // ничего не делает (подтверждено на реальном устройстве, как и со
+  // скачиванием .ics). Внутри Telegram передаём ссылку через tg.openLink()
+  // в системный браузер — у него, в отличие от WebView, уже есть обычный
+  // для мобильных ОС механизм "открыть в установленном приложении".
+  // Google/Apple (https-ссылки) вне Telegram работают и так, но заодно
+  // проводим и их через openLink() для единообразия — лишним не будет.
+  ['routeLinkGoogle', 'routeLinkApple', 'routeLink2gis', 'routeLinkYandex'].forEach(function (id) {
+    document.getElementById(id).addEventListener('click', function (e) {
+      if (!insideTelegram) return; // обычный браузер — обычный переход по ссылке
+      e.preventDefault();
+      tg.openLink(this.href);
+    });
+  });
   function closeRouteModal() { routeModal.style.display = 'none'; }
   document.getElementById('routeModalClose').addEventListener('click', closeRouteModal);
   routeModal.addEventListener('click', function (e) {
