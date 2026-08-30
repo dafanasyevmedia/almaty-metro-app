@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow" />
+<title>Добавить событие в календарь — Метро Алматы</title>
+<style>
+  :root{
+    --bg:oklch(0.16 0.012 255); --card:oklch(0.20 0.014 255);
+    --text:oklch(0.95 0.006 255); --muted:oklch(0.62 0.02 255);
+    --border:oklch(0.30 0.02 255 / .55);
+    --accent:oklch(0.82 0.19 132); --accent-ink:oklch(0.16 0.012 255);
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:oklch(0.98 0.004 255); --card:oklch(0.995 0.002 255);
+      --text:oklch(0.18 0.012 255); --muted:oklch(0.46 0.02 255);
+      --border:oklch(0.84 0.012 255 / .9);
+      --accent:oklch(0.55 0.16 132); --accent-ink:oklch(0.99 0.003 255);
+    }
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:18px;
+    padding:26px 22px; max-width:360px; width:100%; text-align:center;
+  }
+  .icon{ font-size:36px; margin-bottom:10px; }
+  h1{ font-size:17px; margin:0 0 8px; }
+  p{ font-size:13.5px; color:var(--muted); line-height:1.5; margin:0 0 20px; }
+  .btn{
+    display:block; width:100%; padding:13px; border-radius:12px; border:none;
+    background:var(--accent); color:var(--accent-ink); font-weight:700; font-size:14.5px;
+    cursor:pointer; font-family:inherit; text-decoration:none;
+  }
+  .btn:active{ transform:scale(.97); }
+  .status{ font-size:12.5px; color:var(--muted); margin-top:14px; min-height:16px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📅</div>
+    <h1 id="title">Добавить событие в календарь</h1>
+    <p id="hint">Если ничего не открылось само — нажмите кнопку ниже.</p>
+    <a class="btn" id="btn" href="#">Скачать и добавить</a>
+    <div class="status" id="status"></div>
+  </div>
+
+<script>
+  // Отдельная страница специально для Telegram Mini App: его собственный
+  // WebView не умеет ни скачивать файлы, ни показывать data:-ссылки как
+  // настоящую страницу (только текстом внутри своего вьюера). tg.openLink()
+  // с этой страницей (обычная https-ссылка) должен открыть её в более
+  // полноценном системном/полусистемном браузере — а там уже пробуем то же
+  // скачивание .ics, что и в основном приложении. Содержимое календаря
+  // передаётся через ?data= (URL-кодированный текст .ics), язык — через
+  // ?lang=. Без общих файлов сайта специально — страница самодостаточная.
+  var I18N = {
+    ru: { title: 'Добавить событие в календарь', hint: 'Если ничего не открылось само — нажмите кнопку ниже.', btn: 'Скачать и добавить', done: 'Открыто. Если календарь не появился — нажмите кнопку ещё раз.', empty: 'Не нашли данные события — вернитесь и попробуйте ещё раз.' },
+    kk: { title: 'Күнтізбеге оқиға қосу', hint: 'Ештеңе өздігінен ашылмаса — төмендегі батырманы басыңыз.', btn: 'Жүктеп алу және қосу', done: 'Ашылды. Күнтізбе көрінбесе — батырманы қайта басыңыз.', empty: 'Оқиға деректері табылмады — қайтып, қайталап көріңіз.' },
+    en: { title: 'Add event to calendar', hint: "If nothing opened automatically — tap the button below.", btn: 'Download and add', done: "Opened. If your calendar app didn't appear — tap the button again.", empty: 'Event data not found — go back and try again.' }
+  };
+  var params = new URLSearchParams(location.search);
+  var lang = params.get('lang');
+  var t = I18N[lang] || I18N.ru;
+  document.getElementById('title').textContent = t.title;
+  document.getElementById('hint').textContent = t.hint;
+  document.getElementById('btn').textContent = t.btn;
+  document.documentElement.lang = lang || 'ru';
+
+  var content = params.get('data');
+  var statusEl = document.getElementById('status');
+  var btn = document.getElementById('btn');
+
+  if (!content) {
+    statusEl.textContent = t.empty;
+    btn.style.display = 'none';
+  } else {
+    var blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    btn.href = url;
+    btn.addEventListener('click', function () {
+      statusEl.textContent = t.done;
+    });
+    // Пробуем сразу же, без ожидания клика — если браузер это позволит
+    // (в отличие от Mini App WebView, обычный/полусистемный браузер обычно
+    // не блокирует переход по ссылке, даже если она не от прямого клика
+    // пользователя, при обычной навигации по <a>, а не через window.open).
+    setTimeout(function () { btn.click(); }, 300);
+  }
+</script>
+</body>
+</html>

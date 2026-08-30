@@ -2112,14 +2112,18 @@
   function downloadIcs(content) {
     // Внутри Telegram Mini App свой WebView без поддержки скачивания файлов —
     // клик по blob-ссылке там просто ничего не делает (подтверждено на
-    // реальном устройстве). tg.openLink() открывает системный браузер
-    // (Safari/Chrome), а он уже умеет предложить "Добавить в календарь" как
-    // у обычного сайта. Нужен именно data: URI, а не blob: — blob-ссылка
-    // привязана к этому же WebView и снаружи, в другом приложении, попросту
-    // не откроется.
+    // реальном устройстве). Первая попытка — tg.openLink() с data: URI —
+    // тоже не сработала: Telegram открыл СВОЙ внутренний просмотрщик и
+    // показал содержимое .ics как обычный текст (data: не считается
+    // "настоящей страницей"). Вместо этого передаём в openLink() реальную
+    // https-ссылку на отдельную страницу cal.html (см. файл рядом) — она
+    // уже пытается скачать .ics сама, но открывается в более полноценном
+    // браузере, а не в ограниченном WebView Mini App.
     if (insideTelegram && tg.openLink) {
-      var dataUri = 'data:text/calendar;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(content)));
-      try { tg.openLink(dataUri); return; } catch (e) { /* пробуем обычный способ ниже */ }
+      var calUrl = new URL('cal.html', location.href);
+      calUrl.searchParams.set('data', content);
+      calUrl.searchParams.set('lang', currentLang);
+      try { tg.openLink(calUrl.href); return; } catch (e) { /* пробуем обычный способ ниже */ }
     }
     var blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
     var url = URL.createObjectURL(blob);
@@ -2346,6 +2350,16 @@
       'dgis://2gis.ru/routeSearch/rsType/pedestrian/to/' + lon + ',' + lat;
     document.getElementById('routeLinkYandex').href =
       'yandexmaps://maps.yandex.ru/?rtext=~' + lat + ',' + lon + '&rtt=pd';
+    // Веб-версии на случай Telegram Mini App (см. комментарий ниже, у
+    // обработчика клика) — у 2ГИС путь совсем другой, чем у dgis://
+    // (не просто замена схемы: /routeSearch/... на вебе просто редиректит
+    // на главную Алматы, а рабочий путь — /directions/points/...).
+    // Принудительно включить пешеходный режим в URL 2ГИС не получилось
+    // (пробовали суффиксы /tab/pedestrian и ,pedestrian — оба игнорируются).
+    document.getElementById('routeLink2gis').setAttribute('data-tg-href',
+      'https://2gis.kz/almaty/directions/points/%7C' + lon + ',' + lat);
+    document.getElementById('routeLinkYandex').setAttribute('data-tg-href',
+      'https://yandex.ru/maps/?rtext=~' + lat + ',' + lon + '&rtt=pd');
   }
   function openRouteModal(slug) {
     var st = STATIONS_BY_SLUG[slug];
@@ -2362,11 +2376,15 @@
   // для мобильных ОС механизм "открыть в установленном приложении".
   // Google/Apple (https-ссылки) вне Telegram работают и так, но заодно
   // проводим и их через openLink() для единообразия — лишним не будет.
+  // У 2ГИС и Яндекса внутри Telegram берём НЕ this.href (там схема
+  // dgis:/yandexmaps: — сама по себе не откроется и в системном браузере),
+  // а заранее заготовленную веб-ссылку из data-tg-href (см. buildRouteLinks).
   ['routeLinkGoogle', 'routeLinkApple', 'routeLink2gis', 'routeLinkYandex'].forEach(function (id) {
     document.getElementById(id).addEventListener('click', function (e) {
       if (!insideTelegram) return; // обычный браузер — обычный переход по ссылке
       e.preventDefault();
-      tg.openLink(this.href);
+      var tgHref = this.getAttribute('data-tg-href');
+      tg.openLink(tgHref || this.href);
     });
   });
   function closeRouteModal() { routeModal.style.display = 'none'; }
