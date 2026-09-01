@@ -1306,13 +1306,38 @@
     var a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
     return 2 * R * Math.asin(Math.sqrt(a));
   }
-  function nearestStation(lat, lon, stations) {
-    var best = null, bestDist = Infinity;
-    stations.forEach(function(s){
-      var d = haversine(lat, lon, s.lat, s.lon);
-      if (d < bestDist) { bestDist = d; best = s; }
+  // Ближайший к (lat, lon) вход/выход станции — у станции может быть
+  // несколько (data/stations.json, поле exits), у метро Алматы обычно
+  // 2-6 наземных павильонов на станцию, разбросанных по кварталу вокруг
+  // подземного зала. Если exits не заданы (не должно случаться для наших
+  // 11 станций, но на всякий случай) — откатываемся на основную точку
+  // станции. См. CLAUDE.md, раздел про выходы станций (2026-09-01).
+  function nearestExitPoint(lat, lon, station) {
+    var exits = (station.exits && station.exits.length) ? station.exits : [{ lat: station.lat, lon: station.lon }];
+    var best = exits[0], bestDist = Infinity;
+    exits.forEach(function (e) {
+      var d = haversine(lat, lon, e.lat, e.lon);
+      if (d < bestDist) { bestDist = d; best = e; }
     });
-    return { station: best, distance: bestDist };
+    return { lat: best.lat, lon: best.lon, distance: bestDist };
+  }
+  function nearestStation(lat, lon, stations) {
+    var best = null;
+    stations.forEach(function (s) {
+      var r = nearestExitPoint(lat, lon, s);
+      if (!best || r.distance < best.distance) best = { station: s, distance: r.distance };
+    });
+    return best;
+  }
+  // Последняя известная геолокация пользователя — используется, чтобы для
+  // карт/.ics брать координаты БЛИЖАЙШЕГО выхода станции, а не условный
+  // "центр" (который может быть в квартале от реального входа). Если
+  // геолокации не было (ручной выбор станции, отказано в разрешении) —
+  // используем основную точку станции как запасной вариант.
+  var lastKnownGeo = null; // {lat, lon}
+  function bestStationPoint(station) {
+    if (lastKnownGeo) return nearestExitPoint(lastKnownGeo.lat, lastKnownGeo.lon, station);
+    return { lat: station.lat, lon: station.lon };
   }
 
   /* ---------- Данные ---------- */
@@ -1690,6 +1715,7 @@
   var FAR_FROM_ALMATY_METERS = 30000; // за пределами города и ближних пригородов — точно не Алматы
 
   function onGeoSuccess(lat, lon) {
+    lastKnownGeo = { lat: lat, lon: lon };
     var res = nearestStation(lat, lon, STATIONS);
     if (res.distance > FAR_FROM_ALMATY_METERS) {
       locateState = { kind: 'far', station: res.station, distance: res.distance };
@@ -2140,6 +2166,7 @@
   }
   function buildIcsContent(depAbsoluteMs, originSlug, destName) {
     var st = STATIONS_BY_SLUG[originSlug];
+    var stPoint = bestStationPoint(st);
     var originName = stationName(st);
     // depAbsoluteMs — во "псевдо-UTC" (см. almatyNow()), для реального
     // момента времени нужно вычесть тот же сдвиг +5ч, что и в almatyNow().
@@ -2158,7 +2185,7 @@
       'DTEND:' + formatIcsUtc(realDepUtcMs + 5 * 60000),
       'SUMMARY:' + icsEscape(t('wtgCalEventTitle', destName)),
       'LOCATION:' + icsEscape(t('wtgCalLocation', originName)),
-      'GEO:' + st.lat + ';' + st.lon,
+      'GEO:' + stPoint.lat + ';' + stPoint.lon,
       'DESCRIPTION:' + icsEscape(t('wtgCalEventDesc', depClock, originName, destName)),
       'BEGIN:VALARM',
       'ACTION:DISPLAY',
@@ -2425,7 +2452,8 @@
   function openRouteModal(slug) {
     var st = STATIONS_BY_SLUG[slug];
     if (!st) return;
-    buildRouteLinks(st.lat, st.lon);
+    var pt = bestStationPoint(st);
+    buildRouteLinks(pt.lat, pt.lon);
     routeModal.style.display = '';
     trackEvent('route_open', { station: slug });
   }
