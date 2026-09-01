@@ -248,10 +248,32 @@
     font-weight:800; letter-spacing:.3px; border-radius:5px; padding:1px 4px; margin-left:4px;
     vertical-align:2px; line-height:1.3;
   }
-  .tab-btn[data-tab="whentogo"]::before{
+  /* Свёрнутый по умолчанию блок "Когда выезжать" на "Ближайшем поезде"
+     (раньше — отдельная вкладка, см. CLAUDE.md, объединение 2026-09-01).
+     Иконка — тот же секундомер, что раньше был у вкладки, просто теперь
+     как обычная currentColor-маска у строки-заголовка. */
+  .wtg-teaser-toggle{
+    display:flex; width:100%; align-items:center; gap:10px; text-align:left;
+    background:var(--card); border:none; border-radius:18px; padding:16px 18px; margin-bottom:12px;
+    color:var(--text); font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+  }
+  .wtg-teaser-toggle.open{ border-radius:18px 18px 4px 4px; margin-bottom:8px; }
+  .wtg-teaser-icon{
+    width:19px; height:19px; flex:none; background-color:var(--accent);
+    -webkit-mask-size:contain; mask-size:contain;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    -webkit-mask-position:center; mask-position:center;
     -webkit-mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTExIDJDOS4wMjIxOCAyIDcuMDg4NzkgMi41ODY0OSA1LjQ0NDI5IDMuNjg1M0MzLjc5OTggNC43ODQxMiAyLjUxODA4IDYuMzQ1OSAxLjc2MTIgOC4xNzMxN0MxLjAwNDMzIDEwLjAwMDQgMC44MDYyOTIgMTIuMDExMSAxLjE5MjE0IDEzLjk1MDlDMS41NzggMTUuODkwNyAyLjUzMDQgMTcuNjcyNSAzLjkyODkzIDE5LjA3MTFDNS4zMjc0NSAyMC40Njk2IDcuMTA5MjggMjEuNDIyIDkuMDQ5MDkgMjEuODA3OUMxMC45ODg5IDIyLjE5MzcgMTIuOTk5NiAyMS45OTU3IDE0LjgyNjggMjEuMjM4OEMxNi42NTQxIDIwLjQ4MTkgMTguMjE1OSAxOS4yMDAyIDE5LjMxNDcgMTcuNTU1N0MyMC40MTM1IDE1LjkxMTIgMjEgMTMuOTc3OCAyMSAxMkMyMSAxMC42ODY4IDIwLjc0MTMgOS4zODY0MiAyMC4yMzg4IDguMTczMTdDMTkuNzM2MiA2Ljk1OTkxIDE4Ljk5OTYgNS44NTc1MiAxOC4wNzExIDQuOTI4OTNDMTcuMTQyNSA0LjAwMDM1IDE2LjA0MDEgMy4yNjM3NSAxNC44MjY4IDIuNzYxMkMxMy42MTM2IDIuMjU4NjYgMTIuMzEzMiAyIDExIDJWMlpNMTEgMjBDOS40MTc3NSAyMCA3Ljg3MTAzIDE5LjUzMDggNi41NTU0MyAxOC42NTE4QzUuMjM5ODQgMTcuNzcyNyA0LjIxNDQ2IDE2LjUyMzMgMy42MDg5NiAxNS4wNjE1QzMuMDAzNDYgMTMuNTk5NyAyLjg0NTAzIDExLjk5MTEgMy4xNTM3MSAxMC40MzkzQzMuNDYyNCA4Ljg4NzQzIDQuMjI0MzIgNy40NjE5NyA1LjM0MzE0IDYuMzQzMTVDNi40NjE5NiA1LjIyNDMzIDcuODg3NDMgNC40NjI0IDkuNDM5MjcgNC4xNTM3MkMxMC45OTExIDMuODQ1MDQgMTIuNTk5NyA0LjAwMzQ2IDE0LjA2MTUgNC42MDg5NkMxNS41MjMzIDUuMjE0NDcgMTYuNzcyNyA2LjIzOTg0IDE3LjY1MTggNy41NTU0NEMxOC41MzA4IDguODcxMDMgMTkgMTAuNDE3NyAxOSAxMkMxOSAxNC4xMjE3IDE4LjE1NzEgMTYuMTU2NiAxNi42NTY5IDE3LjY1NjlDMTUuMTU2NiAxOS4xNTcxIDEzLjEyMTcgMjAgMTEgMjBWMjBaTTEyIDExLjkzVjdDMTIgNi43MzQ3OCAxMS44OTQ2IDYuNDgwNDMgMTEuNzA3MSA2LjI5Mjg5QzExLjUxOTYgNi4xMDUzNiAxMS4yNjUyIDYgMTEgNkMxMC43MzQ4IDYgMTAuNDgwNCA2LjEwNTM2IDEwLjI5MjkgNi4yOTI4OUMxMC4xMDU0IDYuNDgwNDMgMTAgNi43MzQ3OCAxMCA3VjEyQzEwIDEyIDEwIDEyLjA3IDEwIDEyLjExQzkuOTc1MzkgMTIuMzEzMyAxMC4wMTM4IDEyLjUxOTIgMTAuMTEgMTIuN0wxMS42MSAxNS4zQzExLjc0MjYgMTUuNTMwNyAxMS45NjE0IDE1LjY5OTMgMTIuMjE4NCAxNS43Njg3QzEyLjQ3NTMgMTUuODM4MSAxMi43NDkzIDE1LjgwMjYgMTIuOTggMTUuNjdDMTMuMjEwNyAxNS41Mzc0IDEzLjM3OTMgMTUuMzE4NiAxMy40NDg3IDE1LjA2MTZDMTMuNTE4MSAxNC44MDQ3IDEzLjQ4MjYgMTQuNTMwNyAxMy4zNSAxNC4zTDEyIDExLjkzWiIgZmlsbD0iYmxhY2siLz4KPC9zdmc+Cg==');
     mask-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTExIDJDOS4wMjIxOCAyIDcuMDg4NzkgMi41ODY0OSA1LjQ0NDI5IDMuNjg1M0MzLjc5OTggNC43ODQxMiAyLjUxODA4IDYuMzQ1OSAxLjc2MTIgOC4xNzMxN0MxLjAwNDMzIDEwLjAwMDQgMC44MDYyOTIgMTIuMDExMSAxLjE5MjE0IDEzLjk1MDlDMS41NzggMTUuODkwNyAyLjUzMDQgMTcuNjcyNSAzLjkyODkzIDE5LjA3MTFDNS4zMjc0NSAyMC40Njk2IDcuMTA5MjggMjEuNDIyIDkuMDQ5MDkgMjEuODA3OUMxMC45ODg5IDIyLjE5MzcgMTIuOTk5NiAyMS45OTU3IDE0LjgyNjggMjEuMjM4OEMxNi42NTQxIDIwLjQ4MTkgMTguMjE1OSAxOS4yMDAyIDE5LjMxNDcgMTcuNTU1N0MyMC40MTM1IDE1LjkxMTIgMjEgMTMuOTc3OCAyMSAxMkMyMSAxMC42ODY4IDIwLjc0MTMgOS4zODY0MiAyMC4yMzg4IDguMTczMTdDMTkuNzM2MiA2Ljk1OTkxIDE4Ljk5OTYgNS44NTc1MiAxOC4wNzExIDQuOTI4OTNDMTcuMTQyNSA0LjAwMDM1IDE2LjA0MDEgMy4yNjM3NSAxNC44MjY4IDIuNzYxMkMxMy42MTM2IDIuMjU4NjYgMTIuMzEzMiAyIDExIDJWMlpNMTEgMjBDOS40MTc3NSAyMCA3Ljg3MTAzIDE5LjUzMDggNi41NTU0MyAxOC42NTE4QzUuMjM5ODQgMTcuNzcyNyA0LjIxNDQ2IDE2LjUyMzMgMy42MDg5NiAxNS4wNjE1QzMuMDAzNDYgMTMuNTk5NyAyLjg0NTAzIDExLjk5MTEgMy4xNTM3MSAxMC40MzkzQzMuNDYyNCA4Ljg4NzQzIDQuMjI0MzIgNy40NjE5NyA1LjM0MzE0IDYuMzQzMTVDNi40NjE5NiA1LjIyNDMzIDcuODg3NDMgNC40NjI0IDkuNDM5MjcgNC4xNTM3MkMxMC45OTExIDMuODQ1MDQgMTIuNTk5NyA0LjAwMzQ2IDE0LjA2MTUgNC42MDg5NkMxNS41MjMzIDUuMjE0NDcgMTYuNzcyNyA2LjIzOTg0IDE3LjY1MTggNy41NTU0NEMxOC41MzA4IDguODcxMDMgMTkgMTAuNDE3NyAxOSAxMkMxOSAxNC4xMjE3IDE4LjE1NzEgMTYuMTU2NiAxNi42NTY5IDE3LjY1NjlDMTUuMTU2NiAxOS4xNTcxIDEzLjEyMTcgMjAgMTEgMjBWMjBaTTEyIDExLjkzVjdDMTIgNi43MzQ3OCAxMS44OTQ2IDYuNDgwNDMgMTEuNzA3MSA2LjI5Mjg5QzExLjUxOTYgNi4xMDUzNiAxMS4yNjUyIDYgMTEgNkMxMC43MzQ4IDYgMTAuNDgwNCA2LjEwNTM2IDEwLjI5MjkgNi4yOTI4OUMxMC4xMDU0IDYuNDgwNDMgMTAgNi43MzQ3OCAxMCA3VjEyQzEwIDEyIDEwIDEyLjA3IDEwIDEyLjExQzkuOTc1MzkgMTIuMzEzMyAxMC4wMTM4IDEyLjUxOTIgMTAuMTEgMTIuN0wxMS42MSAxNS4zQzExLjc0MjYgMTUuNTMwNyAxMS45NjE0IDE1LjY5OTMgMTIuMjE4NCAxNS43Njg3QzEyLjQ3NTMgMTUuODM4MSAxMi43NDkzIDE1LjgwMjYgMTIuOTggMTUuNjdDMTMuMjEwNyAxNS41Mzc0IDEzLjM3OTMgMTUuMzE4NiAxMy40NDg3IDE1LjA2MTZDMTMuNTE4MSAxNC44MDQ3IDEzLjQ4MjYgMTQuNTMwNyAxMy4zNSAxNC4zTDEyIDExLjkzWiIgZmlsbD0iYmxhY2siLz4KPC9zdmc+Cg==');
   }
+  .wtg-teaser-text{ flex:1; }
+  .wtg-teaser-toggle .chevron{
+    width:18px; height:18px; flex:none; color:var(--muted); transition:transform .2s;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .wtg-teaser-toggle.open .chevron{ transform:rotate(180deg); }
+  .wtg-teaser-body{ display:none; }
+  .wtg-teaser-body .card:first-child{ margin-top:0; }
 
   .station-title{ display:flex; align-items:baseline; gap:8px; margin-bottom:14px;}
   .station-title h2{ font-size:22px; margin:0; font-weight:600; letter-spacing:-.3px; }
@@ -374,10 +396,17 @@
   .note.warn{ color:var(--warn); }
   .note.holiday{ color:var(--accent); font-weight:600; }
 
+  /* max-width здесь — не 640px, а 640-32=608: main тоже упирается в 640px,
+     но у него ещё и свои 16px+16px padding по бокам, из-за которых
+     карточки внутри реально шире 608px не бывают. .disclaimer/.offline-note
+     лежат СНАРУЖИ main (не могут унаследовать его padding), так что ширину
+     приходится дублировать вручную — иначе на широких экранах этот блок
+     оказывается на 32px шире карточек и торчит по бокам (было замечено
+     пользователем 2026-09-01). */
   .disclaimer{
     display:flex; gap:9px; align-items:flex-start; background:var(--card);
     border-radius:14px; padding:11px 14px; margin:0 auto 12px;
-    max-width:640px; width:calc(100% - 32px); font-size:12.5px; color:var(--muted); line-height:1.45;
+    max-width:608px; width:calc(100% - 32px); font-size:12.5px; color:var(--muted); line-height:1.45;
   }
   .disclaimer .icon{ display:none; }
 
@@ -387,7 +416,7 @@
   .offline-note{
     display:flex; align-items:flex-start; background:var(--card); border:1px solid var(--warn);
     border-radius:14px; padding:11px 14px; margin:0 auto 12px;
-    max-width:640px; width:calc(100% - 32px); font-size:12.5px; color:var(--warn); line-height:1.45; font-weight:600;
+    max-width:608px; width:calc(100% - 32px); font-size:12.5px; color:var(--warn); line-height:1.45; font-weight:600;
   }
 
   .about-h2{ font-size:14px; font-weight:600; margin:0 0 10px; letter-spacing:-.2px; }
@@ -621,43 +650,49 @@
       </div>
     </div>
 
-  </section>
+    <!-- "Когда выезжать" — раньше отдельная вкладка, с 2026-09-01 свёрнутый
+         блок прямо здесь: своей станции отправления у него нет, это всегда
+         selectedSlug сверху (см. CLAUDE.md). -->
+    <button class="wtg-teaser-toggle" id="wtgTeaserToggle" style="display:none">
+      <span class="wtg-teaser-icon"></span>
+      <span class="wtg-teaser-text" id="wtgTeaserText">На какой поезд успеть, чтобы быть на месте вовремя</span>
+      <span class="new-badge" id="wtgNewBadge">NEW</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
 
-  <!-- ===== ВКЛАДКА: КОГДА ВЫЕЗЖАТЬ ===== -->
-  <section class="view" id="view-whentogo">
-    <div class="card">
-      <div class="field">
-        <label for="wtgOriginSelect" id="wtgFieldOriginLabel">От станции</label>
-        <select id="wtgOriginSelect"></select>
+    <div class="wtg-teaser-body" id="wtgTeaserBody" style="display:none">
+      <div class="card">
+        <div class="field">
+          <label for="wtgDestSelect" id="wtgFieldDestLabel">До станции</label>
+          <select id="wtgDestSelect"></select>
+        </div>
+
+        <div class="field">
+          <label for="wtgTargetTime" id="wtgFieldTimeLabel">К какому времени</label>
+          <input type="time" id="wtgTargetTime" />
+        </div>
+
+        <button class="btn primary" id="wtgCalcBtn" style="width:100%; padding:12px 16px; font-size:14px; margin-top:4px;">Посчитать</button>
       </div>
 
-      <div class="field">
-        <label for="wtgDestSelect" id="wtgFieldDestLabel">До станции</label>
-        <select id="wtgDestSelect"></select>
+      <div class="card result" id="wtgResultCard">
+        <div class="result-dir" id="wtgResultDir"></div>
+        <div class="result-countdown-label" id="wtgResultCountdownLabel" style="display:none"></div>
+        <div class="result-countdown" id="wtgResultCountdown"></div>
+        <div class="result-sub" id="wtgResultSub"></div>
+        <button class="route-toggle" id="wtgRouteToggle" style="display:none">
+          <span id="wtgRouteToggleText">Показать все станции</span><span class="chevron">▾</span>
+        </button>
+        <div class="route-list" id="wtgRouteList"></div>
+        <div class="wtg-action-row" id="wtgActionRow">
+          <button class="btn wtg-route-btn" id="wtgOriginRouteBtn" style="display:none">Маршрут</button>
+          <button class="btn wtg-calendar-btn" id="wtgCalendarBtn" style="display:none">Напомнить</button>
+        </div>
       </div>
-
-      <div class="field">
-        <label for="wtgTargetTime" id="wtgFieldTimeLabel">К какому времени</label>
-        <input type="time" id="wtgTargetTime" />
-      </div>
-
-      <button class="btn primary" id="wtgCalcBtn" style="width:100%; padding:12px 16px; font-size:14px; margin-top:4px;">Посчитать</button>
     </div>
 
-    <div class="card result" id="wtgResultCard">
-      <div class="result-dir" id="wtgResultDir"></div>
-      <div class="result-countdown-label" id="wtgResultCountdownLabel" style="display:none"></div>
-      <div class="result-countdown" id="wtgResultCountdown"></div>
-      <div class="result-sub" id="wtgResultSub"></div>
-      <button class="route-toggle" id="wtgRouteToggle" style="display:none">
-        <span id="wtgRouteToggleText">Показать все станции</span><span class="chevron">▾</span>
-      </button>
-      <div class="route-list" id="wtgRouteList"></div>
-      <div class="wtg-action-row" id="wtgActionRow">
-        <button class="btn wtg-route-btn" id="wtgOriginRouteBtn" style="display:none">Маршрут</button>
-        <button class="btn wtg-calendar-btn" id="wtgCalendarBtn" style="display:none">Напомнить</button>
-      </div>
-    </div>
   </section>
 
   <!-- ===== ВКЛАДКА: ВСЁ РАСПИСАНИЕ ===== -->
@@ -763,7 +798,6 @@
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
     <button class="tab-btn active" data-tab="nearest">Ближайший поезд</button>
-    <button class="tab-btn" data-tab="whentogo" id="whentogoTabBtn"><span id="whentogoTabLabel">Когда выезжать</span><span class="new-badge" id="whentogoNewBadge">NEW</span></button>
     <button class="tab-btn" data-tab="full">Всё расписание</button>
     <button class="tab-btn about-link-btn" data-tab="about" id="aboutLinkBtn">О метро</button>
   </div>
@@ -858,8 +892,6 @@
       scheduleDisclaimer: 'Поезда чаще всего отправляются ровно по расписанию, указанному на этом сайте. Но иногда метро добавляет дополнительные составы.',
       tabNearest: 'Ближайший поезд',
       tabFull: 'Всё расписание',
-      tabWhentogo: 'Когда выезжать',
-      wtgFieldOrigin: 'От станции',
       wtgFieldDest: 'До станции',
       wtgFieldTime: 'К какому времени',
       wtgCalcBtn: 'Посчитать',
@@ -956,8 +988,6 @@
       scheduleDisclaimer: 'Пойыздар көбіне осы сайтта көрсетілген кесте бойынша дәл жүреді. Бірақ кейде метро қосымша құрам қосады.',
       tabNearest: 'Жақын пойыз',
       tabFull: 'Толық кесте',
-      tabWhentogo: 'Қашан шығу керек',
-      wtgFieldOrigin: 'Қай бекеттен',
       wtgFieldDest: 'Қай бекетке',
       wtgFieldTime: 'Қай уақытқа дейін',
       wtgCalcBtn: 'Есептеу',
@@ -1058,8 +1088,6 @@
       scheduleDisclaimer: 'Trains usually depart exactly on the schedule shown here. But the metro sometimes adds extra trains.',
       tabNearest: 'Nearest train',
       tabFull: 'Full schedule',
-      tabWhentogo: 'When to leave',
-      wtgFieldOrigin: 'From station',
       wtgFieldDest: 'To station',
       wtgFieldTime: 'By what time',
       wtgCalcBtn: 'Calculate',
@@ -1608,16 +1636,26 @@
   }
 
   function selectStation(slug, viaGeo, distanceMeters, method) {
+    var prevSlug = selectedSlug;
     selectedSlug = slug;
     stationSelect.value = slug;
-    wtgOriginSelect.value = slug;
     var st = STATIONS_BY_SLUG[slug];
     document.getElementById('stationCard').style.display = '';
     document.getElementById('stationName').textContent = stationName(st);
     document.getElementById('stationRouteBtn').style.display = '';
     document.getElementById('wtgOriginRouteBtn').style.display = '';
+    document.getElementById('wtgTeaserToggle').style.display = '';
     renderLineStrip(slug);
     renderDirections();
+    // Блок "Когда выезжать" всегда считает от этой же станции (см.
+    // wtgCalculate() — берёт selectedSlug напрямую, отдельного поля "От
+    // станции" у него больше нет, см. CLAUDE.md). Если станция сменилась,
+    // а расчёт уже был показан — он относится к прежней станции, прячем,
+    // чтобы не вводить в заблуждение, пока не нажали "Посчитать" заново.
+    if (prevSlug !== slug && wtgResultCard.className.indexOf('show') !== -1) {
+      wtgResultCard.className = 'card result';
+      wtgStopCountdown();
+    }
     // method: 'geo' — по геолокации, 'manual' — выбрал сам (список/точка на линии),
     // 'default' — авто-фолбэк на первую станцию (геолокация недоступна/далеко), это
     // не осознанный выбор пользователя, но полезно отличать в статистике.
@@ -1942,11 +1980,13 @@
   // Подпись под шапкой (#appSubtitle) — своя на каждую вкладку, т.к. они
   // делают разное: "сколько ждать" верно только для "Ближайшего поезда".
   // На "О метро" подписи нет вовсе — это справочный раздел, не про ожидание.
+  // "Когда выезжать" больше не отдельная вкладка (см. ниже) — своей подписи
+  // в шапке у неё, соответственно, тоже больше нет.
   function updateAppSubtitle(tab) {
     var el = document.getElementById('appSubtitle');
     if (tab === 'about') { el.style.display = 'none'; return; }
     el.style.display = '';
-    el.textContent = t(tab === 'whentogo' ? 'appSubtitleWhentogo' : tab === 'full' ? 'appSubtitleFull' : 'appSubtitle');
+    el.textContent = t(tab === 'full' ? 'appSubtitleFull' : 'appSubtitle');
   }
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -1962,23 +2002,34 @@
         if (selectedSlug) fullStationSelect.value = selectedSlug;
         renderFullSchedule();
       }
-      if (btn.dataset.tab === 'whentogo') {
-        try { localStorage.setItem('whentogoSeen', '1'); } catch (e) { /* приватный режим и т.п. */ }
-        document.getElementById('whentogoNewBadge').style.display = 'none';
-      }
     });
   });
-  // NEW-бейдж у вкладки — скрываем сразу при загрузке, если человек уже
-  // открывал её раньше (не только по клику, см. выше) — иначе бейдж мелькнёт
-  // на долю секунды при каждом заходе, пока обработчик клика не сработает.
+
+  /* ---------- "Когда выезжать" ----------
+     С 2026-09-01 это не отдельная вкладка, а свёрнутый по умолчанию блок
+     внизу "Ближайшего поезда" (см. CLAUDE.md, раздел объединения) — своей
+     станции отправления у него больше нет, всегда используется общий
+     selectedSlug сверху. */
+  var wtgTeaserToggle = document.getElementById('wtgTeaserToggle');
+  var wtgTeaserBody = document.getElementById('wtgTeaserBody');
+  wtgTeaserToggle.addEventListener('click', function () {
+    var open = wtgTeaserToggle.classList.toggle('open');
+    wtgTeaserBody.style.display = open ? 'block' : 'none';
+    if (open) {
+      trackEvent('wtg_teaser_open', {});
+      try { localStorage.setItem('whentogoSeen', '1'); } catch (e) { /* приватный режим и т.п. */ }
+      document.getElementById('wtgNewBadge').style.display = 'none';
+    }
+  });
+  // NEW-бейдж — скрываем сразу при загрузке, если человек уже разворачивал
+  // блок раньше (не только по клику, см. выше) — иначе бейдж мелькнёт на
+  // долю секунды при каждом заходе, пока обработчик клика не сработает.
   try {
     if (localStorage.getItem('whentogoSeen') === '1') {
-      document.getElementById('whentogoNewBadge').style.display = 'none';
+      document.getElementById('wtgNewBadge').style.display = 'none';
     }
   } catch (e) { /* приватный режим и т.п. */ }
 
-  /* ---------- Вкладка "Когда выезжать" ---------- */
-  var wtgOriginSelect = document.getElementById('wtgOriginSelect');
   var wtgDestSelect = document.getElementById('wtgDestSelect');
   var wtgTargetTime = document.getElementById('wtgTargetTime');
   var wtgCalcBtn = document.getElementById('wtgCalcBtn');
@@ -1991,21 +2042,6 @@
   var wtgRouteToggleText = document.getElementById('wtgRouteToggleText');
   var wtgRouteList = document.getElementById('wtgRouteList');
   var wtgCountdownTimer = null;
-
-  // "От станции" на этой вкладке — общая "домашняя" станция с вкладки
-  // "Ближайший поезд" (своей отдельной геолокации сознательно нет — не
-  // дублируем то, что уже есть на главном экране), но поменять её можно
-  // прямо тут же: это тот же selectedSlug, что и на "Ближайшем поезде" —
-  // изменение в одном месте сразу отражается в другом (см. selectStation()
-  // и populateStationSelects()).
-  wtgOriginSelect.addEventListener('change', function () {
-    selectStation(wtgOriginSelect.value, false);
-    // старый результат расчёта относился к прежней станции — прячем, чтобы
-    // не вводить в заблуждение, пока не нажали "Посчитать" заново
-    wtgResultCard.className = 'card result';
-    wtgStopCountdown();
-  });
-
 
   function wtgStopCountdown() {
     if (wtgCountdownTimer) { clearInterval(wtgCountdownTimer); wtgCountdownTimer = null; }
@@ -2399,7 +2435,7 @@
     if (selectedSlug) openRouteModal(selectedSlug);
   });
   document.getElementById('wtgOriginRouteBtn').addEventListener('click', function () {
-    if (selectedSlug) openRouteModal(selectedSlug); // wtgOriginSelect всегда = selectedSlug
+    if (selectedSlug) openRouteModal(selectedSlug);
   });
 
   /* ---------- Полное расписание ---------- */
@@ -2526,7 +2562,7 @@
 
   /* ---------- Переключение языка ---------- */
   function populateStationSelects() {
-    [stationSelect, fullStationSelect, wtgDestSelect, wtgOriginSelect].forEach(function (sel) {
+    [stationSelect, fullStationSelect, wtgDestSelect].forEach(function (sel) {
       var prevValue = sel.value;
       sel.innerHTML = '';
       STATIONS.forEach(function (s) {
@@ -2537,13 +2573,14 @@
       });
       if (prevValue) sel.value = prevValue;
     });
-    // stationSelect и wtgOriginSelect — не независимый выбор (в отличие от
+    // stationSelect — не независимый выбор (в отличие от
     // fullStationSelect/wtgDestSelect, где можно смотреть расписание любой
-    // станции без смены "домашней"): оба должны всегда совпадать с
-    // selectedSlug, куда бы его ни поменяли.
+    // станции без смены "домашней"): должен всегда совпадать с
+    // selectedSlug, куда бы его ни поменяли. У блока "Когда выезжать"
+    // своего поля "От станции" больше нет — он и так всегда берёт
+    // selectedSlug напрямую (см. wtgCalculate()).
     if (selectedSlug) {
       stationSelect.value = selectedSlug;
-      wtgOriginSelect.value = selectedSlug;
     }
   }
 
@@ -2586,8 +2623,7 @@
     document.querySelector('[data-tab="nearest"]').textContent = t('tabNearest');
     document.querySelector('[data-tab="full"]').textContent = t('tabFull');
     document.querySelector('[data-tab="about"]').textContent = t('aboutTab');
-    document.getElementById('whentogoTabLabel').textContent = t('tabWhentogo');
-    document.getElementById('wtgFieldOriginLabel').textContent = t('wtgFieldOrigin');
+    document.getElementById('wtgTeaserText').textContent = t('appSubtitleWhentogo');
     document.getElementById('wtgFieldDestLabel').textContent = t('wtgFieldDest');
     document.getElementById('wtgFieldTimeLabel').textContent = t('wtgFieldTime');
     document.getElementById('wtgCalcBtn').textContent = t('wtgCalcBtn');
