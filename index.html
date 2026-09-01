@@ -530,20 +530,39 @@
   .daytype-toggle .btn{ flex:1; }
   .daytype-toggle .btn.active{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
 
+  /* Порог поднят с 400 до 480px (2026-09-01, по просьбе пользователя —
+     раздел казался мелким): у большинства современных телефонов (390-430px)
+     ширина экрана раньше всё ещё укладывала две колонки рядом, ужимая
+     чипы времени в ~185px — теперь у них одна широкая колонка. */
   .sched-cols{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  @media (max-width:400px){ .sched-cols{ grid-template-columns:1fr; } }
+  @media (max-width:480px){ .sched-cols{ grid-template-columns:1fr; } }
   .sched-col-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; user-select:none; margin:0 0 10px; padding:2px 0; }
-  .sched-col-header h3{ font-size:12px; color:var(--muted); margin:0; font-weight:600; font-family:"Inter",sans-serif; }
+  .sched-col-header h3{ font-size:16px; color:var(--text); margin:0; font-weight:700; font-family:"Inter",sans-serif; }
   .sched-col-header .chevron{ width:16px; height:16px; flex:none; color:var(--muted); transition:transform .2s; display:flex; align-items:center; justify-content:center; }
   .sched-col-body{ display:block; }
   .sched-col.collapsed .sched-col-body{ display:none; }
   .sched-col.collapsed .chevron{ transform:rotate(-90deg); }
-  .hour-block{ margin-bottom:12px; }
-  .hour-block .hour{ font-size:11px; color:var(--muted2); margin-bottom:5px; font-weight:700; }
-  .chip-row{ display:flex; flex-wrap:wrap; gap:5px; }
-  .chip{ font-size:12px; font-variant-numeric:tabular-nums; font-weight:600; padding:4px 8px; border-radius:8px; background:var(--card2); border:1px solid var(--border); color:var(--text); }
-  .chip.past{ opacity:.3; }
+  .hour-block{ margin-bottom:14px; }
+  .hour-block .hour{ font-size:12.5px; color:var(--muted); margin-bottom:6px; font-weight:700; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{ font-size:14px; font-variant-numeric:tabular-nums; font-weight:600; padding:6px 10px; border-radius:9px; background:var(--card2); border:1px solid var(--border); color:var(--text); }
+  .chip.past{ opacity:.35; }
   .chip.next{ background:var(--accent); color:var(--accent-ink); border-color:transparent; font-weight:700; }
+
+  /* Схлопнутые "прошедшие часы" (2026-09-01) — по умолчанию скрыты, чтобы
+     вечером сразу было видно расписание с текущего часа, а не листать вниз
+     мимо десятка тусклых прошедших часов. Показывается только для дня,
+     который реально сегодня (viewingCurrentDayType) — у другого дня недели
+     нет понятия "прошедшее". */
+  .sched-earlier-toggle{
+    display:flex; align-items:center; gap:6px; width:100%; margin:0 0 12px;
+    padding:7px 2px; border:none; border-bottom:1px solid var(--border); background:none;
+    color:var(--muted); font-size:12px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .sched-earlier-toggle .chevron{ width:13px; height:13px; flex:none; transition:transform .2s; }
+  .sched-earlier-toggle.open .chevron{ transform:rotate(180deg); }
+  .sched-earlier-body{ display:none; margin-bottom:2px; }
+  .sched-earlier-body.show{ display:block; }
 
   .spinner{ width:16px;height:16px;border-radius:50%;border:2.5px solid var(--border); border-top-color:var(--accent); animation:spin .8s linear infinite; flex:none; }
   @keyframes spin{ to{ transform:rotate(360deg);} }
@@ -947,6 +966,8 @@
       weekday: 'Будни',
       weekend: 'Выходные',
       noDepartures: 'Нет отправлений (конечная станция или нет данных).',
+      fullShowEarlier: function (from, to) { return 'Показать более ранние (' + from + '–' + to + ')'; },
+      fullHideEarlier: 'Скрыть прошедшие',
       footerUpdated: function (date) { return 'Последнее обновление: ' + date + ' · источник metroalmaty.kz'; },
       footerStatic: 'Расписание статическое (не GPS-трекинг поездов), как и на официальном сайте',
       feedbackLink: 'Написать нам',
@@ -1047,6 +1068,8 @@
       weekday: 'Жұмыс күндері',
       weekend: 'Демалыс күндері',
       noDepartures: 'Рейстер жоқ (соңғы бекет немесе деректер жоқ).',
+      fullShowEarlier: function (from, to) { return 'Бұрынғыларын көрсету (' + from + '–' + to + ')'; },
+      fullHideEarlier: 'Бұрынғыларын жасыру',
       footerUpdated: function (date) { return 'Соңғы жаңарту: ' + date + ' · дереккөзі metroalmaty.kz'; },
       footerStatic: 'Статикалық кесте (пойыздарды GPS арқылы бақыламайды), ресми сайттағыдай',
       feedbackLink: 'Бізге жазыңыз',
@@ -1143,6 +1166,8 @@
       weekday: 'Weekdays',
       weekend: 'Weekends',
       noDepartures: 'No departures (terminus station or no data).',
+      fullShowEarlier: function (from, to) { return 'Show earlier (' + from + '–' + to + ')'; },
+      fullHideEarlier: 'Hide earlier',
       footerUpdated: function (date) { return 'Last update: ' + date + ' · source metroalmaty.kz'; },
       footerStatic: 'Static schedule (not live GPS train tracking), same as on the official site',
       feedbackLink: 'Send feedback',
@@ -2531,11 +2556,13 @@
 
       var groups = groupByHour(times);
       // часы 00-02 — хвост текущих суток (после полуночи), должны идти в конце, а не в начале
-      Object.keys(groups).sort(function (a, b) {
+      var sortedHours = Object.keys(groups).sort(function (a, b) {
         var ka = (+a < 3) ? +a + 24 : +a;
         var kb = (+b < 3) ? +b + 24 : +b;
         return ka - kb;
-      }).forEach(function (hour) {
+      });
+
+      function buildHourBlock(hour) {
         var block = document.createElement('div');
         block.className = 'hour-block';
         var hourLabel = document.createElement('div');
@@ -2544,18 +2571,59 @@
         block.appendChild(hourLabel);
         var row = document.createElement('div');
         row.className = 'chip-row';
-        groups[hour].forEach(function (t) {
+        groups[hour].forEach(function (raw) {
           var chip = document.createElement('span');
-          var mins = timeStrToMinutes(t);
+          var mins = timeStrToMinutes(raw);
           var isPast = viewingCurrentDayType && mins < nowMinutes - 0.001;
-          var isNext = viewingCurrentDayType && t === nextRaw;
+          var isNext = viewingCurrentDayType && raw === nextRaw;
           chip.className = 'chip' + (isPast ? ' past' : '') + (isNext ? ' next' : '');
-          chip.textContent = t.slice(0, 5);
+          chip.textContent = raw.slice(0, 5);
           row.appendChild(chip);
         });
         block.appendChild(row);
-        body.appendChild(block);
-      });
+        return block;
+      }
+
+      // Схлопываем полностью прошедшие часы под тумблер "Показать более
+      // ранние" — чтобы вечером сразу было видно расписание с текущего
+      // часа, а не пролистывать вниз мимо десятка тусклых прошедших. Только
+      // для реально сегодняшнего дня недели (viewingCurrentDayType) — у
+      // просмотра "не сегодняшнего" дня нет понятия "прошедшее".
+      var splitIdx = -1;
+      if (viewingCurrentDayType) {
+        splitIdx = sortedHours.findIndex(function (hour) {
+          return groups[hour].some(function (raw) { return timeStrToMinutes(raw) >= nowMinutes - 0.001; });
+        });
+      }
+      if (splitIdx > 0) {
+        var pastHours = sortedHours.slice(0, splitIdx);
+        var restHours = sortedHours.slice(splitIdx);
+
+        var toggle = document.createElement('button');
+        toggle.className = 'sched-earlier-toggle';
+        toggle.innerHTML =
+          '<svg class="chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '<span class="sched-earlier-toggle-text">' +
+          t('fullShowEarlier', pastHours[0] + ':00', pastHours[pastHours.length - 1] + ':00') + '</span>';
+        body.appendChild(toggle);
+
+        var earlierBody = document.createElement('div');
+        earlierBody.className = 'sched-earlier-body';
+        pastHours.forEach(function (hour) { earlierBody.appendChild(buildHourBlock(hour)); });
+        body.appendChild(earlierBody);
+
+        toggle.addEventListener('click', function () {
+          var open = toggle.classList.toggle('open');
+          earlierBody.classList.toggle('show', open);
+          toggle.querySelector('.sched-earlier-toggle-text').textContent =
+            open ? t('fullHideEarlier') : t('fullShowEarlier', pastHours[0] + ':00', pastHours[pastHours.length - 1] + ':00');
+        });
+
+        restHours.forEach(function (hour) { body.appendChild(buildHourBlock(hour)); });
+      } else {
+        sortedHours.forEach(function (hour) { body.appendChild(buildHourBlock(hour)); });
+      }
       cols.appendChild(col);
     });
   }
