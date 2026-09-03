@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Метро Алматы — расписание поездов онлайн</title>
+<title>[BETA] Метро Алматы — расписание поездов онлайн</title>
 <meta name="description" content="Онлайн-расписание метро Алматы и время до следующего поезда. Алматы метросының кестесі. Almaty Metro schedule online." />
-<meta name="robots" content="index, follow" />
+<meta name="robots" content="noindex, nofollow" />
 <link rel="canonical" href="https://ala-metro.org/" />
 
 <!-- Open Graph / соцсети и мессенджеры -->
@@ -660,6 +660,7 @@
   <div class="brand">
     <img class="logo-mark" src="mascot/logo.png" alt="" width="28" height="28" />
     <h1 id="appTitle">Метро Алматы</h1>
+    <span class="new-badge">BETA</span>
   </div>
   <div class="lang-toggle" id="langToggle">
     <button class="lang-btn" data-lang="kk">ҚАЗ</button>
@@ -892,16 +893,10 @@
     return;
   }
 
-  // Офлайн-доступ (см. sw.js + CLAUDE.md) — регистрируем после полной загрузки
-  // страницы, чтобы не соревноваться за сеть с основными ресурсами. Внутри
-  // самого Telegram (WebView) Service Worker может быть недоступен вовсе —
-  // особенно на iOS — тогда просто ничего не произойдёт, приложение работает
-  // как обычно, просто без офлайн-кеша.
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function () { /* нет офлайна — не критично */ });
-    });
-  }
+  // beta.html: Service Worker НАМЕРЕННО не регистрируем — это тестовая
+  // страница для обкатки новых фич перед переносом в index.html, офлайн-кеш
+  // тут только мешал бы (пришлось бы постоянно гадать, свежая ли версия
+  // открылась). См. CLAUDE.md, раздел про beta.html.
 
   /* ---------- Telegram Mini App bootstrap ---------- */
   var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -2884,7 +2879,7 @@
     try { localStorage.setItem(LANG_STORAGE_KEY, lang); } catch (e) { /* приватный режим и т.п. */ }
 
     document.documentElement.lang = lang;
-    document.title = t('pageTitle');
+    document.title = '[BETA] ' + t('pageTitle');
     document.getElementById('appTitle').textContent = t('appTitle');
     var activeTabBtn = document.querySelector('.tab-btn.active');
     updateAppSubtitle(activeTabBtn ? activeTabBtn.dataset.tab : 'nearest');
