@@ -524,13 +524,20 @@
 
   /* Компактный вариант — рядом с названием станции/подписью поля, а не
      отдельной строкой. Нейтральный, приглушённый — это вспомогательное
-     действие, не хочет соревноваться за внимание с основными кнопками. */
-  .station-name-row{ display:inline-flex; align-items:flex-start; gap:7px; min-width:0; flex-wrap:wrap; }
+     действие, не хочет соревноваться за внимание с основными кнопками.
+     На "Ближайшем поезде" (#stationRouteBtn) с 2026-09-05 без подписи —
+     решили, что одной иконки достаточно, увеличили её (было 9px) вместо
+     мелкого бейджика с текстом. Пробовали 22px вровень с высотой шрифта
+     названия станции — по отзыву слишком крупно, остановились на 15px
+     (тот же размер, что у ::before в .route-trigger по умолчанию —
+     см. выше). Текст остался только в aria-label (см. JS,
+     applyLanguage()) — для скринридеров. */
+  .station-name-row{ display:inline-flex; align-items:flex-end; gap:7px; min-width:0; flex-wrap:wrap; }
   .route-trigger-sm{
-    margin-top:2px; padding:2px 7px 2px 5px; gap:3px; font-size:9.5px;
-    border-radius:6px; font-weight:700; background:transparent; border:1px solid var(--border); color:var(--muted);
+    padding:3px; margin-bottom:4px; gap:3px; font-size:9.5px;
+    border-radius:7px; font-weight:700; background:transparent; border:1px solid var(--border); color:var(--muted);
   }
-  .route-trigger-sm::before{ width:9px; height:9px; }
+  .route-trigger-sm::before{ width:15px; height:15px; }
 
 
   .route-links{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
@@ -697,7 +704,7 @@
       <div class="station-title">
         <span class="station-name-row">
           <h2 id="stationName">—</h2>
-          <button class="route-trigger route-trigger-sm" id="stationRouteBtn" style="display:none">Маршрут до станции</button>
+          <button class="route-trigger route-trigger-sm" id="stationRouteBtn" style="display:none" aria-label="Маршрут до станции"></button>
         </span>
       </div>
       <div class="line-wrap">
@@ -2646,22 +2653,31 @@
   });
 
   /* ---------- Оплата ONAY ----------
-     Своей ссылки-схемы у ONAY (типа onay://) в открытых источниках нет —
-     ведём на страницу приложения в сторе: если оно уже установлено, ОС
-     сама предложит открыть его вместо страницы стора (iOS/Android умеют
-     это для официальных приложений с большой аудиторией — у ONAY 5M+
-     установок), если нет — можно сразу поставить. До экрана с QR внутри
-     самого ONAY — уже пара тапов пользователя, тут не обойти без
-     задокументированной глубокой ссылки на конкретный экран, которой
-     у ONAY просто нет. */
-  var ONAY_APPSTORE = 'https://apps.apple.com/kz/app/onay/id1267862149';
-  var ONAY_PLAY = 'https://play.google.com/store/apps/details?id=kz.onay';
+     Раньше вели на страницу приложения в сторе (apps.apple.com/
+     play.google.com) в расчёте, что ОС сама откроет установленное
+     приложение вместо страницы стора — это оказалось неверно: ссылка
+     на СТОР не переоткрывает установленное приложение ни на одной
+     платформе, так не работает ни iOS, ни Android. Так делают только
+     Universal Links (iOS) / App Links (Android) — ссылка именно на
+     домен самого приложения, не на его страницу в сторе.
+     Проверили 2026-09-05: на onay.kz реально есть
+     .well-known/apple-app-site-association (Universal Links, весь
+     домен → kz.onay.Onay) и .well-known/assetlinks.json (Android App
+     Links, весь домен → kz.onay, тот же package, что был в старой
+     ссылке на Google Play) — значит ссылка на сам домен должна
+     открывать установленное приложение напрямую на обеих платформах,
+     а не просто показывать его страницу в сторе. Ведём на корень
+     домена (шаблон в apple-app-site-association — "*", то есть весь
+     сайт, а не отдельный путь) — глубже, сразу на экран QR внутри
+     ONAY, задокументированного способа попасть всё равно нет.
+     Собственная кастомная URL-схема (onay://) для этого и не нужна —
+     Universal/App Links работают через обычный https-адрес. */
+  var ONAY_LINK = 'https://onay.kz/';
   document.getElementById('onayBtn').addEventListener('click', function () {
     var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    var url = isIOS ? ONAY_APPSTORE : ONAY_PLAY;
     trackEvent('onay_open', { platform: isIOS ? 'ios' : 'android' });
-    if (insideTelegram && tg.openLink) { tg.openLink(url); return; }
-    window.open(url, '_blank', 'noopener');
+    if (insideTelegram && tg.openLink) { tg.openLink(ONAY_LINK); return; }
+    window.open(ONAY_LINK, '_blank', 'noopener');
   });
 
   /* ---------- Полное расписание ---------- */
@@ -2898,7 +2914,7 @@
     document.getElementById('wtgCalcBtn').textContent = t('wtgCalcBtn');
     document.getElementById('wtgRouteToggleText').textContent =
       wtgRouteToggle.classList.contains('open') ? t('wtgHideStations') : t('wtgShowAllStations');
-    document.getElementById('stationRouteBtn').textContent = t('routeTrigger');
+    document.getElementById('stationRouteBtn').setAttribute('aria-label', t('routeTrigger'));
     document.getElementById('onayRowText').textContent = t('onayRowText');
     document.getElementById('wtgOriginRouteBtn').textContent = t('wtgRouteBtn');
     document.getElementById('routeModalTitle').textContent = t('routeModalTitle');

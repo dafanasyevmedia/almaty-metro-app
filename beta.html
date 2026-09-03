@@ -230,6 +230,75 @@
     color:var(--text); font-size:15px; font-weight:600; font-family:inherit; margin-top:10px;
     appearance:none; -webkit-appearance:none;
   }
+  /* Кнопка-триггер модалки выбора станции — визуально один в один как
+     select{} выше (тот же паддинг/радиус/фон/шеврон), просто <button>
+     вместо <select>: сами селекты (stationSelect/wtgDestSelect/
+     fullStationSelect) остаются в DOM скрытыми и по-прежнему хранят
+     значение — вся существующая логика (wtgCalculate, renderFullSchedule,
+     populateStationSelects и т.п.) продолжает работать без изменений,
+     меняется только то, как человек это значение выбирает. См.
+     openStationModal()/CLAUDE.md. */
+  .station-picker-trigger{
+    width:100%; padding:12px 36px 12px 14px; border-radius:13px; border:1px solid var(--border);
+    background:var(--card2) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%238a94ab" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>') no-repeat right 12px center;
+    color:var(--text); font-size:15px; font-weight:600; font-family:inherit; margin-top:10px;
+    display:block; text-align:left; cursor:pointer;
+  }
+  .station-picker-trigger:active{ opacity:.85; }
+  .sched-controls .station-picker-trigger{ margin-top:0; }
+
+  /* Модалка выбора станции — вертикальная линия (та же идея, что у
+     горизонтальной .line-track на "Ближайшем поезде", просто в столбик:
+     .station-modal-line::before — сплошная линия, точки и подписи
+     станций — обычные строки поверх неё). 2026-09-04. */
+  .station-modal-card{ max-width:340px; padding:20px 18px; }
+  .station-modal-card h2{ padding-left:4px; }
+  .station-modal-line{ position:relative; display:flex; flex-direction:column; padding:4px 0; }
+  .station-modal-line::before{
+    content:''; position:absolute; top:26px; bottom:26px; left:16px; width:2px;
+    background:var(--border); border-radius:2px;
+  }
+  .station-modal-row{
+    position:relative; z-index:1; display:flex; align-items:center; gap:12px;
+    padding:8px 6px; border-radius:10px; border:none; background:none;
+    color:var(--text); font-family:inherit; text-align:left; cursor:pointer;
+  }
+  .station-modal-row:active{ background:var(--card2); }
+  .station-modal-dotwrap{
+    position:relative; width:22px; height:22px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .station-modal-dot{
+    width:9px; height:9px; border-radius:50%; background:var(--muted); opacity:.6; transition:all .15s;
+  }
+  .station-modal-row.active .station-modal-dot{
+    width:15px; height:15px; opacity:1; background:var(--accent);
+    box-shadow:0 0 0 4px var(--accent-soft), 0 0 14px -2px var(--accent);
+  }
+  .station-modal-name{ font-size:14.5px; font-weight:600; }
+  .station-modal-row.active .station-modal-name{ color:var(--accent); font-weight:700; }
+  /* Метка "рядом с вами по GPS" — тонкое кольцо вокруг обычной (не
+     активной) точки, как маркер геопозиции на картах. Не рисуем, если
+     геоближайшая станция и так активна (её уже выделяет большая залитая
+     точка) — см. renderStationModalList()/CLAUDE.md. 2026-09-04.
+     Размеры — только целые числа (16px, не 15px; margin -8px, не
+     -7.5px), а box-sizing:border-box — ОБЯЗАТЕЛЬНО указан явно, а не
+     унаследован от глобального `*{box-sizing:border-box}` (строка ~132):
+     на псевдоэлементах `::after`/`::before` этот `*` в браузере не
+     срабатывает (тот же приём уже используется в .tab-btn::before выше
+     по файлу). Без явного border-box рамка 2px добавлялась ПОВЕРХ
+     ширины 16px (итоговый диаметр — 20px, не 16px), а отступ -8px
+     центрировал не тот размер — кольцо визуально уезжало на ~2px
+     вниз-вправо от точки. Поймал не через getBoundingClientRect()
+     (у ::after его нет) — наложил поверх настоящий элемент с той же
+     версткой и getComputedStyle() сверил box-sizing построчно.
+     2026-09-04. */
+  .station-modal-dotwrap.is-near::after{
+    content:''; position:absolute; top:50%; left:50%; width:16px; height:16px;
+    box-sizing:border-box; margin:-8px 0 0 -8px; border:2px solid var(--accent);
+    border-radius:50%; opacity:.55;
+  }
+  .station-modal-near-tag{ color:var(--muted); font-weight:500; font-size:11.5px; margin-left:6px; }
   input[type="time"]{
     width:100%; padding:12px 14px; border-radius:13px; border:1px solid var(--border);
     background:var(--card2); color:var(--text); font-size:15px; font-weight:600; font-family:inherit;
@@ -524,13 +593,23 @@
 
   /* Компактный вариант — рядом с названием станции/подписью поля, а не
      отдельной строкой. Нейтральный, приглушённый — это вспомогательное
-     действие, не хочет соревноваться за внимание с основными кнопками. */
-  .station-name-row{ display:inline-flex; align-items:flex-start; gap:7px; min-width:0; flex-wrap:wrap; }
+     действие, не хочет соревноваться за внимание с основными кнопками.
+     На "Ближайшем поезде" (#stationRouteBtn) с 2026-09-05 без подписи —
+     решили, что одной иконки достаточно, увеличили её (было 9px) вместо
+     мелкого бейджика с текстом. Пробовали 22px вровень с высотой шрифта
+     названия станции — по отзыву слишком крупно, остановились на 15px
+     (тот же размер, что у ::before в .route-trigger по умолчанию —
+     см. выше). Текст остался только в aria-label (см. JS,
+     applyLanguage()) — для скринридеров. Отступы у бейджика — строго
+     симметричные (padding:3px), иначе квадрат перестаёт быть квадратом
+     и иконка внутри визуально смещается не по центру; подъём над
+     базовой линией текста — через margin-bottom, не через отступы. */
+  .station-name-row{ display:inline-flex; align-items:flex-end; gap:7px; min-width:0; flex-wrap:wrap; }
   .route-trigger-sm{
-    margin-top:2px; padding:2px 7px 2px 5px; gap:3px; font-size:9.5px;
-    border-radius:6px; font-weight:700; background:transparent; border:1px solid var(--border); color:var(--muted);
+    padding:3px; margin-bottom:4px; gap:3px; font-size:9.5px;
+    border-radius:7px; font-weight:700; background:transparent; border:1px solid var(--border); color:var(--muted);
   }
-  .route-trigger-sm::before{ width:9px; height:9px; }
+  .route-trigger-sm::before{ width:15px; height:15px; }
 
 
   .route-links{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
@@ -698,7 +777,7 @@
       <div class="station-title">
         <span class="station-name-row">
           <h2 id="stationName">—</h2>
-          <button class="route-trigger route-trigger-sm" id="stationRouteBtn" style="display:none">Маршрут до станции</button>
+          <button class="route-trigger route-trigger-sm" id="stationRouteBtn" style="display:none" aria-label="Маршрут до станции"></button>
         </span>
       </div>
       <div class="line-wrap">
@@ -740,8 +819,11 @@
     <div class="wtg-teaser-body" id="wtgTeaserBody" style="display:none">
       <div class="card">
         <div class="field">
-          <label for="wtgDestSelect" id="wtgFieldDestLabel">До станции</label>
-          <select id="wtgDestSelect"></select>
+          <label id="wtgFieldDestLabel">До станции</label>
+          <button type="button" class="station-picker-trigger" id="wtgDestTrigger">
+            <span id="wtgDestTriggerText">—</span>
+          </button>
+          <select id="wtgDestSelect" style="display:none"></select>
         </div>
 
         <div class="field">
@@ -774,7 +856,10 @@
   <section class="view" id="view-full">
     <div class="card">
       <div class="sched-controls">
-        <select id="fullStationSelect" style="flex:1"></select>
+        <button type="button" class="station-picker-trigger" id="fullStationTrigger" style="flex:1">
+          <span id="fullStationTriggerText">—</span>
+        </button>
+        <select id="fullStationSelect" style="display:none"></select>
       </div>
       <div class="daytype-toggle">
         <button class="btn" data-daytype="weekday">Будни</button>
@@ -867,6 +952,18 @@
       <a class="route-link-item" id="routeLink2gis"><img class="route-link-icon" src="data:image/svg+xml;base64,PHN2ZwogICB3aWR0aD0iMTE3IgogICBoZWlnaHQ9IjExMyIKICAgZmlsbD0ibm9uZSIKICAgdmlld0JveD0iMCAwIDExNyAxMTMiCiAgIHZlcnNpb249IjEuMSIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcyAvPgogIDxtYXNrCiAgICAgaWQ9ImEyZ2lzIgogICAgIG1hc2tVbml0cz0idXNlclNwYWNlT25Vc2UiCiAgICAgeD0iMjIiCiAgICAgeT0iMTgiCiAgICAgd2lkdGg9IjM0IgogICAgIGhlaWdodD0iMzMiPgogICAgPHBhdGgKICAgICAgIGZpbGwtcnVsZT0iZXZlbm9kZCIKICAgICAgIGNsaXAtcnVsZT0iZXZlbm9kZCIKICAgICAgIGQ9Ik0gMzAuMjAyLDE4LjAxNSAzMS42MTQsMTggNDYuMzAxLDE4LjAwNiBjIDAuMjIzLDAuMDAyIDAuMzYyLDAuMDA1IDAuNSwwLjAwOSAwLjcyOCwwLjAxOSAxLjQ2MywwLjA2MSAyLjE4MywwLjE5IGEgNy40MSw3LjQxIDAgMCAxIDIuMDc1LDAuNjc2IGMgMC42NTIsMC4zMjggMS4yNSwwLjc1NiAxLjc2NywxLjI2OSBhIDYuODc4LDYuODc4IDAgMCAxIDEuMjgzLDEuNzQ2IGMgMC4zNCwwLjY1NyAwLjU1MywxLjMzIDAuNjg0LDIuMDUyIDAuMTMsMC43MTIgMC4xNzMsMS40MzggMC4xOTIsMi4xNTggMC4wMSwwLjMzIDAuMDE0LDAuNjYgMC4wMTUsMC45OTEgbCAwLjAwMiwwLjU4OSB2IDEzLjAzNyBjIDAsMC4zOTIgMCwwLjc4NSAtMC4wMDIsMS4xNzggLTAuMDAyLDAuMzMgLTAuMDA1LDAuNjYgLTAuMDE1LDAuOTkgLTAuMDIsMC43MiAtMC4wNjIsMS40NDcgLTAuMTkyLDIuMTU4IGEgNy4yMDIsNy4yMDIgMCAwIDEgLTAuNjg0LDIuMDUyIDYuODk3LDYuODk3IDAgMCAxIC0xLjI4MywxLjc0NyA2Ljk3NSw2Ljk3NSAwIDAgMSAtMS43NjcsMS4yNjkgNy40MDYsNy40MDYgMCAwIDEgLTIuMDc1LDAuNjc2IGMgLTAuNzIsMC4xMjggLTEuNDU1LDAuMTcgLTIuMTgzLDAuMTkgTCA0NC42MDcsNTEgMzAuNzAxLDUwLjk5MiBhIDI3LjIyOSwyNy4yMjkgMCAwIDEgLTAuNDk5LC0wLjAxIGMgLTAuNzI4LC0wLjAxOCAtMS40NjMsLTAuMDYxIC0yLjE4MywtMC4xODkgYSA3LjQwNSw3LjQwNSAwIDAgMSAtMi4wNzQsLTAuNjc2IDYuOTYzLDYuOTYzIDAgMCAxIC0zLjA1MiwtMy4wMTYgNy4yMzYsNy4yMzYgMCAwIDEgLTAuNjg0LC0yLjA1MiBjIC0wLjEzLC0wLjcxMSAtMC4xNzIsLTEuNDM4IC0wLjE5MSwtMi4xNTcgLTAuMDEsLTAuMzMgLTAuMDEzLC0wLjY2MSAtMC4wMTUsLTAuOTkxIEwgMjIsNDEuMzEgViAyOC4yNzUgYyAwLC0wLjM5MiAwLC0wLjc4NSAwLjAwMywtMS4xNzcgMC4wMDIsLTAuMzMgMC4wMDYsLTAuNjYgMC4wMTUsLTAuOTkxIDAuMDIsLTAuNzIgMC4wNjIsLTEuNDQ2IDAuMTkxLC0yLjE1OCBhIDcuMjMxLDcuMjMxIDAgMCAxIDAuNjg0LC0yLjA1MiA2Ljk1LDYuOTUgMCAwIDEgMy4wNTEsLTMuMDE2IDcuNDA5LDcuNDA5IDAgMCAxIDIuMDc1LC0wLjY3NiBjIDAuNzIsLTAuMTI4IDEuNDU1LC0wLjE3IDIuMTgzLC0wLjE5IHoiCiAgICAgICBmaWxsPSIjZmZmZmZmIiAvPgogIDwvbWFzaz4KICA8ZwogICAgIG1hc2s9InVybCgjYTJnaXMpIgogICAgIHRyYW5zZm9ybT0ibWF0cml4KDMuNDE4ODAzNSwwLDAsMy40MTg4MDM1LC03NS4yMTM2NzcsLTYxLjUzODQ2MykiPgogICAgPHBhdGgKICAgICAgIGZpbGw9IiMxOWFhMWUiCiAgICAgICBkPSJNIDIyLDE3Ljk5OCBIIDU1LjAwMyBWIDUxLjAwMSBIIDIyIFoiIC8+CiAgICA8cGF0aAogICAgICAgZmlsbC1ydWxlPSJldmVub2RkIgogICAgICAgY2xpcC1ydWxlPSJldmVub2RkIgogICAgICAgZD0iTSAyMiwxNy45OTggSCA1NS4wMDMgViAyOC44MjYgTCAyMiwyMy42NyBaIgogICAgICAgZmlsbD0iI2ZmYjkxOSIgLz4KICAgIDxwYXRoCiAgICAgICBmaWxsLXJ1bGU9ImV2ZW5vZGQiCiAgICAgICBjbGlwLXJ1bGU9ImV2ZW5vZGQiCiAgICAgICBkPSJNIDIyLDQ3LjM5IDU1LjAwMyw0Mi4yMzQgViA1MSBIIDIyIFoiCiAgICAgICBmaWxsPSIjODJkNzE0IiAvPgogICAgPHBhdGgKICAgICAgIGZpbGwtcnVsZT0iZXZlbm9kZCIKICAgICAgIGNsaXAtcnVsZT0iZXZlbm9kZCIKICAgICAgIGQ9Im0gMjIsMjMuMDE4IDExLjUyLDEuOCBjIDEuNDM0LC0wLjkwOCAzLjE0LC0xLjQwNiA0Ljk4MSwtMS40MDYgMi41NSwwIDQuODQyLDAuOTU1IDYuNTEsMi42MzEgMC4yMSwwLjIxMiAwLjQwOCwwLjQzMyAwLjU5NSwwLjY2MyBsIDkuMzk3LDEuNDY4IHYgMS4zMDUgbCAtOC40NDMsLTEuMzIgYSA4LjQ3Miw4LjQ3MiAwIDAgMSAwLjk2NSwzLjkxNCBjIDAsMS43NjggLTAuMzk1LDMuNTMxIC0xLjIxMyw1LjMwMSBsIC0wLjAyNCwwLjA1NCAtMC4zNDgsMC43NDQgaCAtMC44MiBjIC0xLjY5NiwwIC0yLjgyLDAuNTA3IC0zLjU1NiwxLjQwNiAtMC41NzcsMC43MDUgLTAuOTExLDEuNjU3IC0xLjAyMywyLjY5NSBsIC0wLjAwNCwwLjAzMiAtMC4wMTYsMC4xNjYgLTAuMDA3LDAuMDcyIC0wLjAxNCwwLjE0MSBjIC0wLjA0MywwLjQ2NCAtMC4wNzEsMC44NTcgLTAuMDg2LDEuMTc3IGwgMTQuNTg5LC0yLjI4IHYgMS4zMDUgTCAyMiw0OC4wNDMgdiAtMS4zMDUgbCAxNC42MDUsLTIuMjgyIC0wLjAwNiwtMC4yOTMgLTAuMDAyLC0wLjA4MiAtMC4wMDIsLTAuMDQzIC0wLjAwMiwtMC4wNjUgYyAtMC4wMTMsLTAuMzU1IC0wLjA0NiwtMC44MSAtMC4wOTgsLTEuMzYyIGwgLTAuMDEsLTAuMTA1IC0wLjAxOCwtMC4xODEgYyAtMC4xMDQsLTEuMDQ0IC0wLjQzMywtMi4wMDcgLTEuMDEsLTIuNzIzIC0wLjcyNywtMC45MDUgLTEuODQsLTEuNDIgLTMuNTIzLC0xLjQzIGggLTAuODcyIGwgLTAuMzQ3LC0wLjc0NCBjIC0wLjgzNCwtMS43ODggLTEuMjM4LC0zLjU2OSAtMS4yMzgsLTUuMzU1IDAsLTIuMjQ2IDAuOTExLC00LjQxOCAyLjUxNSwtNi4wMyBMIDMyLjEzMiwyNS45MDYgMjIsMjQuMzIyIFoiCiAgICAgICBmaWxsPSIjZmZmZmZmIiAvPgogICAgPHBhdGgKICAgICAgIGZpbGwtcnVsZT0iZXZlbm9kZCIKICAgICAgIGNsaXAtcnVsZT0iZXZlbm9kZCIKICAgICAgIGQ9Im0gMzguNTAxLDI0LjcwMSBjIDQuNjA4LDAgNy43MzUsMy41NDYgNy43MzUsNy4zNzIgMCwxLjUzNiAtMC4zMzUsMy4xMzQgLTEuMTE3LDQuODEgLTQuNTMzLDAgLTUuNjUyLDMuMjQ2IC01Ljg2NCw1LjI5IGwgLTAuMDE0LDAuMTM1IGMgLTAuMDcxLDAuNzMgLTAuMTEzLDEuMzE1IC0wLjEyNCwxLjc1NSBsIC0xLjIyOCwwLjE5MiB2IC0wLjA0IEEgMjMuNTE2LDIzLjUxNiAwIDAgMCAzNy43NTcsNDIuMjcgbCAtMC4wMDMsLTAuMDM2IGMgLTAuMTk2LC0yLjAzOSAtMS4yOTEsLTUuMzUxIC01Ljg3LC01LjM1MSAtMC43ODMsLTEuNjc2IC0xLjExOCwtMy4yNzQgLTEuMTE4LC00LjgxIDAsLTMuODI2IDMuMTI4LC03LjM3MiA3LjczNSwtNy4zNzIgeiIKICAgICAgIGZpbGw9IiMwMDczZmEiIC8+CiAgPC9nPgo8L3N2Zz4K" alt="" /><span id="routeLink2gisText">2GIS</span></a>
       <a class="route-link-item" id="routeLinkYandex"><img class="route-link-icon" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNOCAxQzQuNjg2MiAxIDIgMy42ODYyIDIgN0MyIDguNjU2MyAyLjY3MTEgMTAuMTU2IDMuNzU2NSAxMS4yNDE3QzQuODQyMiAxMi4zMjggNy40IDEzLjkgNy41NSAxNS41NUM3LjU3MjQ5IDE1Ljc5NzQgNy43NTE2IDE2IDggMTZDOC4yNDg0IDE2IDguNDI3NTEgMTUuNzk3NCA4LjQ1IDE1LjU1QzguNiAxMy45IDExLjE1NzggMTIuMzI4IDEyLjI0MzUgMTEuMjQxN0MxMy4zMjg5IDEwLjE1NiAxNCA4LjY1NjMgMTQgN0MxNCAzLjY4NjIgMTEuMzEzOCAxIDggMVoiIGZpbGw9IiNGRjQ0MzMiLz48cGF0aCBkPSJNOC4wMDAwMiA5LjEwMDE1QzkuMTU5ODIgOS4xMDAxNSAxMC4xIDguMTU5OTQgMTAuMSA3LjAwMDE1QzEwLjEgNS44NDAzNSA5LjE1OTgyIDQuOTAwMTUgOC4wMDAwMiA0LjkwMDE1QzYuODQwMjMgNC45MDAxNSA1LjkwMDAyIDUuODQwMzUgNS45MDAwMiA3LjAwMDE1QzUuOTAwMDIgOC4xNTk5NCA2Ljg0MDIzIDkuMTAwMTUgOC4wMDAwMiA5LjEwMDE1WiIgZmlsbD0id2hpdGUiLz48L3N2Zz4K" alt="" /><span id="routeLinkYandexText">Yandex Maps</span></a>
     </div>
+  </div>
+</div>
+
+<!-- Модалка выбора станции — заменяет нативные <select> во всех трёх
+     местах (ручной выбор, "До станции", "Всё расписание"), 2026-09-04.
+     Один общий компонент, открывается с контекстом: openStationModal()
+     запоминает, какой именно скрытый <select> нужно обновить (см. JS). -->
+<div class="feedback-modal" id="stationModal" style="display:none">
+  <div class="feedback-card station-modal-card">
+    <button class="feedback-close" id="stationModalClose" aria-label="Закрыть">×</button>
+    <h2 id="stationModalTitle">Выбор станции</h2>
+    <div class="station-modal-line" id="stationModalLine"><!-- заполняется JS --></div>
   </div>
 </div>
 
@@ -984,6 +1081,8 @@
       onayRowText: 'Оплатить проезд в метро',
       wtgRouteBtn: 'Маршрут',
       routeModalTitle: 'Маршрут до станции',
+      stationModalTitle: 'Выбор станции',
+      stationModalNearTag: 'рядом с вами',
       routeGoogle: 'Google Maps',
       routeApple: 'Apple Maps',
       route2gis: '2GIS',
@@ -1090,6 +1189,8 @@
       onayRowText: 'Метро ақысын төлеу',
       wtgRouteBtn: 'Бағыт',
       routeModalTitle: 'Бекетке дейінгі бағыт',
+      stationModalTitle: 'Бекетті таңдау',
+      stationModalNearTag: 'сізге жақын',
       routeGoogle: 'Google Maps',
       routeApple: 'Apple Maps',
       route2gis: '2GIS',
@@ -1192,6 +1293,8 @@
       onayRowText: 'Pay for the metro ride',
       wtgRouteBtn: 'Route',
       routeModalTitle: 'Route to the station',
+      stationModalTitle: 'Choose a station',
+      stationModalNearTag: 'near you',
       routeGoogle: 'Google Maps',
       routeApple: 'Apple Maps',
       route2gis: '2GIS',
@@ -1836,8 +1939,12 @@
       locateState = { kind: 'far', station: res.station, distance: res.distance };
       renderLocateStatus();
       trackEvent('geo_result', { result: 'far' });
-      locateBtn.style.display = 'none';
-      stationSelect.style.display = '';
+      // Раньше тут прятали "Выбрать станцию" и сразу показывали нативный
+      // список (какой смысл в лишней кнопке, если сразу нужно выбирать
+      // вручную). Теперь список — модалка, а не постоянно видимый
+      // элемент, так что открывающая её кнопка нужна всегда, в т.ч. и
+      // здесь — иначе просто не с чего было бы открыть выбор станции.
+      locateBtn.style.display = '';
       if (!selectedSlug) selectStation(STATIONS[0].slug, false, null, 'default');
       return;
     }
@@ -1855,8 +1962,7 @@
     locateState = { kind: 'err', reasonKey: reasonKey, rawMessage: rawMessage };
     renderLocateStatus();
     trackEvent('geo_result', { result: reasonKey === 'permissionDenied' ? 'denied' : reasonKey === 'unsupported' ? 'unsupported' : 'error' });
-    locateBtn.style.display = 'none';
-    stationSelect.style.display = '';
+    locateBtn.style.display = '';
     if (!selectedSlug) selectStation(STATIONS[0].slug, false, null, 'default');
   }
 
@@ -1906,20 +2012,12 @@
     );
   }
 
+  // Раньше — toggle видимости нативного <select> (+ showPicker()), теперь
+  // просто открываем общую модалку выбора станции (см. openStationModal
+  // ниже) — сам stationSelect остаётся навсегда скрытым, служит только
+  // хранилищем значения для остального кода (selectStation и т.п.).
   locateBtn.addEventListener('click', function () {
-    var wasHidden = stationSelect.style.display === 'none';
-    stationSelect.style.display = wasHidden ? '' : 'none';
-    // showPicker() — открывает нативный список сразу, без второго тапа
-    // именно по самому <select> (иначе после первого клика список просто
-    // становится видимым, но закрытым — нужно было бы нажать ещё раз).
-    // Поддержка не универсальная (старые WebView, в т.ч. возможно внутри
-    // Telegram, могут не знать этот метод) — при отсутствии просто тихо
-    // остаёмся на прежнем поведении (список виден, открывается обычным
-    // тапом). Вызывать нужно синхронно в обработчике клика — это
-    // требование самого API (нужен "живой" user gesture).
-    if (wasHidden && typeof stationSelect.showPicker === 'function') {
-      try { stationSelect.showPicker(); } catch (e) { /* не поддерживается в этом контексте */ }
-    }
+    openStationModal(stationSelect, t('stationModalTitle'));
   });
   stationSelect.addEventListener('change', function () {
     selectStation(stationSelect.value, false);
@@ -2640,23 +2738,123 @@
     if (selectedSlug) openRouteModal(selectedSlug);
   });
 
+  /* ---------- Модалка выбора станции ----------
+     Один общий компонент вместо трёх нативных <select> (ручной выбор
+     станции, "До станции" в "Когда выезжать", станция на "Всё
+     расписание"). Сами <select> остаются в DOM — просто скрытые,
+     служат хранилищем значения. Модалка при выборе ставит значение в
+     нужный <select> и диспатчит 'change' — вся существующая логика
+     (wtgCalculate, renderFullSchedule, selectStation и т.п.) реагирует
+     как и раньше, ничего в ней менять не пришлось. См. CLAUDE.md. */
+  var stationModal = document.getElementById('stationModal');
+  var stationModalTarget = null; // какой именно <select> сейчас редактируем
+  // Геоближайшая станция для метки в модалке — переиспользуем то, что уже
+  // вычислено геолокацией (onGeoSuccess → locateState), новый запрос не
+  // нужен. null, если геолокация не определилась/запрещена/ещё грузится.
+  function geoNearestSlug() {
+    if (locateState.kind === 'ok' || locateState.kind === 'far') return locateState.station.slug;
+    return null;
+  }
+  function renderStationModalList(activeSlug) {
+    var wrap = document.getElementById('stationModalLine');
+    var nearSlug = geoNearestSlug();
+    wrap.innerHTML = '';
+    STATIONS.forEach(function (s) {
+      var isActive = s.slug === activeSlug;
+      var isNear = s.slug === nearSlug && !isActive;
+      var row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'station-modal-row' + (isActive ? ' active' : '');
+      var dotwrap = document.createElement('span');
+      dotwrap.className = 'station-modal-dotwrap' + (isNear ? ' is-near' : '');
+      var dot = document.createElement('span');
+      dot.className = 'station-modal-dot';
+      dotwrap.appendChild(dot);
+      var name = document.createElement('span');
+      name.className = 'station-modal-name';
+      name.textContent = stationName(s);
+      if (isNear) {
+        var tag = document.createElement('span');
+        tag.className = 'station-modal-near-tag';
+        tag.textContent = t('stationModalNearTag');
+        name.appendChild(tag);
+      }
+      row.appendChild(dotwrap);
+      row.appendChild(name);
+      row.addEventListener('click', function () { pickStationFromModal(s.slug); });
+      wrap.appendChild(row);
+    });
+  }
+  function openStationModal(targetSelect, title) {
+    stationModalTarget = targetSelect;
+    document.getElementById('stationModalTitle').textContent = title || t('stationModalTitle');
+    renderStationModalList(targetSelect.value);
+    stationModal.style.display = '';
+    trackEvent('station_modal_open', {});
+  }
+  function closeStationModal() {
+    stationModal.style.display = 'none';
+    stationModalTarget = null;
+  }
+  function pickStationFromModal(slug) {
+    if (!stationModalTarget) return;
+    stationModalTarget.value = slug;
+    stationModalTarget.dispatchEvent(new Event('change', { bubbles: true }));
+    syncStationTriggers();
+    closeStationModal();
+  }
+  document.getElementById('stationModalClose').addEventListener('click', closeStationModal);
+  stationModal.addEventListener('click', function (e) {
+    if (e.target === stationModal) closeStationModal(); // клик по тёмному фону, не по карточке
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && stationModal.style.display !== 'none') closeStationModal();
+  });
+  document.getElementById('wtgDestTrigger').addEventListener('click', function () {
+    openStationModal(wtgDestSelect, t('wtgFieldDest'));
+  });
+  document.getElementById('fullStationTrigger').addEventListener('click', function () {
+    openStationModal(fullStationSelect, t('stationModalTitle'));
+  });
+  // Текст на самих кнопках-триггерах ("До станции"/"Всё расписание") — не
+  // сам select, а его текущее значение станции, поэтому обновляется не
+  // только при выборе, но и при первичном заполнении/смене языка (см.
+  // populateStationSelects() и applyLanguage() — вызывается там же).
+  function syncStationTriggers() {
+    if (STATIONS_BY_SLUG[wtgDestSelect.value]) {
+      document.getElementById('wtgDestTriggerText').textContent = stationName(STATIONS_BY_SLUG[wtgDestSelect.value]);
+    }
+    if (STATIONS_BY_SLUG[fullStationSelect.value]) {
+      document.getElementById('fullStationTriggerText').textContent = stationName(STATIONS_BY_SLUG[fullStationSelect.value]);
+    }
+  }
+
   /* ---------- Оплата ONAY ----------
-     Своей ссылки-схемы у ONAY (типа onay://) в открытых источниках нет —
-     ведём на страницу приложения в сторе: если оно уже установлено, ОС
-     сама предложит открыть его вместо страницы стора (iOS/Android умеют
-     это для официальных приложений с большой аудиторией — у ONAY 5M+
-     установок), если нет — можно сразу поставить. До экрана с QR внутри
-     самого ONAY — уже пара тапов пользователя, тут не обойти без
-     задокументированной глубокой ссылки на конкретный экран, которой
-     у ONAY просто нет. */
-  var ONAY_APPSTORE = 'https://apps.apple.com/kz/app/onay/id1267862149';
-  var ONAY_PLAY = 'https://play.google.com/store/apps/details?id=kz.onay';
+     Раньше вели на страницу приложения в сторе (apps.apple.com/
+     play.google.com) в расчёте, что ОС сама откроет установленное
+     приложение вместо страницы стора — это оказалось неверно: ссылка
+     на СТОР не переоткрывает установленное приложение ни на одной
+     платформе, так не работает ни iOS, ни Android. Так делают только
+     Universal Links (iOS) / App Links (Android) — ссылка именно на
+     домен самого приложения, не на его страницу в сторе.
+     Проверили 2026-09-05: на onay.kz реально есть
+     .well-known/apple-app-site-association (Universal Links, весь
+     домен → kz.onay.Onay) и .well-known/assetlinks.json (Android App
+     Links, весь домен → kz.onay, тот же package, что был в старой
+     ссылке на Google Play) — значит ссылка на сам домен должна
+     открывать установленное приложение напрямую на обеих платформах,
+     а не просто показывать его страницу в сторе. Ведём на корень
+     домена (шаблон в apple-app-site-association — "*", то есть весь
+     сайт, а не отдельный путь) — глубже, сразу на экран QR внутри
+     ONAY, задокументированного способа попасть всё равно нет.
+     Собственная кастомная URL-схема (onay://) для этого и не нужна —
+     Universal/App Links работают через обычный https-адрес. */
+  var ONAY_LINK = 'https://onay.kz/';
   document.getElementById('onayBtn').addEventListener('click', function () {
     var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    var url = isIOS ? ONAY_APPSTORE : ONAY_PLAY;
     trackEvent('onay_open', { platform: isIOS ? 'ios' : 'android' });
-    if (insideTelegram && tg.openLink) { tg.openLink(url); return; }
-    window.open(url, '_blank', 'noopener');
+    if (insideTelegram && tg.openLink) { tg.openLink(ONAY_LINK); return; }
+    window.open(ONAY_LINK, '_blank', 'noopener');
   });
 
   /* ---------- Полное расписание ---------- */
@@ -2893,7 +3091,7 @@
     document.getElementById('wtgCalcBtn').textContent = t('wtgCalcBtn');
     document.getElementById('wtgRouteToggleText').textContent =
       wtgRouteToggle.classList.contains('open') ? t('wtgHideStations') : t('wtgShowAllStations');
-    document.getElementById('stationRouteBtn').textContent = t('routeTrigger');
+    document.getElementById('stationRouteBtn').setAttribute('aria-label', t('routeTrigger'));
     document.getElementById('onayRowText').textContent = t('onayRowText');
     document.getElementById('wtgOriginRouteBtn').textContent = t('wtgRouteBtn');
     document.getElementById('routeModalTitle').textContent = t('routeModalTitle');
@@ -2943,6 +3141,7 @@
 
     if (STATIONS.length) {
       populateStationSelects();
+      syncStationTriggers();
       if (selectedSlug) {
         document.getElementById('stationName').textContent = stationName(STATIONS_BY_SLUG[selectedSlug]);
         renderLineStrip(selectedSlug);
@@ -3013,6 +3212,7 @@
       b.classList.toggle('active', b.dataset.daytype === fullDayType);
     });
     fullStationSelect.value = 'RMBK';
+    syncStationTriggers();
 
     renderFooter();
     document.getElementById('offlineNote').style.display = dataFromOfflineCache ? '' : 'none';
