@@ -386,6 +386,22 @@
   .onay-row img{ height:20px; width:auto; display:block; flex:none; }
   .onay-row:active{ transform:scale(.98); }
 
+  /* Подсказка "На экран Домой" — карточка того же языка, что и .disclaimer
+     (иконка + текст), плюс крестик закрытия. Показывается/скрывается и
+     запоминается закрытие в JS (isIOSInstallTipCandidate(), 2026-09-06,
+     см. CLAUDE.md) — тут только внешний вид. */
+  .ios-install-tip{
+    display:flex; gap:9px; align-items:flex-start; background:var(--card);
+    border-radius:14px; padding:11px 34px 11px 14px; margin:0 0 12px; position:relative;
+    font-size:12.5px; color:var(--muted); line-height:1.45;
+  }
+  .ios-share-icon{ width:15px; height:15px; flex:none; margin-top:1px; color:var(--accent); }
+  .ios-install-text b{ color:var(--text); }
+  .ios-install-close{
+    position:absolute; top:4px; right:6px; background:none; border:none; color:var(--muted2);
+    font-size:18px; line-height:1; cursor:pointer; padding:6px; font-family:inherit;
+  }
+
   .station-title{ display:flex; align-items:baseline; gap:8px; margin-bottom:14px;}
   .station-title h2{ font-size:22px; margin:0; font-weight:600; letter-spacing:-.3px; }
 
@@ -403,28 +419,51 @@
     box-shadow:0 0 0 4px var(--accent-soft), 0 0 14px -2px var(--accent);
   }
   .line-dot.active:hover{ transform:none; }
+  /* "Поезд на станции" — обсуждали платформы (по ширине поезда) и обводку
+     вокруг поезда цветом фона, остановились на самом простом варианте:
+     форма и размер точки НЕ меняются, только усиливается свечение — см.
+     .docked toggle в renderTrainMarkers()/CLAUDE.md. 2026-09-06. */
+  .line-dot.active.docked{
+    box-shadow:0 0 0 5px var(--accent-soft), 0 0 22px 0px var(--accent);
+  }
   .line-ends{ display:flex; justify-content:space-between; margin:6px 2px 0; font-size:10.5px; color:var(--muted2); font-weight:600; }
   .line-ends span{ max-width:44%; } .line-ends span:last-child{ text-align:right; }
 
+  /* Силуэт поезда (не "пуля"/полигон, как раньше) + хвост-свечение позади —
+     обкатано на прототипе (Artifact "Поезд-комета"), форма подогнана под
+     реальную иконку-референс пользователя: замерил её силуэт по пикселям
+     (canvas, построчный анализ альфа-канала) и подобрал кривые Безье под
+     те же пропорции — нос НЕсимметричный (верхний край скошен от самого
+     начала, нижний почти плоский до кончика), кончик носа ниже центра
+     корпуса. .bwd — не transform:scaleX(-1) от .fwd, а отдельный
+     зеркальный path/градиент, как и раньше в этом блоке (тот же приём,
+     что был у старого clip-path на два полигона). 2026-09-06. */
   .train-marker{
     position:absolute; top:50%; left:0; width:16px; height:8px; margin-top:-4px;
     pointer-events:none; z-index:2; transition:left .95s linear, top .3s ease; animation:trainPulse 1.7s ease-in-out infinite;
   }
+  .train-marker::before{
+    content:''; position:absolute; top:50%; width:16px; height:4.5px; transform:translateY(-50%);
+    filter:blur(1.3px); border-radius:50%; z-index:-1;
+  }
   .train-marker.fwd{
     top:calc(50% - 7px); margin-left:-16px; background:var(--accent);
-    box-shadow:0 0 8px 1px color-mix(in oklch, var(--accent) 50%, transparent);
-    clip-path:polygon(0 0, 62% 0, 84% 14%, 100% 50%, 84% 86%, 62% 100%, 0 100%);
+    filter:drop-shadow(0 0 3px color-mix(in oklch, var(--accent) 55%, transparent));
+    clip-path:path("M0 0 H11 C12.5 0.3 15 4.3 16 6 C16 7.1 14.5 8 12.5 8 H0 Z");
+  }
+  .train-marker.fwd::before{
+    right:56%;
+    background:linear-gradient(to left, color-mix(in oklch, var(--accent) 65%, transparent), transparent 85%);
   }
   .train-marker.bwd{
-    top:calc(50% + 7px); background:color-mix(in oklch, var(--accent) 55%, transparent);
-    box-shadow:0 0 8px 1px color-mix(in oklch, var(--accent) 35%, transparent);
-    clip-path:polygon(100% 0, 38% 0, 16% 14%, 0 50%, 16% 86%, 38% 100%, 100% 100%);
+    top:calc(50% + 7px); background:color-mix(in oklch, var(--accent) 62%, transparent);
+    filter:drop-shadow(0 0 2px color-mix(in oklch, var(--accent) 35%, transparent));
+    clip-path:path("M16 0 H5 C3.5 0.3 1 4.3 0 6 C0 7.1 1.5 8 3.5 8 H16 Z");
   }
-  .train-marker.fwd::before,.train-marker.fwd::after,.train-marker.bwd::before,.train-marker.bwd::after{
-    content:''; position:absolute; top:2px; width:4px; height:4px; background:oklch(0.16 0.012 255 / .55);
+  .train-marker.bwd::before{
+    left:56%;
+    background:linear-gradient(to right, color-mix(in oklch, var(--accent) 45%, transparent), transparent 85%);
   }
-  .train-marker.fwd::before{ left:3px; } .train-marker.fwd::after{ left:9px; }
-  .train-marker.bwd::before{ left:5px; } .train-marker.bwd::after{ left:11px; }
   @keyframes trainPulse{ 0%,100%{ opacity:.75; transform:scale(.9); } 50%{ opacity:1; transform:scale(1); } }
 
   .directions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -540,8 +579,11 @@
 
   footer.meta{ text-align:center; color:var(--muted2); font-size:11px; padding:10px 16px 22px; line-height:1.7; font-weight:500; max-width:640px; margin:0 auto; }
 
+  /* Раньше тут был один "Написать нам" — с 2026-09-06 рядом "Поделиться"
+     (см. shareLink в JS/CLAUDE.md), общий отступ переехал на обёртку. */
+  .footer-links{ display:flex; justify-content:center; gap:18px; margin:-12px auto 22px; }
   .feedback-link{
-    display:block; text-align:center; margin:-12px auto 22px; font-size:11.5px;
+    display:block; text-align:center; font-size:11.5px;
     color:var(--muted2); text-decoration:underline; text-underline-offset:2px;
     background:none; border:none; cursor:pointer; font-family:inherit; padding:4px;
   }
@@ -852,6 +894,20 @@
       <img src="icons/onay.svg" alt="ONAY" />
     </button>
 
+    <!-- "Добавить на экран Домой" — только вне Telegram, только iOS Safari
+         (см. isIOSInstallTipCandidate()/CLAUDE.md). Внизу основного экрана,
+         не глобально — тут его увидят те, кто реально дошёл до расписания,
+         а не мешает на любой другой вкладке. -->
+    <div class="ios-install-tip" id="iosInstallTip" style="display:none">
+      <button class="ios-install-close" id="iosInstallClose" aria-label="Закрыть">×</button>
+      <svg class="ios-share-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="ios-install-text" id="iosInstallText"></span>
+    </div>
+
   </section>
 
   <!-- ===== ВКЛАДКА: ВСЁ РАСПИСАНИЕ ===== -->
@@ -913,7 +969,10 @@
 </div>
 
 <footer class="meta" id="metaFooter">Загрузка данных…</footer>
-<button class="feedback-link" id="feedbackLink">Написать нам</button>
+<div class="footer-links">
+  <button class="feedback-link" id="shareLink">Поделиться</button>
+  <button class="feedback-link" id="feedbackLink">Написать нам</button>
+</div>
 
 <div class="feedback-modal" id="feedbackModal" style="display:none">
   <div class="feedback-card">
@@ -1023,6 +1082,74 @@
     } catch (e) { /* работаем как обычная веб-страница */ }
   }
 
+  /* ---------- "Добавить на экран Домой" (только iOS Safari, не Telegram) ----------
+     Просили показывать инструкцию только пользователям сайта на iOS —
+     не внутри Telegram Mini App (там своя логика открытия, "на экран
+     Домой" через Safari просто не имеет смысла) и не в других браузерах
+     на iOS (Chrome/Firefox/Edge/Opera для iOS всё равно работают через
+     WebKit и в UA есть слово Safari, но у них НЕТ пункта "На экран
+     Домой" в меню "Поделиться" — с ними инструкция была бы неверной,
+     отличаем по их собственным токенам в UA). Не показываем повторно,
+     если уже установлено (navigator.standalone) или пользователь once
+     закрыл крестиком (localStorage, чтобы не надоедать на каждый визит —
+     это просто "не показывать снова", а не поведенческая память вроде
+     той, что откатили в фиче с геолокацией, см. CLAUDE.md). 2026-09-06. */
+  function isIOSInstallTipCandidate() {
+    var ua = navigator.userAgent;
+    if (!/iPhone|iPad|iPod/i.test(ua)) return false;
+    if (/CriOS|FxiOS|EdgiOS|OPiOS|FBAN|FBAV|Instagram/i.test(ua)) return false;
+    if (navigator.standalone) return false;
+    return true;
+  }
+  var IOS_INSTALL_DISMISS_KEY = 'iosInstallTipDismissed';
+  var iosInstallTip = document.getElementById('iosInstallTip');
+  var iosInstallDismissed = false;
+  try { iosInstallDismissed = localStorage.getItem(IOS_INSTALL_DISMISS_KEY) === '1'; } catch (e) { /* приватный режим — просто не запоминаем */ }
+  if (!insideTelegram && !iosInstallDismissed && isIOSInstallTipCandidate()) {
+    iosInstallTip.style.display = '';
+    trackEvent('ios_install_tip_shown', {});
+  }
+  document.getElementById('iosInstallClose').addEventListener('click', function () {
+    iosInstallTip.style.display = 'none';
+    try { localStorage.setItem(IOS_INSTALL_DISMISS_KEY, '1'); } catch (e) { /* не критично */ }
+    trackEvent('ios_install_tip_dismiss', {});
+  });
+
+  /* ---------- Поделиться приложением ----------
+     Внутри Telegram — открываем нативный экран "переслать" через
+     t.me/share/url (tg.openTelegramLink, отдельный метод от tg.openLink —
+     именно он открывает t.me-ссылки внутри самого клиента, а не в
+     системном браузере). Снаружи — Web Share API (мобильный Safari/
+     Chrome показывают системное меню "Поделиться"); если и его нет —
+     копируем ссылку в буфер и на секунду меняем текст кнопки, чтобы
+     дать понять, что сработало; если и буфера нет — просто открываем
+     ссылку, скопировать можно будет из адресной строки. 2026-09-06. */
+  var SHARE_URL = location.origin + '/';
+  document.getElementById('shareLink').addEventListener('click', function () {
+    var btn = this;
+    var text = t('shareMessageText');
+    trackEvent('share_click', { method: insideTelegram ? 'telegram' : (navigator.share ? 'web-share' : 'clipboard') });
+    if (insideTelegram && tg.openTelegramLink) {
+      tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(SHARE_URL) + '&text=' + encodeURIComponent(text));
+      return;
+    }
+    if (navigator.share) {
+      navigator.share({ title: t('pageTitle'), text: text, url: SHARE_URL }).catch(function () { /* пользователь отменил — не ошибка */ });
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(SHARE_URL).then(function () {
+        var original = btn.textContent;
+        btn.textContent = t('shareCopiedText');
+        setTimeout(function () { btn.textContent = original; }, 1600);
+      }).catch(function () {
+        window.open(SHARE_URL, '_blank', 'noopener');
+      });
+      return;
+    }
+    window.open(SHARE_URL, '_blank', 'noopener');
+  });
+
   /* ---------- Локализация (ru / kk) ---------- */
   var LANG_STORAGE_KEY = 'almatyMetroLang';
 
@@ -1080,13 +1207,17 @@
       wtgClosedTitle: 'В это время метро не работает',
       wtgClosedMsg: function (closing, opening) { return 'Метро закрыто примерно с ' + closing + ' до ' + opening + ' — лучше поехать на такси.'; },
       wtgBoardTrain: function (depClock, dirLabelHtml) { return 'Садитесь на поезд в ' + depClock + ' ' + dirLabelHtml; },
-      wtgArrivalMsg: function (estimated, destName, clock) { return (estimated ? 'Ориентировочно поезд' : 'Поезд') + ' будет на станции «<b>' + destName + '</b>» в ' + clock; },
+      wtgArrivalMsg: function (estimated, destName, clock, durationMin, stopsCount) { return (estimated ? 'Ориентировочно поезд' : 'Поезд') + ' будет на станции «<b>' + destName + '</b>» в ' + clock + ' (' + durationMin + ' мин, ' + stopsCount + ' ' + ruStopsWord(stopsCount) + ')'; },
       wtgDepartsIn: 'Отправляется через',
       wtgNextTrainTowards: function (dirLabelHtml) { return 'Ближайший поезд ' + dirLabelHtml + ' отправляется через'; },
       wtgNotMakingIt: function (targetStr, destName) { return 'Не успеваете к ' + targetStr + ' быть на «<b>' + destName + '</b>»'; },
       wtgNoDeparturesToday: 'Не нашлось подходящих рейсов в расписании на сегодня.',
       routeTrigger: 'Маршрут до станции',
       onayRowText: 'Оплатить проезд в метро',
+      shareLinkText: 'Поделиться',
+      shareCopiedText: 'Ссылка скопирована!',
+      shareMessageText: 'Расписание метро Алматы — сколько ждать до поезда 🚇',
+      iosInstallTipMsg: '<b>Установите как приложение:</b> нажмите значок «Поделиться» внизу экрана Safari, затем — «На экран «Домой»».',
       wtgRouteBtn: 'Маршрут',
       routeModalTitle: 'Маршрут до станции',
       stationModalTitle: 'Выбор станции',
@@ -1188,13 +1319,17 @@
       wtgClosedTitle: 'Бұл уақытта метро жұмыс істемейді',
       wtgClosedMsg: function (closing, opening) { return 'Метро шамамен ' + closing + ' – ' + opening + ' аралығында жабық — таксимен жүрген дұрыс.'; },
       wtgBoardTrain: function (depClock, dirLabelHtml) { return dirLabelHtml + ' ' + depClock + ' пойызына отырыңыз'; },
-      wtgArrivalMsg: function (estimated, destName, clock) { return 'Пойыз «<b>' + destName + '</b>» бекетіне ' + (estimated ? 'болжам бойынша ' : '') + 'сағат ' + clock + '-' + kkClockSuffix(clock, 'loc') + ' келеді'; },
+      wtgArrivalMsg: function (estimated, destName, clock, durationMin, stopsCount) { return 'Пойыз «<b>' + destName + '</b>» бекетіне ' + (estimated ? 'болжам бойынша ' : '') + 'сағат ' + clock + '-' + kkClockSuffix(clock, 'loc') + ' келеді (' + durationMin + ' минут, ' + stopsCount + ' аялдама)'; },
       wtgDepartsIn: 'Жөнелуіне қалды',
       wtgNextTrainTowards: function (dirLabelHtml) { return dirLabelHtml + ' ең жақын пойыздың жөнелуіне қалды'; },
       wtgNotMakingIt: function (targetStr, destName) { return '«<b>' + destName + '</b>» бекетіне сағат ' + targetStr + '-' + kkClockSuffix(targetStr, 'dat') + ' үлгермейсіз'; },
       wtgNoDeparturesToday: 'Бүгінгі кестеде сәйкес рейс табылмады.',
       routeTrigger: 'Бекетке дейінгі бағыт',
       onayRowText: 'Метро ақысын төлеу',
+      shareLinkText: 'Бөлісу',
+      shareCopiedText: 'Сілтеме көшірілді!',
+      shareMessageText: 'Алматы метросы — пойызды қанша күту керек 🚇',
+      iosInstallTipMsg: '<b>Қолданба ретінде орнатыңыз:</b> Safari экранының төменгі жағындағы «Бөлісу» белгішесін басып, «Үй экранына қосу» дегенді таңдаңыз.',
       wtgRouteBtn: 'Бағыт',
       routeModalTitle: 'Бекетке дейінгі бағыт',
       stationModalTitle: 'Бекетті таңдау',
@@ -1292,13 +1427,17 @@
       wtgClosedTitle: 'The metro is closed at this time',
       wtgClosedMsg: function (closing, opening) { return 'The metro is closed roughly from ' + closing + ' to ' + opening + ' — better to take a taxi.'; },
       wtgBoardTrain: function (depClock, dirLabelHtml) { return 'Board the ' + depClock + ' train ' + dirLabelHtml; },
-      wtgArrivalMsg: function (estimated, destName, clock) { return (estimated ? 'The train should be at' : 'The train will be at') + ' «<b>' + destName + '</b>» at ' + clock; },
+      wtgArrivalMsg: function (estimated, destName, clock, durationMin, stopsCount) { return (estimated ? 'The train should be at' : 'The train will be at') + ' «<b>' + destName + '</b>» at ' + clock + ' (' + durationMin + ' min, ' + stopsCount + ' ' + (stopsCount === 1 ? 'stop' : 'stops') + ')'; },
       wtgDepartsIn: 'Departs in',
       wtgNextTrainTowards: function (dirLabelHtml) { return 'The nearest train ' + dirLabelHtml + ' departs in'; },
       wtgNotMakingIt: function (targetStr, destName) { return "You won't make it to «<b>" + destName + '</b>» by ' + targetStr; },
       wtgNoDeparturesToday: "No suitable departures found in today's schedule.",
       routeTrigger: 'Route to station',
       onayRowText: 'Pay for the metro ride',
+      shareLinkText: 'Share',
+      shareCopiedText: 'Link copied!',
+      shareMessageText: 'Almaty Metro schedule — how long until the next train 🚇',
+      iosInstallTipMsg: '<b>Install as an app:</b> tap the Share icon at the bottom of Safari, then "Add to Home Screen".',
       wtgRouteBtn: 'Route',
       routeModalTitle: 'Route to the station',
       stationModalTitle: 'Choose a station',
@@ -1795,6 +1934,18 @@
       }
     }
 
+    // "Поезд на станции" — подсветка активной (выбранной) точки чуть сильнее,
+    // пока поезд там реально стоит (см. CLAUDE.md, обсуждали платформы/обводку
+    // поезда — остановились на самом простом варианте: силуэт и размер точки
+    // не меняются, только усиливается свечение). dwellFrac() возвращает РОВНО
+    // 0/1 (не просто "близко") только во время самой стоянки — значит pos
+    // совпадает с целым индексом станции пиксель-в-пиксель, сравнение через
+    // === безопасно, без эпсилон-допуска.
+    var activeIdx = selectedSlug ? STATIONS.findIndex(function (s) { return s.slug === selectedSlug; }) : -1;
+    var docked = activeIdx >= 0 && wanted.some(function (w) { return w.pos === activeIdx; });
+    var activeDot = track.querySelector('.line-dot.active');
+    if (activeDot) activeDot.classList.toggle('docked', docked);
+
     // Переиспользуем DOM-элементы по ключу (станция+индекс рейса), чтобы CSS-transition
     // плавно сдвигал уже существующую точку, а не пересоздавал её каждую секунду.
     var existing = {};
@@ -1825,6 +1976,19 @@
       return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     }
     return m + ':' + String(s).padStart(2,'0');
+  }
+
+  // Русское склонение "остановка/остановки/остановок" по числу — нужно для
+  // wtgArrivalMsg (см. CLAUDE.md, "N мин, M остановок"). Стандартное правило:
+  // 1, 21, 31... — "остановка"; 2-4, 22-24... — "остановки"; остальное,
+  // включая 11-14 — "остановок". Казахскому и английскому такое склонение
+  // не нужно (в казахском числительное+существительное не меняет форму,
+  // в английском — просто stop/stops, см. wtgArrivalMsg ниже).
+  function ruStopsWord(n) {
+    var n10 = n % 10, n100 = n % 100;
+    if (n10 === 1 && n100 !== 11) return 'остановка';
+    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return 'остановки';
+    return 'остановок';
   }
 
   var DIR_LABEL = { forward: null, backward: null }; // заполнится после загрузки станций
@@ -2584,9 +2748,11 @@
       var depAbsoluteMs = serviceStart.getTime() + best.departure.minutes * 60000;
       var arrClock = fmtHHMM(new Date(serviceStart.getTime() + best.arrival.minutes * 60000));
       var depClock = fmtHHMM(new Date(depAbsoluteMs));
+      var durationMin = Math.round(best.arrival.minutes - best.departure.minutes);
+      var stopsCount = best.arrival.path.length - 1;
       wtgResultCard.className = 'card result show ok';
       wtgResultDir.innerHTML = t('wtgBoardTrain', depClock, dirLabel);
-      wtgResultSub.innerHTML = t('wtgArrivalMsg', best.arrival.estimated, destName, arrClock);
+      wtgResultSub.innerHTML = t('wtgArrivalMsg', best.arrival.estimated, destName, arrClock, durationMin, stopsCount);
       wtgStartCountdown(depAbsoluteMs, t('wtgDepartsIn'));
       wtgRenderRoute(best.arrival.path, serviceStart);
       // "Добавить в календарь" — только если реально есть время им
@@ -2598,9 +2764,11 @@
     } else if (firstEstimate) {
       var arrClock2 = fmtHHMM(new Date(serviceStart.getTime() + firstEstimate.arrival.minutes * 60000));
       var depAbsoluteMs2 = serviceStart.getTime() + firstEstimate.departure.minutes * 60000;
+      var durationMin2 = Math.round(firstEstimate.arrival.minutes - firstEstimate.departure.minutes);
+      var stopsCount2 = firstEstimate.arrival.path.length - 1;
       wtgResultCard.className = 'card result show fail';
       wtgResultDir.innerHTML = t('wtgNotMakingIt', targetStr, destName);
-      wtgResultSub.innerHTML = t('wtgArrivalMsg', false, destName, arrClock2);
+      wtgResultSub.innerHTML = t('wtgArrivalMsg', false, destName, arrClock2, durationMin2, stopsCount2);
       wtgStartCountdown(depAbsoluteMs2, t('wtgNextTrainTowards', dirLabel));
       wtgRenderRoute(firstEstimate.arrival.path, serviceStart);
     } else {
@@ -3119,6 +3287,8 @@
       wtgRouteToggle.classList.contains('open') ? t('wtgHideStations') : t('wtgShowAllStations');
     document.getElementById('stationRouteBtn').setAttribute('aria-label', t('routeTrigger'));
     document.getElementById('onayRowText').textContent = t('onayRowText');
+    document.getElementById('shareLink').textContent = t('shareLinkText');
+    document.getElementById('iosInstallText').innerHTML = t('iosInstallTipMsg');
     document.getElementById('wtgOriginRouteBtn').textContent = t('wtgRouteBtn');
     document.getElementById('routeModalTitle').textContent = t('routeModalTitle');
     document.getElementById('routeLinkGoogleText').textContent = t('routeGoogle');
