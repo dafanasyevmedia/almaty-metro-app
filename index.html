@@ -406,25 +406,43 @@
   .station-title h2{ font-size:22px; margin:0; font-weight:600; letter-spacing:-.3px; }
 
   .line-wrap{ margin:2px 4px 20px; }
-  .line-track{ position:relative; display:flex; justify-content:space-between; align-items:center; padding:10px 6px; height:36px; overflow:hidden; }
+  .line-track{ position:relative; padding:10px 6px; height:36px; overflow:hidden; }
   .line-track::before{
     content:''; position:absolute; left:6px; right:6px; top:50%; height:2px; margin-top:-1px;
     background:var(--border); border-radius:2px;
   }
-  .line-dot{ position:relative; width:7px; height:7px; border-radius:50%; background:var(--muted); opacity:.5; transition:all .2s; cursor:pointer; }
-  .line-dot::before{ content:''; position:absolute; top:50%; left:50%; width:22px; height:22px; transform:translate(-50%, -50%); }
-  .line-dot:hover{ opacity:.85; transform:scale(1.3); }
-  .line-dot.active{
-    width:15px; height:15px; opacity:1; background:var(--accent);
-    box-shadow:0 0 0 4px var(--accent-soft), 0 0 14px -2px var(--accent);
+  /* Станция — платформа по ширине поезда (train-marker — 16px), не точка.
+     Обкатано на прототипе ("Станции-платформы"): пришлось поправить
+     привязку поезда с носа на центр (см. .train-marker margin-left ниже),
+     иначе при стоянке поезд торчал мимо симметричной платформы. Но и
+     этого оказалось мало: раньше точки стояли через flex
+     (justify-content:space-between — перераспределяет место с учётом
+     реальной ширины КАЖДОГО элемента), а поезд — через проценты. Пока
+     точки были крошечные (7-15px), расхождение было незаметно; на
+     платформах (16-20px, да ещё активная заметно шире остальных) оно
+     превратилось в реальный сдвиг на несколько пикселей — поезд
+     "стоял" не в центре своей платформы. Убрали flex, точки теперь
+     тоже через `left:calc(...)` (та же формула, что у поезда,
+     см. renderLineStrip) + `transform:translate(-50%,-50%)` для
+     центрирования по обеим осям сразу — центр платформы и центр
+     "припаркованного" поезда гарантированно совпадают, а не только на
+     глаз. 2026-09-06. */
+  .line-dot{
+    position:absolute; top:50%; width:16px; height:8px; border-radius:4px; background:var(--muted);
+    opacity:.4; transition:all .2s; cursor:pointer; transform:translate(-50%, -50%);
   }
-  .line-dot.active:hover{ transform:none; }
-  /* "Поезд на станции" — обсуждали платформы (по ширине поезда) и обводку
-     вокруг поезда цветом фона, остановились на самом простом варианте:
-     форма и размер точки НЕ меняются, только усиливается свечение — см.
+  .line-dot::before{ content:''; position:absolute; top:50%; left:50%; width:22px; height:22px; transform:translate(-50%, -50%); }
+  .line-dot:hover{ opacity:.7; transform:translate(-50%, -50%) scale(1.15); }
+  .line-dot.active{
+    width:20px; height:11px; opacity:1; background:var(--accent-soft); border:1.5px solid var(--accent);
+    border-radius:5.5px; box-shadow:0 0 12px -2px var(--accent);
+  }
+  .line-dot.active:hover{ transform:translate(-50%, -50%); }
+  /* "Поезд на станции" — рамка/заливка/размер платформы НЕ меняются
+     (по отзыву — оставить как есть), только усиливается свечение — см.
      .docked toggle в renderTrainMarkers()/CLAUDE.md. 2026-09-06. */
   .line-dot.active.docked{
-    box-shadow:0 0 0 5px var(--accent-soft), 0 0 22px 0px var(--accent);
+    box-shadow:0 0 22px 0px var(--accent);
   }
   .line-ends{ display:flex; justify-content:space-between; margin:6px 2px 0; font-size:10.5px; color:var(--muted2); font-weight:600; }
   .line-ends span{ max-width:44%; } .line-ends span:last-child{ text-align:right; }
@@ -439,7 +457,7 @@
      зеркальный path/градиент, как и раньше в этом блоке (тот же приём,
      что был у старого clip-path на два полигона). 2026-09-06. */
   .train-marker{
-    position:absolute; top:50%; left:0; width:16px; height:8px; margin-top:-4px;
+    position:absolute; top:50%; left:0; width:16px; height:8px; margin-top:-4px; margin-left:-8px;
     pointer-events:none; z-index:2; transition:left .95s linear, top .3s ease; animation:trainPulse 1.7s ease-in-out infinite;
   }
   .train-marker::before{
@@ -447,7 +465,7 @@
     filter:blur(1.3px); border-radius:50%; z-index:-1;
   }
   .train-marker.fwd{
-    top:calc(50% - 7px); margin-left:-16px; background:var(--accent);
+    top:calc(50% - 7px); background:var(--accent);
     filter:drop-shadow(0 0 3px color-mix(in oklch, var(--accent) 55%, transparent));
     clip-path:path("M0 0 H11 C12.5 0.3 15 4.3 16 6 C16 7.1 14.5 8 12.5 8 H0 Z");
   }
@@ -2075,9 +2093,17 @@
   function renderLineStrip(slug) {
     var track = document.getElementById('lineTrack');
     track.innerHTML = '';
-    STATIONS.forEach(function (s) {
+    var n = STATIONS.length;
+    STATIONS.forEach(function (s, i) {
       var dot = document.createElement('div');
       dot.className = 'line-dot' + (s.slug === slug ? ' active' : '');
+      // Та же формула, что и у train-marker (см. renderTrainMarkers) — раньше
+      // станции стояли через flex (justify-content:space-between), а поезд
+      // через проценты; пока точки были крошечные, расхождение было незаметно,
+      // на платформах (16-20px) оно стало реальным сдвигом в несколько
+      // пикселей. Общая формула гарантирует, что центр платформы и центр
+      // "припаркованного" поезда совпадают всегда, а не только на глаз.
+      dot.style.left = 'calc(6px + (100% - 12px) * ' + (i / (n - 1)) + ')';
       dot.title = stationName(s);
       dot.setAttribute('role', 'button');
       dot.setAttribute('aria-label', stationName(s));
