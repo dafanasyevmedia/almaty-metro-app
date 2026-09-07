@@ -253,6 +253,21 @@
      станций — обычные строки поверх неё). 2026-09-04. */
   .station-modal-card{ max-width:340px; padding:20px 18px; }
   .station-modal-card h2{ padding-left:4px; }
+  /* Маскот с подзорной трубой (far.png, тот же файл, что в строке
+     геолокации) — "высматривает" станцию в списке. Крупный, в свободном
+     углу карточки (справа снизу от коротких названий станций).
+     z-index:0 — НАМЕРЕННО ниже .station-modal-row (z-index:1): на
+     казахском/английском самые длинные названия ("М. Әуезов атындағы
+     театр", 24 симв.) доходят почти до края карточки, так что маскот
+     местами окажется позади текста — это ожидаемо и безопасно, текст
+     всегда читается поверх картинки, а не наоборот. pointer-events:none,
+     чтобы декоративный элемент не перехватывал клики по строкам.
+     2026-09-07 (переехал сюда из шапки — было два маскота на одном
+     экране, оставили один, но крупнее). */
+  .station-modal-mascot{
+    position:absolute; right:10px; bottom:10px; width:104px; height:104px;
+    object-fit:contain; z-index:0; pointer-events:none;
+  }
   .station-modal-line{ position:relative; display:flex; flex-direction:column; padding:4px 0; }
   .station-modal-line::before{
     content:''; position:absolute; top:26px; bottom:26px; left:16px; width:2px;
@@ -582,10 +597,14 @@
      (см. sw.js + X-From-SW-Cache в fetchJSON ниже) — не просто "давно не
      обновлялось", а именно "прямо сейчас нет сети". */
   .offline-note{
-    display:flex; align-items:flex-start; background:var(--card); border:1px solid var(--warn);
-    border-radius:14px; padding:11px 14px; margin:0 auto 12px;
+    display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--warn);
+    border-radius:14px; padding:9px 14px; margin:0 auto 12px;
     max-width:608px; width:calc(100% - 32px); font-size:12.5px; color:var(--warn); line-height:1.45; font-weight:600;
   }
+  /* mascot/offline.png — новая поза (2026-09-07), файл появится позже —
+     если файла ещё нет, браузер просто не покажет пустую картинку (alt=""),
+     текст баннера при этом не ломается. */
+  .offline-note-mascot{ width:34px; height:34px; flex:none; object-fit:contain; }
 
   .about-h2{ font-size:14px; font-weight:600; margin:0 0 10px; letter-spacing:-.2px; }
   .about-text{ font-size:13.5px; color:var(--muted); line-height:1.6; margin:0; }
@@ -978,6 +997,7 @@
 </main>
 
 <div class="offline-note" id="offlineNote" style="display:none">
+  <img class="offline-note-mascot" src="mascot/offline.png" alt="" onerror="this.style.display='none'" />
   <span id="offlineNoteText">Нет соединения — показаны сохранённые данные</span>
 </div>
 
@@ -1043,6 +1063,7 @@
     <button class="feedback-close" id="stationModalClose" aria-label="Закрыть">×</button>
     <h2 id="stationModalTitle">Выбор станции</h2>
     <div class="station-modal-line" id="stationModalLine"><!-- заполняется JS --></div>
+    <img class="station-modal-mascot" src="mascot/far.png" alt="" />
   </div>
 </div>
 
