@@ -48,10 +48,10 @@
 
   gtag('config', 'G-Q7NT3NLEJY');
 </script>
-<link rel="icon" type="image/png" href="favicon-32x32.png?v=4" sizes="32x32" />
-<link rel="icon" type="image/png" href="favicon-16x16.png?v=4" sizes="16x16" />
-<link rel="shortcut icon" href="favicon.ico?v=4" />
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=4" />
+<link rel="icon" type="image/png" href="favicon-32x32.png?v=5" sizes="32x32" />
+<link rel="icon" type="image/png" href="favicon-16x16.png?v=5" sizes="16x16" />
+<link rel="shortcut icon" href="favicon.ico?v=5" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=5" />
 <meta name="apple-mobile-web-app-title" content="Almaty Metro" />
 <link rel="manifest" href="site.webmanifest" />
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -314,6 +314,52 @@
     border-radius:50%; opacity:.55;
   }
   .station-modal-near-tag{ color:var(--muted); font-weight:500; font-size:11.5px; margin-left:6px; }
+
+  /* Модалка "расписание конкретного поезда" (2026-09-08, переработана
+     2026-09-09) — тот же .station-modal-line/-row/-dotwrap/-dot, что и в
+     выборе станции, просто без кликабельности (это не выбор, а просмотр) и
+     с добавленным временем справа (.train-modal-time, margin-left:auto —
+     дожимает его к правому краю без переопределения justify-content на
+     всём ряду). Список ВСЕГДА в одном и том же порядке (Райымбек батыра →
+     Б. Момышулы), независимо от того, по какой карточке направления
+     тапнули — активная (.active) станция не обязательно первая в списке,
+     это просто та, что совпадает с выбранной (originIdx). */
+  .train-modal-line{ padding:6px 0 4px; }
+  .train-modal-row{ cursor:default; }
+  .train-modal-time{
+    margin-left:auto; font-size:12.5px; color:var(--muted); font-weight:600;
+    font-variant-numeric:tabular-nums; flex:none;
+  }
+  .train-modal-row.active .train-modal-time{ color:var(--accent); }
+  /* Станции, которые поезд уже проехал — просто тусклее целиком (не трогаем
+     цвета по отдельности, opacity сразу гасит и точку, и текст, и время
+     одинаково) — по отзыву пользователя, "которые не проехал — как
+     обычно", то есть менять нужно только проехавшие. 2026-09-09. */
+  .train-modal-row.passed{ opacity:.4; }
+  /* Маркер — тот же силуэт/path, что у .train-marker.fwd на горизонтальной
+     линии. `top` выставляется в JS (updateTrainModalMarker) по факту
+     измеренных пиксельных центров строк (getRowCenters), а не по проценту
+     от высоты контейнера — имена станций разной длины дают разную высоту
+     строки (перенос на 2 строки на казахском/английском), так что процент
+     от общей высоты "поплыл" бы точно так же, как раньше плыли платформы
+     на горизонтальной линии (см. .line-track выше) — тут этот баг заранее
+     не повторяем.
+     Список теперь ВСЕГДА в одном порядке (см. выше), а едет поезд в разные
+     стороны — значит и маркер должен смотреть в разные стороны: .dir-
+     forward (к Б. Момышулы, вниз по списку) — нос вниз (rotate(90deg));
+     .dir-backward (к Райымбек батыра, вверх по списку) — нос вверх
+     (rotate(-90deg)). rotate — ПОСЛЕ translate(-50%,-50%), то есть вокруг
+     уже отцентрированной по (left,top) точки, тот же приём, что и
+     центрирование .line-dot. */
+  .train-modal-marker{
+    position:absolute; left:16px; top:0; width:16px; height:8px; z-index:2;
+    background:var(--accent); pointer-events:none;
+    filter:drop-shadow(0 0 3px color-mix(in oklch, var(--accent) 55%, transparent));
+    clip-path:path("M0 0 H11 C12.5 0.3 15 4.3 16 6 C16 7.1 14.5 8 12.5 8 H0 Z");
+    transition:top .95s linear;
+  }
+  .train-modal-marker.dir-forward{ transform:translate(-50%, -50%) rotate(90deg); }
+  .train-modal-marker.dir-backward{ transform:translate(-50%, -50%) rotate(-90deg); }
   input[type="time"]{
     width:100%; padding:12px 14px; border-radius:13px; border:1px solid var(--border);
     background:var(--card2); color:var(--text); font-size:15px; font-weight:600; font-family:inherit;
@@ -511,10 +557,16 @@
 
   .dir-card{
     position:relative; overflow:hidden; background:var(--card); border-radius:18px; padding:16px 14px;
-    text-align:center; border:1.5px solid var(--border); transition:border-color .3s; min-height:118px;
+    text-align:center; border:1.5px solid var(--border); transition:border-color .3s, transform .1s; min-height:118px;
     display:flex; flex-direction:column; justify-content:center;
     --tier:var(--muted); --tier2:var(--muted);
   }
+  /* Тап по карточке — открывает расписание именно этого поезда по станциям
+     (см. openTrainModal, 2026-09-08). Только у карточек с реальным
+     отсчётом — у "unavailable" (конечная станция, поездов нет) кликать
+     нечего, курсор/press-эффект туда не добавляем. */
+  .dir-card.tappable{ cursor:pointer; }
+  .dir-card.tappable:active{ transform:scale(.98); border-color:var(--tier); }
   .dir-card.wait-normal{ --tier:var(--accent); --tier2:var(--accent); }
   .dir-card.wait-soon{ --tier:var(--success); --tier2:var(--success); border-color:var(--tier); }
   .dir-card::before{
@@ -1067,6 +1119,23 @@
   </div>
 </div>
 
+<!-- Модалка "расписание конкретного поезда" — открывается тапом по карточке
+     направления на "Ближайшем поезде" (см. renderDirections/openTrainModal,
+     2026-09-08; переработана 2026-09-09 — список всегда в одном порядке,
+     все станции сразу, кнопка "следующий поезд"). Тот же визуальный язык,
+     что у stationModal (вертикальная линия станций), плюс живой маркер
+     поезда (#trainModalMarker), позиционируется по той же логике, что и на
+     горизонтальной линии (estimateFullPath() + dwellFrac) — см. CLAUDE.md. -->
+<div class="feedback-modal" id="trainModal" style="display:none">
+  <div class="feedback-card station-modal-card">
+    <button class="feedback-close" id="trainModalClose" aria-label="Закрыть">×</button>
+    <h2 id="trainModalTitle">Поезд</h2>
+    <div class="feedback-intro" id="trainModalSubtitle"></div>
+    <div class="station-modal-line train-modal-line" id="trainModalLine"><!-- заполняется JS --></div>
+    <button class="btn" id="trainModalNextBtn" style="width:100%; margin-top:14px;">Показать следующий поезд</button>
+  </div>
+</div>
+
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
     <button class="tab-btn active" data-tab="nearest">Ближайший поезд</button>
@@ -1261,6 +1330,9 @@
       routeModalTitle: 'Маршрут до станции',
       stationModalTitle: 'Выбор станции',
       stationModalNearTag: 'рядом с вами',
+      trainModalTitle: function (depClock) { return 'Поезд в ' + depClock; },
+      trainModalAriaLabel: 'Показать расписание этого поезда по станциям',
+      trainModalNextTrain: 'Показать следующий поезд',
       routeGoogle: 'Google Maps',
       routeApple: 'Apple Maps',
       route2gis: '2GIS',
@@ -1373,6 +1445,9 @@
       routeModalTitle: 'Бекетке дейінгі бағыт',
       stationModalTitle: 'Бекетті таңдау',
       stationModalNearTag: 'сізге жақын',
+      trainModalTitle: function (depClock) { return depClock + ' пойызы'; },
+      trainModalAriaLabel: 'Осы пойыздың бекеттер бойынша кестесін көрсету',
+      trainModalNextTrain: 'Келесі пойызды көрсету',
       routeGoogle: 'Google Maps',
       routeApple: 'Apple Maps',
       route2gis: '2GIS',
@@ -1481,6 +1556,9 @@
       routeModalTitle: 'Route to the station',
       stationModalTitle: 'Choose a station',
       stationModalNearTag: 'near you',
+      trainModalTitle: function (depClock) { return depClock + ' train'; },
+      trainModalAriaLabel: 'Show this train\'s station-by-station schedule',
+      trainModalNextTrain: 'Show next train',
       routeGoogle: 'Google Maps',
       routeApple: 'Apple Maps',
       route2gis: '2GIS',
@@ -1728,9 +1806,20 @@
      линии между соседними станциями расширяется в обе стороны от
      середины) — осознанно выбрали больший запас (2.0), а не тютелька
      в тютельку под 1.66, чтобы не пришлось возвращаться к этому же
-     разговору при следующей похожей жалобе. */
+     разговору при следующей похожей жалобе.
+
+     AMBIGUOUS_MAX_M поднят с 900 до 2000 (2026-09-08) — кейс пользователя:
+     едет на автобусе к метро, ещё на подъезде (не пешком), между двумя
+     станциями, хочет видеть варианты для обеих заранее, а не только
+     когда уже дойдёт пешком. Проверили по реальным координатам станций,
+     что для пешехода вдоль самой линии это ничего не меняет — даже в
+     середине САМОГО длинного перегона (Сарыарка–Б. Момышулы, 1841м)
+     расстояние до ближайшей станции всего ~920м, то есть почти вся
+     линия и так укладывалась в старые 900м; новый порог расширяет
+     подсказку только для случая "еду издалека", не добавляя лишних
+     срабатываний тем, кто уже рядом с линией. */
   var AMBIGUOUS_RATIO = 2.0;
-  var AMBIGUOUS_MAX_M = 900;
+  var AMBIGUOUS_MAX_M = 2000;
   function isAmbiguous(res) {
     return !!res.second && res.distance <= AMBIGUOUS_MAX_M && res.second.distance <= res.distance * AMBIGUOUS_RATIO;
   }
@@ -1871,6 +1960,29 @@
     return est != null ? { minutes: depTime + est, estimated: true } : null;
   }
 
+  // Зеркало matchNextArrival — не "когда доедет ДО следующей", а "когда
+  // отправился С предыдущей", чтобы восстановить время на станциях, которые
+  // поезд уже проехал (см. openTrainModal/estimateFullPath ниже, 2026-09-09).
+  // prevSlug — та же ЛИНИЯ ВРЕМЕНИ prevSlug в ТОМ ЖЕ direction: раз поезда
+  // идут друг за другом по одному пути, последнее отправление с prevSlug ДО
+  // atTime — это отправление того же самого поезда.
+  function matchPrevDeparture(atTime, curSlug, prevSlug, direction, serviceStart) {
+    var prevTimeline = buildTimeline(prevSlug, direction, serviceStart);
+    if (prevTimeline.length) {
+      var m = lastTimelineIndexAtOrBefore(prevTimeline, atTime);
+      if (m >= 0 && atTime - prevTimeline[m].minutes <= MAX_SEGMENT_MIN) {
+        return { minutes: prevTimeline[m].minutes, estimated: false };
+      }
+      return null;
+    }
+    var oppDir = direction === 'forward' ? 'backward' : 'forward';
+    var est = medianSegmentTravelMin(
+      buildTimeline(curSlug, oppDir, serviceStart),
+      buildTimeline(prevSlug, oppDir, serviceStart)
+    );
+    return est != null ? { minutes: atTime - est, estimated: true } : null;
+  }
+
   // Цепочкой матчим через все промежуточные станции от origin до dest.
   // path — время на каждой станции по пути (для списка станций под результатом).
   function estimateArrival(originIdx, destIdx, direction, departureMinutes, serviceStart) {
@@ -1889,6 +2001,49 @@
       path.push({ idx: i, minutes: t });
     }
     return { minutes: t, estimated: estimated, path: path };
+  }
+
+  // Время на КАЖДОЙ станции линии для одного конкретного поезда — не только
+  // от originIdx до конечной (как estimateArrival), а во ВСЕ стороны сразу:
+  // и вперёд по ходу поезда, и назад (станции, которые он уже проехал до
+  // originIdx) — см. модалку "расписание поезда", 2026-09-09, пользователь
+  // явно попросил видеть все станции, а не только оставшиеся, "потому что
+  // часто поезд ещё не подъехал к выбранной станции". Возвращает {idx:
+  // minutes} — карту, не обязательно на все 11 станций: у краёв расписания
+  // (первый/последний поезд дня) сматчить дальше может быть не с чем,
+  // тогда просто останавливаемся — лучше неполная, но честная карта, чем
+  // вообще ничего (тот же принцип, что уже был у старого fallback'а с
+  // "откатиться на более близкую станцию", только теперь применён к обеим
+  // сторонам сразу и без отдельного цикла retry).
+  function estimateFullPath(originIdx, direction, departureMinutes, serviceStart) {
+    var step = direction === 'forward' ? 1 : -1;
+    var times = {};
+    times[originIdx] = departureMinutes;
+
+    // Вперёд по ходу поезда — от origin до конца линии в эту сторону.
+    var farEnd = direction === 'forward' ? STATIONS.length - 1 : 0;
+    var i = originIdx, t = departureMinutes;
+    while (i !== farEnd) {
+      var res = matchNextArrival(t, STATIONS[i].slug, STATIONS[i + step].slug, direction, serviceStart);
+      if (!res) break;
+      t = res.minutes;
+      i += step;
+      times[i] = t;
+    }
+
+    // Назад — станции, которые поезд уже проехал до прибытия на origin.
+    var nearEnd = direction === 'forward' ? 0 : STATIONS.length - 1;
+    var j = originIdx, u = departureMinutes;
+    while (j !== nearEnd) {
+      var prevIdx = j - step;
+      var res2 = matchPrevDeparture(u, STATIONS[j].slug, STATIONS[prevIdx].slug, direction, serviceStart);
+      if (!res2) break;
+      u = res2.minutes;
+      j = prevIdx;
+      times[j] = u;
+    }
+
+    return times;
   }
 
   // Ищет ночной перерыв (закрытие метро) в таймлайне одной станции — самый
@@ -2287,6 +2442,9 @@
     container.innerHTML = '';
     container.style.display = '';
     document.getElementById('closedBanner').style.display = 'none';
+    // Если была открыта модалка "расписание поезда" от прежней станции —
+    // закрываем: её путь/время относятся к уже неактуальной станции.
+    closeTrainModal();
     // Карточки пересоздаются с нуля — прошлые "first"-значения относятся к другой
     // станции, сравнивать их дальше нельзя (иначе ложно сыграет doors-fx).
     lastFirstMinutes.forward = null;
@@ -2326,6 +2484,13 @@
         label +
         '<div class="countdown" data-dir="' + d.key + '">—</div>' +
         '<div class="next-after" data-dir-after="' + d.key + '"></div>';
+      // Тап по всей карточке — открывает расписание именно того поезда,
+      // до которого идёт отсчёт (см. openTrainModal). Не значок на линии —
+      // тот слишком мелкий и вдобавок движется, ненадёжная цель для тапа.
+      wrap.classList.add('tappable');
+      wrap.setAttribute('role', 'button');
+      wrap.setAttribute('aria-label', t('trainModalAriaLabel'));
+      wrap.addEventListener('click', function () { openTrainModal(d.key); });
       container.appendChild(wrap);
     });
 
@@ -2413,6 +2578,10 @@
       var serviceStartForMarkers = serviceDayStart(nowForMarkers);
       renderTrainMarkers((nowForMarkers - serviceStartForMarkers) / 60000, serviceStartForMarkers);
     }
+    // Живой маркер и "проехавшие" станции в модалке "расписание поезда" —
+    // тот же тик, что и у горизонтальной линии выше; сам себя не запускает
+    // отдельным таймером.
+    if (trainModalState) { updateTrainModalMarker(); updateTrainModalPassedStates(); }
     // Считаем, сколько реально существующих направлений (не "конечная станция,
     // поездов нет") сейчас закрыты — если закрыты все до одного, ночью вместо двух
     // одинаковых "метро закрыто" в тесных карточках показываем один общий баннер
@@ -3051,6 +3220,236 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && stationModal.style.display !== 'none') closeStationModal();
   });
+
+  /* ---------- "Расписание конкретного поезда" (2026-09-08, переработана
+     2026-09-09) ----------
+     Тап по карточке направления на "Ближайшем поезде" — открывает
+     вертикальную схему (тот же визуальный язык, что у stationModal) с
+     живым положением ИМЕННО того поезда, до которого шёл отсчёт на этой
+     карточке. По отзыву пользователя список ВСЕГДА в одном и том же
+     порядке (Райымбек батыра → Б. Момышулы), независимо от того, по какой
+     карточке тапнули, и показывает ВСЕ станции сразу — не только
+     оставшиеся впереди, но и уже пройденные (тусклее, .passed): "часто
+     поезд ещё не подъехал к выбранной станции", и раньше в такой ситуации
+     список начинался с выбранной станции, хотя поезд физически ещё где-то
+     позади неё. См. CLAUDE.md. */
+  var trainModal = document.getElementById('trainModal');
+  var trainModalLine = document.getElementById('trainModalLine');
+  // {times, serviceStart, originIdx} текущего показанного поезда — times
+  // это {idx: minutes} из estimateFullPath (не обязательно все 11 станций,
+  // см. её комментарий). null — модалка закрыта (проверяется и в
+  // tickCountdowns, чтобы не считать лишнее, когда она не открыта).
+  var trainModalState = null;
+  // Какое направление сейчас открыто и который по счёту поезд в нём (0 —
+  // ближайший) — нужно для кнопки "Показать следующий поезд".
+  var trainModalDirKey = null;
+  var trainModalTrainIndex = 0;
+
+  // Пиксельные центры точек-станций относительно .train-modal-line —
+  // намеренно НЕ проценты от общей высоты контейнера: имена станций разной
+  // длины дают разную высоту строки (перенос на 2 строки на казахском/
+  // английском для длинных названий), так что равномерный процент "поплыл"
+  // бы точно так же, как раньше плыли платформы на горизонтальной линии
+  // (см. .line-track/renderLineStrip выше и CLAUDE.md, "координаты
+  // станций/поезда разошлись") — тут этот баг заранее не повторяем,
+  // меряем реальный offsetTop каждой строки после рендера. Индекс в
+  // массиве centers СОВПАДАЕТ с индексом станции в STATIONS — список
+  // рендерится строго в порядке STATIONS (см. renderTrainModalList).
+  function getRowCenters() {
+    var rows = trainModalLine.querySelectorAll('.train-modal-row');
+    var centers = [];
+    rows.forEach(function (row) {
+      // .station-modal-dotwrap САМА имеет position:relative (см. её CSS выше) —
+      // значит её offsetParent это СВОЙ ряд, а не .train-modal-line, и её
+      // offsetTop — это смещение ВНУТРИ ряда (одинаковое почти у всех рядов),
+      // а не позиция на всей линии. Настоящая позиция — offsetTop ряда
+      // (offsetParent которого уже правильно .train-modal-line) ПЛЮС
+      // смещение точки внутри него. Поймал не на глаз — увидел, что все
+      // центры получались одинаковыми, когда должны были расти. 2026-09-08.
+      var dot = row.querySelector('.station-modal-dotwrap');
+      centers.push(row.offsetTop + dot.offsetTop + dot.offsetHeight / 2);
+    });
+    return centers;
+  }
+
+  function renderTrainModalList(times, serviceStart, originIdx) {
+    trainModalLine.innerHTML = '';
+    STATIONS.forEach(function (s, idx) {
+      var row = document.createElement('div');
+      row.className = 'station-modal-row train-modal-row' + (idx === originIdx ? ' active' : '');
+      row.dataset.idx = idx;
+      var dotwrap = document.createElement('span');
+      dotwrap.className = 'station-modal-dotwrap';
+      var dot = document.createElement('span');
+      dot.className = 'station-modal-dot';
+      dotwrap.appendChild(dot);
+      var name = document.createElement('span');
+      name.className = 'station-modal-name';
+      name.textContent = stationName(s);
+      var clock = document.createElement('span');
+      clock.className = 'train-modal-time';
+      // "—" — станция за пределами того, что смогли восстановить в обе
+      // стороны (редкий край расписания, см. estimateFullPath) — не
+      // выдумываем время, честно показываем, что не знаем.
+      clock.textContent = times[idx] != null ? fmtHHMM(new Date(serviceStart.getTime() + times[idx] * 60000)) : '—';
+      row.appendChild(dotwrap);
+      row.appendChild(name);
+      row.appendChild(clock);
+      trainModalLine.appendChild(row);
+    });
+    var marker = document.createElement('div');
+    marker.className = 'train-modal-marker';
+    marker.id = 'trainModalMarker';
+    trainModalLine.appendChild(marker);
+  }
+
+  // "Проехал ли поезд эту станцию" — просто "известное время на ней уже в
+  // прошлом", не зависит от направления (см. CLAUDE.md): time — это
+  // реальный момент, когда поезд БЫЛ на этой станции, независимо от того,
+  // едет он к началу линии или к концу.
+  function updateTrainModalPassedStates() {
+    if (!trainModalState) return;
+    var nowMinutes = (almatyNow() - trainModalState.serviceStart) / 60000;
+    var times = trainModalState.times;
+    trainModalLine.querySelectorAll('.train-modal-row').forEach(function (row) {
+      var idx = +row.dataset.idx;
+      row.classList.toggle('passed', times[idx] != null && times[idx] <= nowMinutes);
+    });
+  }
+
+  // Позиция маркера — та же идея, что и wanted.push({pos: i + dwellFrac(...)})
+  // в renderTrainMarkers() для горизонтальной линии, но для ОДНОГО заранее
+  // известного поезда. Список теперь в ФИКСИРОВАННОМ порядке (индекс
+  // станции), а не в порядке движения поезда — значит время по мере роста
+  // индекса может как расти (поезд едет к Б. Момышулы), так и убывать
+  // (едет к Райымбек батыра). Поэтому ищем сегмент через min/max на каждой
+  // паре, а не полагаемся на возрастание — работает для обоих направлений
+  // одной и той же веткой кода. 2026-09-09.
+  function updateTrainModalMarker() {
+    if (!trainModalState) return;
+    var marker = document.getElementById('trainModalMarker');
+    if (!marker) return;
+    var times = trainModalState.times;
+    var centers = getRowCenters();
+    var known = [];
+    for (var idx = 0; idx < STATIONS.length; idx++) {
+      if (times[idx] != null) known.push({ idx: idx, minutes: times[idx] });
+    }
+    if (!known.length || centers.length !== STATIONS.length) return;
+
+    var nowMinutes = (almatyNow() - trainModalState.serviceStart) / 60000;
+
+    // Поезд ещё не отправился со своей КОНЕЧНОЙ (начальной для этого рейса)
+    // станции — рейс физически ещё не начался, вагончик прятать целиком, а
+    // не рисовать его "ждущим" где-то на линии. Начальная станция — не
+    // originIdx (это станция, которую выбрал пользователь), а терминус,
+    // противоположный направлению движения (0 для поезда к Б. Момышулы,
+    // последняя — для поезда к Райымбек батыра). По просьбе пользователя,
+    // 2026-09-09: пролистывая "Показать следующий поезд" вперёд, легко
+    // долистать до рейса, который вот-вот начнётся, но ещё не начался.
+    var startIdx = trainModalState.direction === 'forward' ? 0 : STATIONS.length - 1;
+    var startTime = times[startIdx];
+    if (startTime != null && startTime > nowMinutes) {
+      marker.style.display = 'none';
+      return;
+    }
+    marker.style.display = '';
+
+    var top = null;
+    for (var k = 0; k < known.length - 1; k++) {
+      var a = known[k], b = known[k + 1];
+      var lo = Math.min(a.minutes, b.minutes), hi = Math.max(a.minutes, b.minutes);
+      if (nowMinutes >= lo && nowMinutes <= hi) {
+        var earlier = a.minutes <= b.minutes ? a : b;
+        var later = a.minutes <= b.minutes ? b : a;
+        var frac = dwellFrac(nowMinutes, earlier.minutes, later.minutes);
+        top = centers[earlier.idx] + (centers[later.idx] - centers[earlier.idx]) * frac;
+        break;
+      }
+    }
+    if (top == null) {
+      // За пределами всех известных времён — прижимаем к хронологически
+      // первой/последней станции (не обязательно STATIONS[0]/[last] — это
+      // зависит от направления, см. known[0] vs known[last]).
+      var first = known[0], last = known[known.length - 1];
+      var firstIsEarlier = first.minutes <= last.minutes;
+      var earlierEnd = firstIsEarlier ? first : last;
+      var laterEnd = firstIsEarlier ? last : first;
+      top = nowMinutes <= earlierEnd.minutes ? centers[earlierEnd.idx] : centers[laterEnd.idx];
+    }
+    marker.style.top = top + 'px';
+  }
+
+  // Общая точка входа и для первого открытия (openTrainModal), и для кнопки
+  // "Показать следующий поезд" (trainModalTrainIndex++) — вся разница
+  // только в том, какой по счёту поезд из nextTrains берём.
+  function loadTrainForModal() {
+    if (!selectedSlug || !trainModalDirKey) return;
+    var res = nextTrains(selectedSlug, trainModalDirKey, trainModalTrainIndex + 1);
+    var first = res.trains[trainModalTrainIndex];
+    if (!first) { trainModalTrainIndex = Math.max(0, trainModalTrainIndex - 1); return; } // дальше по расписанию ничего нет
+    var mins = first.minutes - res.nowMinutes;
+    // Метро закрыто (следующий поезд только завтра/очень нескоро) — как и в
+    // tickCountdowns, тут отдельного поезда, чтобы показать, попросту нет.
+    if ((first.dayOffset === 1 || mins > 6 * 60) && mins > PRE_OPEN_COUNTDOWN_MIN) return;
+
+    var originIdx = STATIONS.findIndex(function (s) { return s.slug === selectedSlug; });
+    var direction = trainModalDirKey === 'forward' ? 'forward' : 'backward';
+    var farEndIdx = direction === 'forward' ? STATIONS.length - 1 : 0;
+    var times = estimateFullPath(originIdx, direction, first.minutes, res.serviceStart);
+
+    trainModalState = { times: times, serviceStart: res.serviceStart, originIdx: originIdx, direction: direction };
+    var depClock = fmtHHMM(new Date(res.serviceStart.getTime() + first.minutes * 60000));
+    var destName = stationName(STATIONS[farEndIdx]);
+    document.getElementById('trainModalTitle').textContent = t('trainModalTitle', depClock);
+    document.getElementById('trainModalSubtitle').innerHTML = t('wtgTowards', destName);
+    renderTrainModalList(times, res.serviceStart, originIdx);
+    var marker = document.getElementById('trainModalMarker');
+    marker.classList.add('dir-' + direction);
+    // Первое появление — сразу на нужное место, БЕЗ анимации "сползания":
+    // .train-modal-marker сам по себе новый элемент (top:0 по умолчанию),
+    // и если сразу включить transition, он проедет весь путь от верха
+    // списка до настоящей позиции — включая ложное "сверху вниз" даже для
+    // поезда, который на самом деле едет к Райымбек батыра (снизу вверх).
+    // Отключаем transition на этот единственный кадр, выставляем top,
+    // потом возвращаем transition обратно для последующих живых тиков —
+    // двойной rAF, чтобы браузер успел применить "без анимации" до того,
+    // как transition снова появится (иначе тот же кадр подхватит оба
+    // изменения разом и анимация всё равно проскочит). 2026-09-09.
+    marker.style.transition = 'none';
+    trainModal.style.display = '';
+    updateTrainModalMarker(); // сразу, не дожидаясь следующего тика
+    updateTrainModalPassedStates();
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { marker.style.transition = ''; });
+    });
+  }
+
+  function openTrainModal(dirKey) {
+    trainModalDirKey = dirKey;
+    trainModalTrainIndex = 0;
+    loadTrainForModal();
+    trackEvent('train_modal_open', { direction: dirKey });
+  }
+  document.getElementById('trainModalNextBtn').addEventListener('click', function () {
+    trainModalTrainIndex++;
+    loadTrainForModal();
+    trackEvent('train_modal_next', { direction: trainModalDirKey, index: trainModalTrainIndex });
+  });
+  function closeTrainModal() {
+    trainModal.style.display = 'none';
+    trainModalState = null;
+    trainModalDirKey = null;
+    trainModalTrainIndex = 0;
+  }
+  document.getElementById('trainModalClose').addEventListener('click', closeTrainModal);
+  trainModal.addEventListener('click', function (e) {
+    if (e.target === trainModal) closeTrainModal(); // клик по тёмному фону
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && trainModal.style.display !== 'none') closeTrainModal();
+  });
+
   document.getElementById('wtgDestTrigger').addEventListener('click', function () {
     openStationModal(wtgDestSelect, t('wtgFieldDest'));
   });
@@ -3338,6 +3737,7 @@
     document.getElementById('iosInstallText').innerHTML = t('iosInstallTipMsg');
     document.getElementById('wtgOriginRouteBtn').textContent = t('wtgRouteBtn');
     document.getElementById('routeModalTitle').textContent = t('routeModalTitle');
+    document.getElementById('trainModalNextBtn').textContent = t('trainModalNextTrain');
     document.getElementById('routeLinkGoogleText').textContent = t('routeGoogle');
     document.getElementById('routeLinkAppleText').textContent = t('routeApple');
     document.getElementById('routeLink2gisText').textContent = t('route2gis');
