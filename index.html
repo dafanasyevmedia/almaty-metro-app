@@ -331,6 +331,34 @@
     font-variant-numeric:tabular-nums; flex:none;
   }
   .train-modal-row.active .train-modal-time{ color:var(--accent); }
+  /* Станции — платформы под ширину маркера, а не кружки, чтобы поезд
+     визуально въезжал в них целиком, как на горизонтальной линии
+     (.line-dot/.line-dot.active) — та же идея, просто ширина/высота
+     поменяны местами: маркер тут повёрнут на 90° (см. .train-modal-marker
+     ниже), значит и платформа под него должна быть "стоя", а не "лёжа".
+     Переопределяем ТОЛЬКО внутри .train-modal-row — .station-modal-dot в
+     обычной модалке выбора станции (stationModal) остаётся кружком, это
+     разные экраны с разным смыслом (там — выбор станции, тут — просмотр
+     схемы конкретного рейса). Специфичность у `.train-modal-row.active
+     .station-modal-dot` та же, что у `.station-modal-row.active
+     .station-modal-dot` выше по файлу (тоже 3 класса) — побеждает по
+     порядку в файле (этот блок идёт позже), не переопределял его
+     нарочно повышенной специфичностью, чтобы не путать в будущем.
+     2026-09-09. */
+  .train-modal-row .station-modal-dot{
+    width:8px; height:16px; border-radius:4px; background:var(--muted); opacity:.4;
+  }
+  .train-modal-row.active .station-modal-dot{
+    width:11px; height:20px; opacity:1; background:var(--accent-soft); border:1.5px solid var(--accent);
+    border-radius:5.5px; box-shadow:0 0 12px -2px var(--accent);
+  }
+  /* Соединительная линия — цветом сливается с обычными (непроехавшими)
+     платформами, а не идёт отдельной полосой другого цвета поверх них
+     (var(--border) по умолчанию у .station-modal-line::before — другой
+     оттенок, чем var(--muted) у платформ). По просьбе пользователя,
+     2026-09-09: та же пара цвет+прозрачность, что у неактивной
+     .station-modal-dot выше. */
+  .train-modal-line::before{ background:var(--muted); opacity:.4; }
   /* Станции, которые поезд уже проехал — просто тусклее целиком (не трогаем
      цвета по отдельности, opacity сразу гасит и точку, и текст, и время
      одинаково) — по отзыву пользователя, "которые не проехал — как
@@ -350,9 +378,17 @@
      .dir-backward (к Райымбек батыра, вверх по списку) — нос вверх
      (rotate(-90deg)). rotate — ПОСЛЕ translate(-50%,-50%), то есть вокруг
      уже отцентрированной по (left,top) точки, тот же приём, что и
-     центрирование .line-dot. */
+     центрирование .line-dot.
+     left:18px (не 16px, как у линии/платформ) — по отзыву пользователя
+     маркер визуально стоял чуть левее центра платформы при заезде;
+     платформы центрируются через flex внутри .station-modal-dotwrap, а
+     маркер — фиксированным left, эти две системы координат не обязаны
+     совпадать день в день (тот же класс проблемы, что раньше был у
+     платформ на горизонтальной линии, только тут разница мельче и её
+     проще было просто подвинуть на глаз/по факту, чем городить общий
+     промер). 2026-09-09. */
   .train-modal-marker{
-    position:absolute; left:16px; top:0; width:16px; height:8px; z-index:2;
+    position:absolute; left:18px; top:0; width:16px; height:8px; z-index:2;
     background:var(--accent); pointer-events:none;
     filter:drop-shadow(0 0 3px color-mix(in oklch, var(--accent) 55%, transparent));
     clip-path:path("M0 0 H11 C12.5 0.3 15 4.3 16 6 C16 7.1 14.5 8 12.5 8 H0 Z");
