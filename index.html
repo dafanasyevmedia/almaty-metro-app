@@ -1493,6 +1493,11 @@
       heroHoliday1: 'Сегодня особый день — метро едет по графику выходных',
       heroHoliday2: 'Расписание сегодня отличается от обычного — сверьтесь на всякий случай',
       heroWorkday1: 'Сегодня рабочая суббота — метро едет по будничному расписанию',
+      // Конкретные даты (SPECIAL_DAYS) — не общие праздники из holidays.json,
+      // а разовые поздравления с конкретным событием на конкретный год.
+      heroCityDay1: 'С Днём города, Алматы!',
+      heroCityDay2: 'Сегодня в Алматы праздник — с Днём города!',
+      heroCityDay3: 'Алматы, с днём рождения! Хорошей вам поездки',
       heroTerminus1: 'Отсюда линия начинается — дальше только в одну сторону',
       heroTerminus2: 'Конечная станция — поезда идут отсюда лишь в одном направлении',
       heroWeekendEst1: 'На выходные для этой станции расписание — оценка по соседям, не с сервера метро',
@@ -1641,6 +1646,9 @@
       heroHoliday1: 'Бүгін ерекше күн — метро демалыс күндерінің кестесі бойынша жүреді',
       heroHoliday2: 'Бүгінгі кесте әдеттегіден өзгеше — тексеріп алыңыз',
       heroWorkday1: 'Сенбі болса да — жұмыс күні: метро әдеттегі кесте бойынша жүреді',
+      heroCityDay1: 'Алматы, Қала күні құтты болсын!',
+      heroCityDay2: 'Бүгін Алматының мерекесі — Қала күні құтты болсын!',
+      heroCityDay3: 'Алматы, туған күніңізбен! Жолыңыз болсын',
       heroTerminus1: 'Осы жерден желі басталады — әрі қарай тек бір бағытта',
       heroTerminus2: 'Соңғы бекет — пойыздар осы жерден тек бір бағытта жүреді',
       heroWeekendEst1: 'Бұл бекет үшін демалыс кестесі — көршілес бекеттер бойынша есептелген',
@@ -1791,6 +1799,9 @@
       heroHoliday1: 'Today is a special day — the metro runs on the weekend schedule',
       heroHoliday2: 'Today’s schedule differs from usual — worth double-checking',
       heroWorkday1: 'This Saturday is a working day — the metro runs on the weekday schedule',
+      heroCityDay1: 'Happy City Day, Almaty!',
+      heroCityDay2: 'It’s Almaty City Day — enjoy the celebrations!',
+      heroCityDay3: 'Happy birthday, Almaty! Have a great ride',
       heroTerminus1: 'The line starts here — trains only go one way from this station',
       heroTerminus2: 'This is a terminus — trains run in one direction only',
       heroWeekendEst1: 'Weekend times for this station are estimated from nearby stations',
@@ -2673,6 +2684,16 @@
   var WEATHER_FETCH_TIMEOUT_MS = 4000;
   var ALMATY_LAT = 43.238949, ALMATY_LON = 76.889709; // центр города — координата фиксированная, не геолокация пользователя
   var DESCENT_INFO = {}; // заглушка под будущее — "до платформы N минут" по slug станции, пока пусто везде
+  // Конкретные календарные даты (не по правилу вроде "первое воскресенье
+  // сентября" — такие праздники каждый год объявляются заново, и уже
+  // прошлогодняя дата в этом году может быть неверной) → список ключей
+  // I18N с поздравлением. Ключ словаря — тот же формат, что у dateKey()
+  // (см. выше, рядом с HOLIDAYS), сверяется с serviceDayStart(), не с
+  // календарным "сейчас". Добавить новый праздник — одна запись здесь +
+  // ключи в I18N, логику категории трогать не нужно.
+  var SPECIAL_DAYS = {
+    '2026-09-20': ['heroCityDay1', 'heroCityDay2', 'heroCityDay3'] // День города Алматы
+  };
   var metroClosedNow = false; // отражает то же условие, что уже решает видимость #closedBanner в tickCountdowns()
   var weatherHeroKeys = null; // ключи, подходящие текущей погоде; null = не знаем/выключено/ошибка
 
@@ -2689,6 +2710,8 @@
       test: function (ctx) { return ctx.isHolidayForced; } },
     { id: 'workingWeekend', keys: ['heroWorkday1'],
       test: function (ctx) { return ctx.isWeekendForcedWorkday; } },
+    { id: 'specialDay', dynamicKeys: function (ctx) { return SPECIAL_DAYS[ctx.dateKey] || []; },
+      test: function (ctx) { return !!SPECIAL_DAYS[ctx.dateKey] && SPECIAL_DAYS[ctx.dateKey].length > 0; } },
     { id: 'stationDescent', keys: [], // заполнится, когда появятся данные в DESCENT_INFO
       test: function (ctx) { return !!(ctx.station && DESCENT_INFO[ctx.station.slug]); } },
     { id: 'stationTerminus', keys: ['heroTerminus1', 'heroTerminus2'],
@@ -2721,6 +2744,7 @@
       offline: dataFromOfflineCache,
       geoKind: locateState.kind,
       metroClosed: metroClosedNow,
+      dateKey: dateKey(serviceStart),
       isHolidayForced: isHolidayForcedWeekend(serviceStart),
       isWeekendForcedWorkday: isWeekendForcedWorkday(serviceStart),
       dayType: dayTypeOf(serviceStart),
