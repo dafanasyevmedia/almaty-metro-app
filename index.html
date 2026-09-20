@@ -1478,6 +1478,38 @@
       appSubtitle: 'Онлайн-расписание — сколько ждать до поезда',
       appSubtitleWhentogo: 'На какой поезд успеть, чтобы быть на месте вовремя',
       appSubtitleFull: 'Полное расписание по всем станциям',
+      // Плашка-реплика маскота в шапке (см. HERO_LINE_CATEGORIES и CLAUDE.md,
+      // раздел "Плашка-реплика маскота в шапке") — каждая фраза отдельный ключ,
+      // сама плашка ничего не хардкодит, только перечисляет эти ключи.
+      heroOffline1: 'Работаем из кеша — обновится само, как появится связь',
+      heroOffline2: 'Данные сохранённые, чуть могли устареть — маршрут тот же',
+      heroOffline3: 'Нет сети, но расписание всё равно под рукой',
+      heroGeoErr1: 'GPS подвёл — но список станций никуда не делся',
+      heroGeoErr2: 'Полное расписание по всем станциям — во второй вкладке',
+      heroGeoFar1: 'Похоже, вы не в городе — расписание всё равно готово',
+      heroClosed1: 'Пока поезда отдыхают — самое время глянуть полное расписание',
+      heroClosed2: 'Ночь. Метро спит — а расписание уже ждёт на соседней вкладке',
+      heroClosed3: 'Скоро снова в путь',
+      heroHoliday1: 'Сегодня особый день — метро едет по графику выходных',
+      heroHoliday2: 'Расписание сегодня отличается от обычного — сверьтесь на всякий случай',
+      heroWorkday1: 'Сегодня рабочая суббота — метро едет по будничному расписанию',
+      heroTerminus1: 'Отсюда линия начинается — дальше только в одну сторону',
+      heroTerminus2: 'Конечная станция — поезда идут отсюда лишь в одном направлении',
+      heroWeekendEst1: 'На выходные для этой станции расписание — оценка по соседям, не с сервера метро',
+      heroWeekendEst2: 'В выходные интервалы здесь считаем по соседним станциям',
+      heroMorningRush1: 'Час пик — на платформе может быть многолюдно',
+      heroEveningRush1: 'Вечерний час пик — самое оживлённое время на линии',
+      heroMonday1: 'Понедельник — сначала кофе, потом метро',
+      heroFriday1: 'Пятница. Почти',
+      heroWeekend1: 'Хороших выходных',
+      heroWeekend2: 'Выходной — можно никуда не спешить',
+      heroNeutral1: 'Метро — самый предсказуемый транспорт в городе',
+      heroNeutral2: '11 станций, одна линия, никаких сюрпризов',
+      heroNeutral3: 'Поехали',
+      heroWeatherCold1: 'На улице холодно — оденьтесь теплее',
+      heroWeatherHot1: 'Жара на улице — не забудьте воду',
+      heroWeatherRain1: 'На улице дождь — метро точно суше',
+      heroWeatherSnow1: 'Снег на улице — под землёй теплее',
       scheduleDisclaimer: 'Поезда чаще всего отправляются ровно по расписанию, указанному на этом сайте. Но иногда метро добавляет дополнительные составы.',
       tabNearest: 'Ближайший поезд',
       tabFull: 'Всё расписание',
@@ -1595,6 +1627,37 @@
       appSubtitle: 'Онлайн-кесте — пойызды қанша күту керек',
       appSubtitleWhentogo: 'Уақытында жету үшін қай пойызға үлгеру керек',
       appSubtitleFull: 'Барлық бекеттердің толық кестесі',
+      // kk-переводы плашки — черновик (AI + без сверки с носителем, как и
+      // остальные kk-строки проекта на момент написания, см. CLAUDE.md).
+      heroOffline1: 'Сақталған деректермен жұмыс істеп тұрмыз — байланыс пайда болысымен өзі жаңарады',
+      heroOffline2: 'Деректер сақталған, сәл ескі болуы мүмкін — бағыт сол күйінде',
+      heroOffline3: 'Интернет жоқ, бірақ кесте қолда',
+      heroGeoErr1: 'GPS қатесі — бірақ бекеттер тізімі орнында',
+      heroGeoErr2: 'Барлық бекеттердің толық кестесі — екінші қойындыда',
+      heroGeoFar1: 'Қала сыртында сияқтысыз — кесте бәрібір дайын',
+      heroClosed1: 'Пойыздар демалып тұрғанда — толық кестені қарап алыңыз',
+      heroClosed2: 'Түн. Метро ұйықтап жатыр — кесте көрші қойындыда күтіп тұр',
+      heroClosed3: 'Жақында қайта жолға шығады',
+      heroHoliday1: 'Бүгін ерекше күн — метро демалыс күндерінің кестесі бойынша жүреді',
+      heroHoliday2: 'Бүгінгі кесте әдеттегіден өзгеше — тексеріп алыңыз',
+      heroWorkday1: 'Сенбі болса да — жұмыс күні: метро әдеттегі кесте бойынша жүреді',
+      heroTerminus1: 'Осы жерден желі басталады — әрі қарай тек бір бағытта',
+      heroTerminus2: 'Соңғы бекет — пойыздар осы жерден тек бір бағытта жүреді',
+      heroWeekendEst1: 'Бұл бекет үшін демалыс кестесі — көршілес бекеттер бойынша есептелген',
+      heroWeekendEst2: 'Демалыс күндері аралықтар көрші бекеттер бойынша есептеледі',
+      heroMorningRush1: 'Қарбалас уақыт — платформада адам көп болуы мүмкін',
+      heroEveningRush1: 'Кешкі қарбалас — желідегі ең тығыз уақыт',
+      heroMonday1: 'Дүйсенбі — алдымен кофе, сосын метро',
+      heroFriday1: 'Жұма. Сәл ғана қалды',
+      heroWeekend1: 'Демалыс күндері сәтті өтсін',
+      heroWeekend2: 'Демалыс — асығудың қажеті жоқ',
+      heroNeutral1: 'Метро — қаладағы ең болжауға оңай көлік',
+      heroNeutral2: '11 бекет, бір желі, күтпеген жайт жоқ',
+      heroNeutral3: 'Жүрдік',
+      heroWeatherCold1: 'Сыртта суық — жылы киініңіз',
+      heroWeatherHot1: 'Сыртта ыстық — су алуды ұмытпаңыз',
+      heroWeatherRain1: 'Сыртта жаңбыр — метрода құрғақ',
+      heroWeatherSnow1: 'Сыртта қар — жер астында жылы',
       scheduleDisclaimer: 'Пойыздар көбіне осы сайтта көрсетілген кесте бойынша дәл жүреді. Бірақ кейде метро қосымша құрам қосады.',
       tabNearest: 'Жақын пойыз',
       tabFull: 'Толық кесте',
@@ -1716,6 +1779,35 @@
       appSubtitle: 'Live schedule — how long until the next train',
       appSubtitleWhentogo: 'Which train to catch to make it there on time',
       appSubtitleFull: 'Full schedule for every station',
+      heroOffline1: 'Running on cached data — will update once you are back online',
+      heroOffline2: 'Data may be slightly stale — the route is still the same',
+      heroOffline3: 'No connection, but the schedule is right here',
+      heroGeoErr1: 'GPS let us down — the station list is still here',
+      heroGeoErr2: 'The full schedule for every station is one tab over',
+      heroGeoFar1: 'Looks like you are not in the city — the schedule is ready anyway',
+      heroClosed1: 'Trains are resting — good time to check the full schedule',
+      heroClosed2: 'Night. The metro is asleep — the schedule is waiting in the next tab',
+      heroClosed3: 'Back on track soon',
+      heroHoliday1: 'Today is a special day — the metro runs on the weekend schedule',
+      heroHoliday2: 'Today’s schedule differs from usual — worth double-checking',
+      heroWorkday1: 'This Saturday is a working day — the metro runs on the weekday schedule',
+      heroTerminus1: 'The line starts here — trains only go one way from this station',
+      heroTerminus2: 'This is a terminus — trains run in one direction only',
+      heroWeekendEst1: 'Weekend times for this station are estimated from nearby stations',
+      heroWeekendEst2: 'Weekend intervals here are estimated from neighboring stations',
+      heroMorningRush1: 'Rush hour — the platform might be crowded',
+      heroEveningRush1: 'Evening rush hour — the busiest time on the line',
+      heroMonday1: 'Monday — coffee first, metro second',
+      heroFriday1: 'Friday. Almost',
+      heroWeekend1: 'Have a great weekend',
+      heroWeekend2: 'A day off — no need to rush',
+      heroNeutral1: 'The metro — the most predictable ride in the city',
+      heroNeutral2: '11 stations, one line, no surprises',
+      heroNeutral3: 'Let’s go',
+      heroWeatherCold1: 'It’s cold outside — dress warm',
+      heroWeatherHot1: 'It’s hot outside — don’t forget water',
+      heroWeatherRain1: 'It’s raining outside — the metro is drier',
+      heroWeatherSnow1: 'It’s snowing outside — warmer underground',
       scheduleDisclaimer: 'Trains usually depart exactly on the schedule shown here. But the metro sometimes adds extra trains.',
       tabNearest: 'Nearest train',
       tabFull: 'Full schedule',
@@ -2565,6 +2657,181 @@
     ends[1].textContent = stationName(STATIONS[STATIONS.length - 1]);
   }
 
+  /* ---------- Плашка-реплика маскота (шапка, #appSubtitle) ----------
+     Полное описание категорий/приоритетов/формата — CLAUDE.md, раздел
+     "Плашка-реплика маскота в шапке". Коротко: HERO_LINE_CATEGORIES —
+     список категорий в порядке приоритета (первая подходящая по test()
+     выигрывает), тексты — обычные ключи I18N (ru/kk/en, см. выше), эта
+     структура их не хранит — только перечисляет, какие ключи относятся
+     к какой категории. Существующую логику расписания не трогает —
+     только читает её результаты (almatyNow/serviceDayStart/dayTypeOf/
+     STATIONS_BY_SLUG/SCHEDULE/locateState/dataFromOfflineCache). */
+  var HERO_LINE_HISTORY_LEN = 3;
+  var HERO_LINE_RECOMPUTE_MIN = 15;
+  var WEATHER_ENABLED = false; // включатель погодной категории — см. CLAUDE.md
+  var WEATHER_CACHE_MIN = 45;
+  var WEATHER_FETCH_TIMEOUT_MS = 4000;
+  var ALMATY_LAT = 43.238949, ALMATY_LON = 76.889709; // центр города — координата фиксированная, не геолокация пользователя
+  var DESCENT_INFO = {}; // заглушка под будущее — "до платформы N минут" по slug станции, пока пусто везде
+  var metroClosedNow = false; // отражает то же условие, что уже решает видимость #closedBanner в tickCountdowns()
+  var weatherHeroKeys = null; // ключи, подходящие текущей погоде; null = не знаем/выключено/ошибка
+
+  var HERO_LINE_CATEGORIES = [
+    { id: 'offline', keys: ['heroOffline1', 'heroOffline2', 'heroOffline3'],
+      test: function (ctx) { return ctx.offline; } },
+    { id: 'geoErr', keys: ['heroGeoErr1', 'heroGeoErr2'],
+      test: function (ctx) { return ctx.geoKind === 'err' || ctx.geoKind === 'loadError'; } },
+    { id: 'geoFar', keys: ['heroGeoFar1'],
+      test: function (ctx) { return ctx.geoKind === 'far'; } },
+    { id: 'metroClosed', keys: ['heroClosed1', 'heroClosed2', 'heroClosed3'],
+      test: function (ctx) { return ctx.metroClosed; } },
+    { id: 'holiday', keys: ['heroHoliday1', 'heroHoliday2'],
+      test: function (ctx) { return ctx.isHolidayForced; } },
+    { id: 'workingWeekend', keys: ['heroWorkday1'],
+      test: function (ctx) { return ctx.isWeekendForcedWorkday; } },
+    { id: 'stationDescent', keys: [], // заполнится, когда появятся данные в DESCENT_INFO
+      test: function (ctx) { return !!(ctx.station && DESCENT_INFO[ctx.station.slug]); } },
+    { id: 'stationTerminus', keys: ['heroTerminus1', 'heroTerminus2'],
+      test: function (ctx) { return !!ctx.station && ctx.stationIsTerminus; } },
+    { id: 'stationWeekendEst', keys: ['heroWeekendEst1', 'heroWeekendEst2'],
+      test: function (ctx) { return !!ctx.station && ctx.stationWeekendEstimated; } },
+    { id: 'morningRush', keys: ['heroMorningRush1'],
+      test: function (ctx) { return !ctx.metroClosed && ctx.isMorningRush; } },
+    { id: 'eveningRush', keys: ['heroEveningRush1'],
+      test: function (ctx) { return !ctx.metroClosed && ctx.isEveningRush; } },
+    { id: 'dayMonday', keys: ['heroMonday1'],
+      test: function (ctx) { return ctx.weekday === 1; } },
+    { id: 'dayFriday', keys: ['heroFriday1'],
+      test: function (ctx) { return ctx.weekday === 5; } },
+    { id: 'dayWeekendMood', keys: ['heroWeekend1', 'heroWeekend2'],
+      test: function (ctx) { return ctx.dayType === 'weekend' && !ctx.isHolidayForced; } },
+    { id: 'weather', dynamicKeys: function (ctx) { return ctx.weatherKeys || []; },
+      test: function (ctx) { return WEATHER_ENABLED && ctx.weatherKeys && ctx.weatherKeys.length > 0; } },
+    { id: 'neutral', keys: ['heroNeutral1', 'heroNeutral2', 'heroNeutral3'],
+      test: function () { return true; } } // гарантированный фолбэк — всегда матчится, список никогда не пуст
+  ];
+
+  function buildHeroLineContext() {
+    var now = almatyNow();
+    var serviceStart = serviceDayStart(now);
+    var station = selectedSlug ? STATIONS_BY_SLUG[selectedSlug] : null;
+    var stSchedule = (station && SCHEDULE) ? SCHEDULE.stations[station.slug] : null;
+    var minutesOfDay = now.getUTCHours() * 60 + now.getUTCMinutes();
+    return {
+      offline: dataFromOfflineCache,
+      geoKind: locateState.kind,
+      metroClosed: metroClosedNow,
+      isHolidayForced: isHolidayForcedWeekend(serviceStart),
+      isWeekendForcedWorkday: isWeekendForcedWorkday(serviceStart),
+      dayType: dayTypeOf(serviceStart),
+      weekday: serviceStart.getUTCDay(),
+      station: station,
+      stationIsTerminus: !!station && STATIONS.length > 0 && (station.order === 1 || station.order === STATIONS.length),
+      stationWeekendEstimated: !!(stSchedule && stSchedule.weekend_estimated),
+      isMorningRush: minutesOfDay >= 7 * 60 && minutesOfDay < 9 * 60 + 30,
+      isEveningRush: minutesOfDay >= 17 * 60 + 30 && minutesOfDay < 19 * 60 + 30,
+      weatherKeys: weatherHeroKeys
+    };
+  }
+
+  var heroLineHistory = [];
+  var heroLineCurrentKey = null;
+  var HERO_LINE_HISTORY_STORAGE_KEY = 'heroLineHistory';
+  (function loadHeroLineHistory() {
+    try {
+      var raw = localStorage.getItem(HERO_LINE_HISTORY_STORAGE_KEY);
+      heroLineHistory = raw ? JSON.parse(raw) : [];
+    } catch (e) { heroLineHistory = []; }
+  })();
+
+  function pickHeroLineKey(keys) {
+    var pool = keys.filter(function (k) { return heroLineHistory.indexOf(k) === -1; });
+    if (!pool.length) pool = keys.filter(function (k) { return k !== heroLineHistory[heroLineHistory.length - 1]; });
+    if (!pool.length) pool = keys;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // Выбирает категорию/фразу заново — вызывается ТОЛЬКО в точках, где
+  // контекст реально мог измениться (см. список мест ниже по файлу),
+  // никогда на каждый секундный тик отсчёта. Рендерит сразу, но только
+  // если сейчас активна вкладка "Ближайший поезд" — см. updateAppSubtitle(),
+  // чтобы не затирать текст "Полного расписания"/скрытую подпись "О метро".
+  function recomputeHeroLine() {
+    var ctx = buildHeroLineContext();
+    var chosenKey = null;
+    for (var i = 0; i < HERO_LINE_CATEGORIES.length; i++) {
+      var cat = HERO_LINE_CATEGORIES[i];
+      var keys = cat.dynamicKeys ? cat.dynamicKeys(ctx) : cat.keys;
+      if (keys.length && cat.test(ctx)) { chosenKey = pickHeroLineKey(keys); break; }
+    }
+    if (!chosenKey) return; // neutral всегда матчится и не пуста — сюда доходить не должны
+    heroLineCurrentKey = chosenKey;
+    heroLineHistory.push(chosenKey);
+    if (heroLineHistory.length > HERO_LINE_HISTORY_LEN) heroLineHistory.shift();
+    try { localStorage.setItem(HERO_LINE_HISTORY_STORAGE_KEY, JSON.stringify(heroLineHistory)); } catch (e) { /* приватный режим и т.п. */ }
+    var activeTabBtn = document.querySelector('.tab-btn.active');
+    if (!activeTabBtn || activeTabBtn.dataset.tab === 'nearest') renderHeroLine();
+  }
+
+  // Только рендер уже выбранного ключа (без пересчёта категории) — вызывается
+  // из updateAppSubtitle() при каждом заходе на вкладку "Ближайший поезд" и
+  // при смене языка: фраза должна остаться той же по смыслу, просто на другом
+  // языке, а не перевыбираться заново (иначе "мигало" бы при простом клике
+  // между вкладками). До первого recomputeHeroLine() (самый первый кадр)
+  // heroLineCurrentKey ещё пуст — честно показываем прежний статичный текст
+  // ('appSubtitle'), а не пустоту.
+  function renderHeroLine() {
+    var el = document.getElementById('appSubtitle');
+    if (!el) return;
+    el.textContent = t(heroLineCurrentKey || 'appSubtitle');
+  }
+
+  // Погода (опционально, выключено по умолчанию через WEATHER_ENABLED) —
+  // open-meteo, без ключа/регистрации, координаты фиксированные (центр
+  // города, не геолокация пользователя — под погоду отдельно её не
+  // запрашиваем). Кеш в localStorage на WEATHER_CACHE_MIN минут. Ошибка
+  // или таймаут — категория просто не матчится, никакого "не удалось
+  // загрузить погоду" пользователю не показываем. Результат НЕ подменяет
+  // уже показанную фразу мгновенно — подхватится на следующем плановом
+  // пересчёте (смена станции / 15-минутный таймер), не как мгновенная
+  // замена посреди чтения.
+  function classifyWeather(tempC, weatherCode) {
+    var keys = [];
+    if (tempC <= -5) keys.push('heroWeatherCold1');
+    else if (tempC >= 30) keys.push('heroWeatherHot1');
+    if (weatherCode >= 71 && weatherCode <= 77) keys.push('heroWeatherSnow1');
+    else if (weatherCode >= 51 && weatherCode <= 82) keys.push('heroWeatherRain1');
+    return keys;
+  }
+  function fetchWeatherForHeroLine() {
+    if (!WEATHER_ENABLED || dataFromOfflineCache) return;
+    try {
+      var cacheRaw = localStorage.getItem('heroWeatherCache');
+      if (cacheRaw) {
+        var cache = JSON.parse(cacheRaw);
+        if (Date.now() - cache.ts < WEATHER_CACHE_MIN * 60000) { weatherHeroKeys = cache.keys; return; }
+      }
+    } catch (e) { /* приватный режим и т.п. */ }
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + ALMATY_LAT + '&longitude=' + ALMATY_LON + '&current=temperature_2m,weather_code';
+    var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timeoutId = controller ? setTimeout(function () { controller.abort(); }, WEATHER_FETCH_TIMEOUT_MS) : null;
+    fetch(url, controller ? { signal: controller.signal } : {}).then(function (r) { return r.json(); }).then(function (data) {
+      if (timeoutId) clearTimeout(timeoutId);
+      var cur = data && data.current;
+      if (!cur) return;
+      var keys = classifyWeather(cur.temperature_2m, cur.weather_code);
+      weatherHeroKeys = keys;
+      try { localStorage.setItem('heroWeatherCache', JSON.stringify({ ts: Date.now(), keys: keys })); } catch (e) { /* приватный режим и т.п. */ }
+    }).catch(function () {
+      if (timeoutId) clearTimeout(timeoutId);
+      weatherHeroKeys = null;
+    });
+  }
+  // Фоновый пересчёт раз в HERO_LINE_RECOMPUTE_MIN минут — ловит переходы,
+  // которые сами по себе нигде не считаются "событием" (начался час пик,
+  // до закрытия остался час) и не покрыты точечными вызовами ниже по файлу.
+  setInterval(recomputeHeroLine, HERO_LINE_RECOMPUTE_MIN * 60000);
+
   function selectStation(slug, viaGeo, distanceMeters, method) {
     var prevSlug = selectedSlug;
     selectedSlug = slug;
@@ -2591,6 +2858,7 @@
     // 'default' — авто-фолбэк на первую станцию (геолокация недоступна/далеко), это
     // не осознанный выбор пользователя, но полезно отличать в статистике.
     trackEvent('select_station', { station: slug, method: method || (viaGeo ? 'geo' : 'manual') });
+    recomputeHeroLine(); // контекст плашки-реплики (станция/её факты) реально сменился
   }
 
   var FAR_FROM_ALMATY_METERS = 30000; // за пределами города и ближних пригородов — точно не Алматы
@@ -2612,6 +2880,7 @@
       // здесь — иначе просто не с чего было бы открыть выбор станции.
       locateBtn.style.display = '';
       if (!selectedSlug) selectStation(STATIONS[0].slug, false, null, 'default');
+      else recomputeHeroLine(); // если станция уже была выбрана — selectStation тут не вызывается, пересчёт нужен отдельно
       return;
     }
     locateState = {
@@ -2630,6 +2899,7 @@
     trackEvent('geo_result', { result: reasonKey === 'permissionDenied' ? 'denied' : reasonKey === 'unsupported' ? 'unsupported' : 'error' });
     locateBtn.style.display = '';
     if (!selectedSlug) selectStation(STATIONS[0].slug, false, null, 'default');
+    else recomputeHeroLine();
   }
 
   function tryTelegramLocation() {
@@ -2972,7 +3242,9 @@
     });
     var closedBanner = document.getElementById('closedBanner');
     var directionsEl = document.getElementById('directions');
-    if (totalDirsCount > 0 && closedDirsCount === totalDirsCount) {
+    var wasMetroClosedNow = metroClosedNow;
+    metroClosedNow = totalDirsCount > 0 && closedDirsCount === totalDirsCount;
+    if (metroClosedNow) {
       var soonestArrival = closedArrivals.reduce(function (a, b) { return a < b ? a : b; });
       document.getElementById('closedBannerText').innerHTML = t('metroClosed', fmtHHMM(soonestArrival));
       closedBanner.style.display = '';
@@ -2981,20 +3253,27 @@
       closedBanner.style.display = 'none';
       directionsEl.style.display = '';
     }
+    // Пересчёт плашки-реплики — только на самой смене состояния "метро
+    // закрыто/открылось", не каждую секунду (тик идёт раз в секунду, см. ниже).
+    if (metroClosedNow !== wasMetroClosedNow) recomputeHeroLine();
     tickTimer = setTimeout(tickCountdowns, 1000);
   }
 
   /* ---------- Вкладки ---------- */
   // Подпись под шапкой (#appSubtitle) — своя на каждую вкладку, т.к. они
-  // делают разное: "сколько ждать" верно только для "Ближайшего поезда".
-  // На "О метро" подписи нет вовсе — это справочный раздел, не про ожидание.
-  // "Когда выезжать" больше не отдельная вкладка (см. ниже) — своей подписи
-  // в шапке у неё, соответственно, тоже больше нет.
+  // делают разное. На "О метро" подписи нет вовсе — это справочный раздел,
+  // не про ожидание. На "Всё расписание" — статичная строка, как и раньше.
+  // На "Ближайший поезд" — с 2026-09-20 не статичная строка, а плашка-
+  // реплика маскота (см. HERO_LINE_CATEGORIES/renderHeroLine() выше и
+  // CLAUDE.md) — сюда её не встраивал напрямую, чтобы не дублировать
+  // логику показа/скрытия элемента, только зову renderHeroLine() вместо
+  // прежнего t('appSubtitle').
   function updateAppSubtitle(tab) {
     var el = document.getElementById('appSubtitle');
     if (tab === 'about') { el.style.display = 'none'; return; }
     el.style.display = '';
-    el.textContent = t(tab === 'full' ? 'appSubtitleFull' : 'appSubtitle');
+    if (tab === 'full') { el.textContent = t('appSubtitleFull'); return; }
+    renderHeroLine();
   }
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -4230,6 +4509,10 @@
   // Применяем язык сразу (ещё до загрузки данных), чтобы статичный текст интерфейса
   // был на нужном языке с первого кадра, а не только после ответа сети.
   applyLanguage(currentLang);
+  // Первый выбор фразы для плашки-реплики — ещё до данных с сервера: категории,
+  // не зависящие от станции/расписания (день недели, время суток), уже доступны
+  // через almatyNow()/dayTypeOf(), плашка не пустует с первого кадра.
+  recomputeHeroLine();
 
   /* ---------- Загрузка данных ---------- */
   // Если Service Worker (sw.js) не смог достучаться до сети и отдал JSON из
@@ -4274,6 +4557,10 @@
 
     renderFooter();
     document.getElementById('offlineNote').style.display = dataFromOfflineCache ? '' : 'none';
+    // Праздники/расписание только что стали известны — пересчитываем плашку-
+    // реплику (holiday/stationFacts-категории раньше не могли сработать).
+    recomputeHeroLine();
+    fetchWeatherForHeroLine(); // no-op, если WEATHER_ENABLED=false — см. выше
 
     // геолокация
     if (!tryTelegramLocation()) tryBrowserGeolocation();
@@ -4281,6 +4568,7 @@
     document.getElementById('metaFooter').textContent = t('loadError', err.message);
     locateState = { kind: 'loadError' };
     renderLocateStatus();
+    recomputeHeroLine();
     trackEvent('schedule_load_error', { message: String(err && err.message || err).slice(0, 100) });
   });
 
