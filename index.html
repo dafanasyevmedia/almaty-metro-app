@@ -100,6 +100,17 @@
     --border:oklch(0.30 0.02 255 / .55);
     --accent:oklch(0.82 0.19 132); --accent-ink:oklch(0.16 0.012 255); --accent-soft:oklch(0.82 0.19 132 / .14);
     --success:var(--accent); --danger:oklch(0.72 0.17 25); --warn:oklch(0.78 0.17 75);
+    /* Редизайн "2a" (2026-09-20, см. CLAUDE.md) — синяя шапка-герой + объём
+       карточек + фоновая текстура. --brand/--brand2 только для градиента
+       шапки (сама шапка не меняется от темы — см. header{} ниже), у
+       --card-top/--card-bot/--rail/--edge/--shadow/--texture свои значения
+       в каждом из 4 блоков темы. */
+    --brand:oklch(0.52 0.15 258); --brand2:oklch(0.31 0.10 262);
+    --card-top:oklch(0.24 0.035 262); --card-bot:oklch(0.20 0.025 262);
+    --rail:oklch(0.5 0.07 258 / .65);
+    --edge:oklch(0.75 0.06 258 / .22);
+    --shadow:oklch(0.06 0.02 262);
+    --texture:oklch(0.95 0.01 255 / .035);
   }
   /* Светлая тема: системная (prefers-color-scheme) или тема самого Telegram
      (data-tg-theme ставит JS — см. <script> внизу, атрибут уже был, просто раньше
@@ -112,6 +123,17 @@
       --border:oklch(0.84 0.012 255 / .9);
       --accent:oklch(0.55 0.16 132); --accent-ink:oklch(0.99 0.003 255); --accent-soft:oklch(0.55 0.16 132 / .12);
       --danger:oklch(0.55 0.17 25); --warn:oklch(0.55 0.16 75);
+      /* Светлый эквивалент "2a" — в макете есть только тёмный вариант,
+         это моя интерпретация в том же языке (см. CLAUDE.md, раздел
+         редизайна): бренд чуть ярче/насыщеннее для контраста на белом
+         (тот же приём, что уже применён к --accent выше), тень мягкая
+         голубовато-серая вместо почти чёрной, edge-подсветка — белая. */
+      --brand:oklch(0.58 0.15 258); --brand2:oklch(0.42 0.14 262);
+      --card-top:oklch(0.99 0.004 255); --card-bot:oklch(0.95 0.01 258);
+      --rail:oklch(0.75 0.05 258 / .55);
+      --edge:oklch(1 0 0 / .7);
+      --shadow:oklch(0.55 0.08 258 / .18);
+      --texture:oklch(0.15 0.02 258 / .025);
     }
   }
   html[data-tg-theme="light"]{
@@ -120,6 +142,12 @@
     --border:oklch(0.84 0.012 255 / .9);
     --accent:oklch(0.55 0.16 132); --accent-ink:oklch(0.99 0.003 255); --accent-soft:oklch(0.55 0.16 132 / .12);
     --danger:oklch(0.55 0.17 25); --warn:oklch(0.55 0.16 75);
+    --brand:oklch(0.58 0.15 258); --brand2:oklch(0.42 0.14 262);
+    --card-top:oklch(0.99 0.004 255); --card-bot:oklch(0.95 0.01 258);
+    --rail:oklch(0.75 0.05 258 / .55);
+    --edge:oklch(1 0 0 / .7);
+    --shadow:oklch(0.55 0.08 258 / .18);
+    --texture:oklch(0.15 0.02 258 / .025);
   }
   html[data-tg-theme="dark"]{
     --bg:oklch(0.16 0.012 255); --card:oklch(0.20 0.014 255); --card2:oklch(0.24 0.016 255);
@@ -127,30 +155,80 @@
     --border:oklch(0.30 0.02 255 / .55);
     --accent:oklch(0.82 0.19 132); --accent-ink:oklch(0.16 0.012 255); --accent-soft:oklch(0.82 0.19 132 / .14);
     --danger:oklch(0.72 0.17 25); --warn:oklch(0.78 0.17 75);
+    --brand:oklch(0.52 0.15 258); --brand2:oklch(0.31 0.10 262);
+    --card-top:oklch(0.24 0.035 262); --card-bot:oklch(0.20 0.025 262);
+    --rail:oklch(0.5 0.07 258 / .65);
+    --edge:oklch(0.75 0.06 258 / .22);
+    --shadow:oklch(0.06 0.02 262);
+    --texture:oklch(0.95 0.01 255 / .035);
   }
 
   *{box-sizing:border-box;}
   html{ -webkit-tap-highlight-color:transparent; }
+  /* Едва заметная диагональная штриховка по всей странице — часть
+     редизайна "2a" (2026-09-20, см. CLAUDE.md). Фиксированный фон (не
+     прокручивается вместе с контентом) — та же текстура видна в одном
+     и том же месте экрана независимо от скролла, как лёгкая фактура
+     материала, а не декор одного конкретного блока. */
   body{
     margin:0; color:var(--text); min-height:100vh; background:var(--bg);
+    background-image:repeating-linear-gradient(115deg, var(--texture) 0 1px, transparent 1px 22px);
+    background-attachment:fixed;
     font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     padding-bottom:88px;
   }
   .brand,.countdown{ font-family:"Unbounded","Inter",sans-serif; }
 
-  header{ position:relative; padding:22px 16px 4px; display:flex; align-items:center; justify-content:space-between; max-width:640px; margin:0 auto; }
+  /* Шапка-"герой" — редизайн "2a" (2026-09-20, см. CLAUDE.md). Синий
+     градиент и белый текст/кнопки языка НЕ зависят от темы страницы
+     (--brand/--brand2 те же в тёмной и светлой — сама плашка всегда
+     синяя, это единственный настоящий "цвет бренда" на экране), только
+     нижний стоп градиента — var(--bg), чтобы шапка плавно переходила в
+     фон страницы независимо от темы. */
+  header{
+    position:relative; max-width:640px; margin:0 auto; overflow:hidden;
+    border-radius:0 0 22px 22px; padding:18px 16px 20px;
+    background:linear-gradient(165deg, var(--brand), var(--brand2) 72%, var(--bg));
+  }
+  header::before{
+    content:''; position:absolute; right:-40px; top:-56px; width:210px; height:210px;
+    border-radius:50%; background:oklch(0.85 0.1 200 / .14); pointer-events:none;
+  }
+  .hero-row{ position:relative; display:flex; align-items:center; justify-content:space-between; }
   .brand{ display:flex; align-items:center; gap:9px; }
-  .logo-mark{ width:28px; height:28px; flex:none; display:block; object-fit:contain; }
-  header h1{ font-size:15px; margin:0; font-weight:600; letter-spacing:-.2px; color:var(--text); }
+  header h1{ font-size:15px; margin:0; font-weight:600; letter-spacing:-.2px; color:oklch(0.99 0.003 255); }
 
+  .hero-bottom{ position:relative; display:flex; align-items:flex-end; gap:12px; margin-top:14px; }
+  /* Маскот в шапке — крупный (64px), рядом с плашкой-"репликой", как в
+     макете. Маленький логотип, который раньше стоял рядом с самим
+     заголовком "Метро Алматы" (.logo-mark, 28px), убран — по отзыву
+     пользователя 2026-09-20 два маскота на одном экране (этот и
+     .locate-mascot чуть ниже, в карточке геолокации) читались как
+     дубль; выбор остановился на КРУПНОМ (тут), а не на маленьком у
+     заголовка — первая попытка (2026-09-20, тем же вечером) убрала не
+     тот и была отменена пользователем. */
+  .hero-mascot{
+    width:64px; height:64px; flex:none; object-fit:contain;
+    filter:drop-shadow(0 10px 18px oklch(0.18 0.05 262 / .5));
+    animation:bob 4.2s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
+  /* #appSubtitle — тот же элемент/id, что и раньше (JS его не трогали,
+     только контейнер/стиль вокруг), теперь оформлен как белая плашка
+     поверх синей шапки, вне палитры темы по той же причине, что и текст
+     шапки выше. На вкладке "О метро" JS по-прежнему прячет весь элемент
+     (display:none, см. updateAppSubtitle()) — там остаётся один маскот
+     без плашки. */
   #appSubtitle{
-    max-width:640px; margin:0 auto; padding:2px 16px 14px;
-    font-size:12.5px; color:var(--muted); font-weight:500;
+    flex:1; min-width:0; margin:0; background:oklch(0.99 0.003 255 / .94); color:oklch(0.2 0.02 262);
+    border-radius:16px 16px 16px 6px; padding:10px 13px;
+    font-size:12.5px; font-weight:600; line-height:1.4;
+    box-shadow:0 8px 22px -10px oklch(0.1 0.04 262 / .8);
   }
 
-  .lang-toggle{ display:inline-flex; gap:3px; background:var(--card2); border-radius:10px; padding:3px; }
+  .lang-toggle{ display:inline-flex; gap:3px; background:oklch(0.99 0.003 255 / .18); border-radius:10px; padding:3px; }
   .lang-btn{
-    appearance:none; border:none; background:transparent; color:var(--muted);
+    appearance:none; border:none; background:transparent; color:oklch(0.99 0.003 255 / .75);
     font-family:inherit; font-size:11px; font-weight:700; padding:5px 9px;
     border-radius:7px; cursor:pointer; transition:all .2s;
   }
@@ -161,7 +239,16 @@
   .view.active{ display:block; animation:fadeIn .3s ease; }
   @keyframes fadeIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none;} }
 
-  .card{ background:var(--card); border-radius:18px; padding:18px; margin-bottom:12px; }
+  /* Объём карточек — редизайн "2a" (2026-09-20, см. CLAUDE.md): лёгкий
+     градиент сверху вниз + верхняя edge-подсветка + мягкая тень снизу,
+     вместо плоской заливки var(--card). --card/--card2 остались как
+     были — по-прежнему используются местами (селекты, лейбл языка и
+     т.п.), просто карточки теперь берут отдельные --card-top/--card-bot. */
+  .card{
+    background:linear-gradient(var(--card-top), var(--card-bot));
+    border-radius:18px; padding:18px; margin-bottom:12px;
+    box-shadow:inset 0 1px 0 var(--edge), 0 10px 24px -14px var(--shadow);
+  }
 
   .locate-block{ display:flex; align-items:center; gap:14px; }
   .locate-content{ flex:1; min-width:0; }
@@ -530,7 +617,7 @@
   .line-track{ position:relative; padding:10px 6px; height:36px; overflow:hidden; }
   .line-track::before{
     content:''; position:absolute; left:6px; right:6px; top:50%; height:2px; margin-top:-1px;
-    background:var(--border); border-radius:2px;
+    background:var(--rail); border-radius:2px;
   }
   /* Станция — платформа по ширине поезда (train-marker — 16px), не точка.
      Обкатано на прототипе ("Станции-платформы"): пришлось поправить
@@ -616,9 +703,12 @@
   .closed-banner-text b{ color:var(--text); font-weight:700; }
 
   .dir-card{
-    position:relative; overflow:hidden; background:var(--card); border-radius:18px; padding:16px 14px;
+    position:relative; overflow:hidden;
+    background:linear-gradient(var(--card-top), var(--card-bot));
+    border-radius:18px; padding:16px 14px;
     text-align:center; border:1.5px solid var(--border); transition:border-color .3s, transform .1s; min-height:118px;
     display:flex; flex-direction:column; justify-content:center;
+    box-shadow:inset 0 1px 0 var(--edge), 0 10px 24px -14px var(--shadow);
     --tier:var(--muted); --tier2:var(--muted);
   }
   /* Тап по карточке — открывает расписание именно этого поезда по станциям
@@ -639,6 +729,23 @@
     50%{ box-shadow:0 0 16px 3px oklch(0.82 0.19 132 / .45); }
   }
   .dir-card.wait-pulse{ animation:waitPulseGlow 1s ease-in-out infinite; }
+  /* Блик фар — редизайн "2a" (2026-09-20, см. CLAUDE.md). Только на
+     карточке с активным ("скоро") отсчётом — .wait-soon, не на всех
+     карточках сразу и не на самой линии/рельсе (её решили не
+     анимировать вовсе, см. .line-track::before выше — оба направления
+     движутся по одному рельсу, "бегущий" рельс читался бы как одно
+     направление). .dir-card::after свободен (::before занят прогресс-
+     баром выше), конфликта нет. */
+  @keyframes headlight{ 0%{ transform:translateX(-120%); } 60%,100%{ transform:translateX(320%); } }
+  .dir-card.wait-soon::after{
+    content:''; position:absolute; top:0; bottom:0; left:0; width:34%;
+    background:linear-gradient(90deg, transparent, oklch(0.95 0.08 132 / .16), transparent);
+    animation:headlight 5s ease-in-out infinite; pointer-events:none;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .hero-mascot{ animation:none; }
+    .dir-card.wait-soon::after{ animation:none; display:none; }
+  }
 
   .doors-fx{ position:absolute; inset:0; z-index:5; display:flex; pointer-events:none; animation:doorsFadeOut 1.5s ease-in forwards; }
   .doors-fx .door{ position:relative; flex:1; background:var(--success); }
@@ -932,17 +1039,21 @@
 </div>
 
 <header>
-  <div class="brand">
-    <img class="logo-mark" src="mascot/logo.png" alt="" width="28" height="28" />
-    <h1 id="appTitle">Метро Алматы</h1>
+  <div class="hero-row">
+    <div class="brand">
+      <h1 id="appTitle">Метро Алматы</h1>
+    </div>
+    <div class="lang-toggle" id="langToggle">
+      <button class="lang-btn" data-lang="kk">ҚАЗ</button>
+      <button class="lang-btn" data-lang="ru">RU</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
   </div>
-  <div class="lang-toggle" id="langToggle">
-    <button class="lang-btn" data-lang="kk">ҚАЗ</button>
-    <button class="lang-btn" data-lang="ru">RU</button>
-    <button class="lang-btn" data-lang="en">EN</button>
+  <div class="hero-bottom">
+    <img class="hero-mascot" src="mascot/idle.png" alt="" />
+    <p id="appSubtitle">Онлайн-расписание — сколько ждать до поезда</p>
   </div>
 </header>
-<p id="appSubtitle">Онлайн-расписание — сколько ждать до поезда</p>
 
 <main>
 
