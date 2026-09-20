@@ -111,6 +111,7 @@
     --edge:oklch(0.75 0.06 258 / .22);
     --shadow:oklch(0.06 0.02 262);
     --texture:oklch(0.95 0.01 255 / .035);
+    --door-a:oklch(0.56 0.15 258); --door-b:oklch(0.33 0.10 262);
   }
   /* Светлая тема: системная (prefers-color-scheme) или тема самого Telegram
      (data-tg-theme ставит JS — см. <script> внизу, атрибут уже был, просто раньше
@@ -134,6 +135,10 @@
       --edge:oklch(1 0 0 / .7);
       --shadow:oklch(0.55 0.08 258 / .18);
       --texture:oklch(0.15 0.02 258 / .025);
+      /* Двери темнее даже light-темских --brand/--brand2 — см. .doors-fx
+         в CSS ниже и CLAUDE.md: на светлой карточке дверь должна читаться
+         как плотный физический объект, а не как элемент палитры темы. */
+      --door-a:oklch(0.42 0.14 258); --door-b:oklch(0.24 0.09 262);
     }
   }
   html[data-tg-theme="light"]{
@@ -148,6 +153,7 @@
     --edge:oklch(1 0 0 / .7);
     --shadow:oklch(0.55 0.08 258 / .18);
     --texture:oklch(0.15 0.02 258 / .025);
+    --door-a:oklch(0.42 0.14 258); --door-b:oklch(0.24 0.09 262);
   }
   html[data-tg-theme="dark"]{
     --bg:oklch(0.16 0.012 255); --card:oklch(0.20 0.014 255); --card2:oklch(0.24 0.016 255);
@@ -161,6 +167,7 @@
     --edge:oklch(0.75 0.06 258 / .22);
     --shadow:oklch(0.06 0.02 262);
     --texture:oklch(0.95 0.01 255 / .035);
+    --door-a:oklch(0.56 0.15 258); --door-b:oklch(0.33 0.10 262);
   }
 
   *{box-sizing:border-box;}
@@ -745,20 +752,64 @@
   @media (prefers-reduced-motion: reduce){
     .hero-mascot{ animation:none; }
     .dir-card.wait-soon::after{ animation:none; display:none; }
+    .doors-fx .seam{ animation:none; opacity:0; }
   }
 
+  /* Двери — редизайн "3a: Стекло" (2026-09-20, см. CLAUDE.md). Раньше
+     плоская заливка var(--success) — тот же лайм, что у отсчёта и
+     активной платформы, а лайм в этом приложении означает "живые данные",
+     не декорацию, конфликтовал по смыслу. Теперь синий градиент в тон
+     шапки/карточек, стеклянное окно с бликом, вспышка по шву — лайма на
+     створках больше нет нигде. */
   .doors-fx{ position:absolute; inset:0; z-index:5; display:flex; pointer-events:none; animation:doorsFadeOut 1.5s ease-in forwards; }
-  .doors-fx .door{ position:relative; flex:1; background:var(--success); }
+  .doors-fx .door{
+    position:relative; flex:1;
+    background:linear-gradient(160deg, var(--door-a), var(--door-b));
+    box-shadow:inset -2px 0 6px -2px oklch(0.10 0.03 262 / .8),
+               inset 0 1px 0 oklch(0.85 0.06 258 / .35);
+  }
+  .doors-fx .door.right{
+    background:linear-gradient(200deg, var(--door-a), var(--door-b));
+    box-shadow:inset 2px 0 6px -2px oklch(0.10 0.03 262 / .8),
+               inset 0 1px 0 oklch(0.85 0.06 258 / .35);
+  }
+  /* Окно — стекло, не плоский прямоугольник: сдвинуто от шва наружу. */
   .doors-fx .door::after{
-    content:''; position:absolute; top:16%; bottom:38%; left:18%; right:18%;
-    background:oklch(0.16 0.012 255 / .3); border:1px solid oklch(0.16 0.012 255 / .4); border-radius:3px;
+    content:''; position:absolute; top:14%; bottom:36%; left:16%; right:12%;
+    border-radius:4px;
+    background:linear-gradient(150deg, oklch(0.80 0.06 235 / .55), oklch(0.20 0.04 262 / .55) 55%);
+    border:1px solid oklch(0.88 0.05 240 / .35);
+    box-shadow:inset 0 0 12px oklch(0.10 0.03 262 / .5);
+  }
+  .doors-fx .door.right::after{ left:12%; right:16%; }
+  /* Блик на стекле левой створки — ::before у .door свободен. */
+  .doors-fx .door.left::before{
+    content:''; position:absolute; top:14%; bottom:36%; left:16%; width:26%;
+    background:linear-gradient(120deg, oklch(0.97 0.02 240 / .32), transparent 70%);
+    border-radius:4px 0 0 4px;
   }
   .doors-fx .door.left{ animation:doorCloseLeft 1.5s cubic-bezier(.3,.9,.3,1) forwards; }
   .doors-fx .door.right{ animation:doorCloseRight 1.5s cubic-bezier(.3,.9,.3,1) forwards; }
   @keyframes doorCloseLeft{ 0%{ transform:translateX(-100%); } 35%, 60%{ transform:translateX(0); } }
   @keyframes doorCloseRight{ 0%{ transform:translateX(100%); } 35%, 60%{ transform:translateX(0); } }
   @keyframes doorsFadeOut{ 0%, 60%{ opacity:1; } 100%{ opacity:0; } }
-
+  /* Вспышка по шву — отдельный узел (.seam, добавлен в playDoorsFx), не
+     псевдоэлемент .doors-fx: оба псевдоэлемента контейнера свободны, но
+     вспышке нужен свой z-порядок ПОВЕРХ обеих створок, а элементы одного
+     контейнера рисуются в порядке DOM — проще отдельным span после дверей,
+     чем городить z-index на псевдоэлементе внешнего контейнера. Фазы
+     привязаны к doorCloseLeft/Right (створки сомкнуты на 35-60%): вспышка
+     нарастает к 30%, гаснет к 60% — синхронно с началом doorsFadeOut. Если
+     тайминги дверей поменяются, двигать seamGlow вместе с ними. */
+  .doors-fx .seam{
+    position:absolute; top:0; bottom:0; left:50%; width:3px; margin-left:-1.5px;
+    background:linear-gradient(oklch(0.95 0.05 240 / 0),
+                               oklch(0.95 0.05 240 / .85),
+                               oklch(0.95 0.05 240 / 0));
+    animation:seamGlow 1.5s ease-in-out forwards;
+    pointer-events:none;
+  }
+  @keyframes seamGlow{ 0%,20%{ opacity:0; } 30%,45%{ opacity:1; } 60%,100%{ opacity:0; } }
   /* Маскот выезжает с края карточки в последние PEEK_ARRIVE_SEC секунд перед
      отправлением (см. tickCountdowns) — z-index НИЖЕ doors-fx (5), поэтому когда
      поезд отправляется и играет анимация дверей, она перекрывает маскота сверху;
@@ -3140,7 +3191,7 @@
 
     var fx = document.createElement('div');
     fx.className = 'doors-fx';
-    fx.innerHTML = '<div class="door left"></div><div class="door right"></div>';
+    fx.innerHTML = '<div class="door left"></div><div class="door right"></div><span class="seam"></span>';
     cardEl.appendChild(fx);
     setTimeout(function () { fx.remove(); }, 1600);
   }
