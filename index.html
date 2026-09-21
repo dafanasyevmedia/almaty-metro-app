@@ -1529,43 +1529,52 @@
       appSubtitle: 'Онлайн-расписание — сколько ждать до поезда',
       appSubtitleWhentogo: 'На какой поезд успеть, чтобы быть на месте вовремя',
       appSubtitleFull: 'Полное расписание по всем станциям',
-      // Плашка-реплика маскота в шапке (см. HERO_LINE_CATEGORIES и CLAUDE.md,
+      // Плашка-реплика маскота в шапке (см. HERO_LINE_STRICT_CATEGORIES/
+      // HERO_LINE_POOL_CATEGORIES и CLAUDE.md,
       // раздел "Плашка-реплика маскота в шапке") — каждая фраза отдельный ключ,
       // сама плашка ничего не хардкодит, только перечисляет эти ключи.
-      heroOffline1: 'Работаем из кеша — обновится само, как появится связь',
-      heroOffline2: 'Данные сохранённые, чуть могли устареть — маршрут тот же',
+      heroOffline1: 'Мы офлайн, но я подтянул данные из кеша. Скорее всего расписание правильное',
+      heroOffline2: 'С интернетом проблемы, но я запомнил расписание прошлый раз.',
       heroOffline3: 'Нет сети, но расписание всё равно под рукой',
-      heroGeoErr1: 'GPS подвёл — но список станций никуда не делся',
-      heroGeoErr2: 'Полное расписание по всем станциям — во второй вкладке',
-      heroGeoFar1: 'Похоже, вы не в городе — расписание всё равно готово',
-      heroClosed1: 'Пока поезда отдыхают — самое время глянуть полное расписание',
-      heroClosed2: 'Ночь. Метро спит — а расписание уже ждёт на соседней вкладке',
-      heroClosed3: 'Скоро снова в путь',
+      heroGeoErr1: 'GPS подвёл, но станцию можно выбрать вручную',
+      heroGeoErr2: 'Я не знаю, где вы, но выбрать станцию можно прям в меню ниже',
+      heroGeoFar1: 'Похоже, вы не в городе. Буду скучать, но расписание покажу',
+      heroClosed1: 'Пока поезда отдыхают, можно глянуть расписание на завтра',
+      heroClosed2: 'Ночь. Метро спит, а расписание на завтра никуда не делось',
+      heroClosed3: 'Метро немного отдохнет и снова заработает',
       heroHoliday1: 'Сегодня особый день — метро едет по графику выходных',
       heroHoliday2: 'Расписание сегодня отличается от обычного — сверьтесь на всякий случай',
-      heroWorkday1: 'Сегодня рабочая суббота — метро едет по будничному расписанию',
+      heroWorkday1: 'Сегодня суббота, но все работают. Метро едет по будничному расписанию',
       // Конкретные даты (SPECIAL_DAYS) — не общие праздники из holidays.json,
       // а разовые поздравления с конкретным событием на конкретный год.
       heroCityDay1: 'С Днём города, Алматы!',
       heroCityDay2: 'Сегодня в Алматы праздник — с Днём города!',
-      heroCityDay3: 'Алматы, с днём рождения! Хорошей вам поездки',
-      heroTerminus1: 'Отсюда линия начинается — дальше только в одну сторону',
-      heroTerminus2: 'Конечная станция — поезда идут отсюда лишь в одном направлении',
-      heroWeekendEst1: 'На выходные для этой станции расписание — оценка по соседям, не с сервера метро',
-      heroWeekendEst2: 'В выходные интервалы здесь считаем по соседним станциям',
+      heroCityDay3: 'Алматы, с днём рождения! А вам хорошей поездки',
+      heroWeekendEst1: 'На выходные для этой станции расписание посчитали сами, на сайте метро его нет',
+      heroWeekendEst2: 'В выходные интервалы здесь посчитали по соседним станциям',
       heroMorningRush1: 'Час пик — на платформе может быть многолюдно',
+      heroMorningRush2: 'Утро в разгаре — вагоны точно не пустуют',
+      heroMorningRush3: 'Доброе утро! Народу сейчас много, но и поезда идут часто',
       heroEveningRush1: 'Вечерний час пик — самое оживлённое время на линии',
+      heroEveningRush2: 'Все спешат по домам — вечерний час пик в разгаре',
+      heroEveningRush3: 'Вечер, час пик — многолюдно, но поезда идут одна за другой',
       heroMonday1: 'Понедельник — сначала кофе, потом метро',
-      heroFriday1: 'Пятница. Почти',
-      heroWeekend1: 'Хороших выходных',
-      heroWeekend2: 'Выходной — можно никуда не спешить',
+      heroMondayEvening1: 'Понедельник — день тяжёлый, но он уже заканчивается',
+      heroFriday1: 'Пятница. Осталось немного — и выходные!',
+      heroWeekend1: 'Хороших выходных!',
+      heroWeekend2: 'Желаю классно покататься на метро в выходной!',
       heroNeutral1: 'Метро — самый предсказуемый транспорт в городе',
       heroNeutral2: '11 станций, одна линия, никаких сюрпризов',
       heroNeutral3: 'Поехали',
+      heroKalkaman1: 'Скоро рядом откроется станция Калкаман — а пока едем отсюда',
+      heroAphorism1: 'Дорога в тысячу шагов начинается с одной станции',
+      heroAphorism2: 'Кто рано встаёт — тому и свободные места в вагоне',
+      heroAphorism3: 'Метро не опаздывает. Опаздываем мы',
+      heroAphorism4: 'Хорошая поездка начинается с точного расписания',
       heroWeatherCold1: 'На улице холодно — оденьтесь теплее',
       heroWeatherHot1: 'Жара на улице — не забудьте воду',
-      heroWeatherRain1: 'На улице дождь — метро точно суше',
-      heroWeatherSnow1: 'Снег на улице — под землёй теплее',
+      heroWeatherRain1: 'На улице дождь — в метро точно суше',
+      heroWeatherSnow1: 'Снег на улице — под землёй теплее и быстрее',
       scheduleDisclaimer: 'Поезда чаще всего отправляются ровно по расписанию, указанному на этом сайте. Но иногда метро добавляет дополнительные составы.',
       tabNearest: 'Ближайший поезд',
       tabFull: 'Всё расписание',
@@ -1685,38 +1694,46 @@
       appSubtitleFull: 'Барлық бекеттердің толық кестесі',
       // kk-переводы плашки — черновик (AI + без сверки с носителем, как и
       // остальные kk-строки проекта на момент написания, см. CLAUDE.md).
-      heroOffline1: 'Сақталған деректермен жұмыс істеп тұрмыз — байланыс пайда болысымен өзі жаңарады',
-      heroOffline2: 'Деректер сақталған, сәл ескі болуы мүмкін — бағыт сол күйінде',
+      heroOffline1: 'Біз офлайнбыз, бірақ мен кэштен деректерді тартып алдым. Кесте, сірә, дұрыс',
+      heroOffline2: 'Интернетте мәселе бар, бірақ мен өткен жолғы кестені есімде сақтап қалдым.',
       heroOffline3: 'Интернет жоқ, бірақ кесте қолда',
-      heroGeoErr1: 'GPS қатесі — бірақ бекеттер тізімі орнында',
-      heroGeoErr2: 'Барлық бекеттердің толық кестесі — екінші қойындыда',
-      heroGeoFar1: 'Қала сыртында сияқтысыз — кесте бәрібір дайын',
-      heroClosed1: 'Пойыздар демалып тұрғанда — толық кестені қарап алыңыз',
-      heroClosed2: 'Түн. Метро ұйықтап жатыр — кесте көрші қойындыда күтіп тұр',
-      heroClosed3: 'Жақында қайта жолға шығады',
+      heroGeoErr1: 'GPS сатқындық жасады, бірақ бекетті қолмен таңдауға болады',
+      heroGeoErr2: 'Сіздің қай жерде екеніңізді білмеймін, бірақ бекетті төмендегі мәзірден таңдай аласыз',
+      heroGeoFar1: 'Сіз қалада емес сияқтысыз. Сағынамын, бірақ кестені бәрібір көрсетемін',
+      heroClosed1: 'Пойыздар демалып жатқанда, ертеңгі кестені қарап алуға болады',
+      heroClosed2: 'Түн. Метро ұйықтап жатыр, ал ертеңгі кесте әлі осында',
+      heroClosed3: 'Метро сәл демалып алып, қайта жұмыс істей бастайды',
       heroHoliday1: 'Бүгін ерекше күн — метро демалыс күндерінің кестесі бойынша жүреді',
       heroHoliday2: 'Бүгінгі кесте әдеттегіден өзгеше — тексеріп алыңыз',
-      heroWorkday1: 'Сенбі болса да — жұмыс күні: метро әдеттегі кесте бойынша жүреді',
+      heroWorkday1: 'Бүгін сенбі, бірақ бәрі жұмыс істейді. Метро жұмыс күндерінің кестесі бойынша жүреді',
       heroCityDay1: 'Алматы, Қала күні құтты болсын!',
       heroCityDay2: 'Бүгін Алматының мерекесі — Қала күні құтты болсын!',
-      heroCityDay3: 'Алматы, туған күніңізбен! Жолыңыз болсын',
-      heroTerminus1: 'Осы жерден желі басталады — әрі қарай тек бір бағытта',
-      heroTerminus2: 'Соңғы бекет — пойыздар осы жерден тек бір бағытта жүреді',
-      heroWeekendEst1: 'Бұл бекет үшін демалыс кестесі — көршілес бекеттер бойынша есептелген',
-      heroWeekendEst2: 'Демалыс күндері аралықтар көрші бекеттер бойынша есептеледі',
+      heroCityDay3: 'Алматы, туған күніңізбен! Ал сізге жақсы жол тілеймін',
+      heroWeekendEst1: 'Бұл бекеттің демалыс кестесін өзіміз есептедік — метро сайтында ол жоқ',
+      heroWeekendEst2: 'Демалыс күндері мұндағы аралықтарды көрші бекеттер бойынша есептедік',
       heroMorningRush1: 'Қарбалас уақыт — платформада адам көп болуы мүмкін',
+      heroMorningRush2: 'Таң қызып тұр — вагондар бос емес',
+      heroMorningRush3: 'Қайырлы таң! Қазір адам көп, бірақ пойыздар да жиі жүреді',
       heroEveningRush1: 'Кешкі қарбалас — желідегі ең тығыз уақыт',
+      heroEveningRush2: 'Бәрі үйге асығып барады — кешкі қарбалас қызып тұр',
+      heroEveningRush3: 'Кеш, қарбалас уақыт — адам көп, бірақ пойыздар бірінен соң бірі келеді',
       heroMonday1: 'Дүйсенбі — алдымен кофе, сосын метро',
-      heroFriday1: 'Жұма. Сәл ғана қалды',
-      heroWeekend1: 'Демалыс күндері сәтті өтсін',
-      heroWeekend2: 'Демалыс — асығудың қажеті жоқ',
+      heroMondayEvening1: 'Дүйсенбі — ауыр күн, бірақ ол бітіп те қалды',
+      heroFriday1: 'Жұма. Сәл қалды — демалыс алда!',
+      heroWeekend1: 'Демалыс күндері сәтті өтсін!',
+      heroWeekend2: 'Демалыс күні метромен сәтті сапар тілеймін!',
       heroNeutral1: 'Метро — қаладағы ең болжауға оңай көлік',
       heroNeutral2: '11 бекет, бір желі, күтпеген жайт жоқ',
       heroNeutral3: 'Жүрдік',
+      heroKalkaman1: 'Жақында осы жерге жақын Қалқаман бекеті ашылады — ал әзірге осы жерден жүреміз',
+      heroAphorism1: 'Мың қадамдық жол бір бекеттен басталады',
+      heroAphorism2: 'Ерте тұрғанға вагонда бос орын да бұйырады',
+      heroAphorism3: 'Метро кешікпейді. Кешігетін — біз',
+      heroAphorism4: 'Жақсы сапар дәл кестеден басталады',
       heroWeatherCold1: 'Сыртта суық — жылы киініңіз',
       heroWeatherHot1: 'Сыртта ыстық — су алуды ұмытпаңыз',
-      heroWeatherRain1: 'Сыртта жаңбыр — метрода құрғақ',
-      heroWeatherSnow1: 'Сыртта қар — жер астында жылы',
+      heroWeatherRain1: 'Сыртта жаңбыр — метрода әлдеқайда құрғақ',
+      heroWeatherSnow1: 'Сыртта қар — жер астында жылы әрі жылдам',
       scheduleDisclaimer: 'Пойыздар көбіне осы сайтта көрсетілген кесте бойынша дәл жүреді. Бірақ кейде метро қосымша құрам қосады.',
       tabNearest: 'Жақын пойыз',
       tabFull: 'Толық кесте',
@@ -1838,38 +1855,46 @@
       appSubtitle: 'Live schedule — how long until the next train',
       appSubtitleWhentogo: 'Which train to catch to make it there on time',
       appSubtitleFull: 'Full schedule for every station',
-      heroOffline1: 'Running on cached data — will update once you are back online',
-      heroOffline2: 'Data may be slightly stale — the route is still the same',
+      heroOffline1: 'We’re offline, but I pulled the schedule from cache. It’s probably still accurate',
+      heroOffline2: 'Having connection trouble, but I remembered the schedule from last time.',
       heroOffline3: 'No connection, but the schedule is right here',
-      heroGeoErr1: 'GPS let us down — the station list is still here',
-      heroGeoErr2: 'The full schedule for every station is one tab over',
-      heroGeoFar1: 'Looks like you are not in the city — the schedule is ready anyway',
-      heroClosed1: 'Trains are resting — good time to check the full schedule',
-      heroClosed2: 'Night. The metro is asleep — the schedule is waiting in the next tab',
-      heroClosed3: 'Back on track soon',
+      heroGeoErr1: 'GPS let me down, but you can pick a station by hand',
+      heroGeoErr2: 'I don’t know where you are, but you can pick a station right in the menu below',
+      heroGeoFar1: 'Looks like you’re not in the city. I’ll miss you, but here’s the schedule anyway',
+      heroClosed1: 'While the trains are resting, take a look at tomorrow’s schedule',
+      heroClosed2: 'Night. The metro is asleep, but tomorrow’s schedule hasn’t gone anywhere',
+      heroClosed3: 'The metro will rest a bit and get going again',
       heroHoliday1: 'Today is a special day — the metro runs on the weekend schedule',
       heroHoliday2: 'Today’s schedule differs from usual — worth double-checking',
-      heroWorkday1: 'This Saturday is a working day — the metro runs on the weekday schedule',
+      heroWorkday1: 'It’s Saturday, but everyone’s working today. The metro runs on the weekday schedule',
       heroCityDay1: 'Happy City Day, Almaty!',
       heroCityDay2: 'It’s Almaty City Day — enjoy the celebrations!',
-      heroCityDay3: 'Happy birthday, Almaty! Have a great ride',
-      heroTerminus1: 'The line starts here — trains only go one way from this station',
-      heroTerminus2: 'This is a terminus — trains run in one direction only',
-      heroWeekendEst1: 'Weekend times for this station are estimated from nearby stations',
-      heroWeekendEst2: 'Weekend intervals here are estimated from neighboring stations',
+      heroCityDay3: 'Happy birthday, Almaty! And have a great ride',
+      heroWeekendEst1: 'We calculated this station’s weekend schedule ourselves — it’s not on the metro’s site',
+      heroWeekendEst2: 'We calculated weekend intervals here from the neighboring stations',
       heroMorningRush1: 'Rush hour — the platform might be crowded',
+      heroMorningRush2: 'Morning’s in full swing — the cars are definitely not empty',
+      heroMorningRush3: 'Good morning! It’s busy right now, but the trains run often too',
       heroEveningRush1: 'Evening rush hour — the busiest time on the line',
+      heroEveningRush2: 'Everyone’s rushing home — evening rush hour is in full swing',
+      heroEveningRush3: 'Evening rush hour — crowded, but the trains keep coming one after another',
       heroMonday1: 'Monday — coffee first, metro second',
-      heroFriday1: 'Friday. Almost',
-      heroWeekend1: 'Have a great weekend',
-      heroWeekend2: 'A day off — no need to rush',
+      heroMondayEvening1: 'Monday — a tough day, but it’s almost over',
+      heroFriday1: 'Friday. Not long now — the weekend’s almost here!',
+      heroWeekend1: 'Have a great weekend!',
+      heroWeekend2: 'Hope you have a great ride on the metro today!',
       heroNeutral1: 'The metro — the most predictable ride in the city',
       heroNeutral2: '11 stations, one line, no surprises',
       heroNeutral3: 'Let’s go',
+      heroKalkaman1: 'Kalkaman station will open nearby soon — for now, this is where we ride from',
+      heroAphorism1: 'A journey of a thousand steps begins with one station',
+      heroAphorism2: 'The early rider gets a seat',
+      heroAphorism3: 'The metro is never late. We are',
+      heroAphorism4: 'A good ride starts with an accurate schedule',
       heroWeatherCold1: 'It’s cold outside — dress warm',
       heroWeatherHot1: 'It’s hot outside — don’t forget water',
-      heroWeatherRain1: 'It’s raining outside — the metro is drier',
-      heroWeatherSnow1: 'It’s snowing outside — warmer underground',
+      heroWeatherRain1: 'It’s raining outside — the metro is definitely drier',
+      heroWeatherSnow1: 'It’s snowing outside — warmer and faster underground',
       scheduleDisclaimer: 'Trains usually depart exactly on the schedule shown here. But the metro sometimes adds extra trains.',
       tabNearest: 'Nearest train',
       tabFull: 'Full schedule',
@@ -2721,13 +2746,15 @@
 
   /* ---------- Плашка-реплика маскота (шапка, #appSubtitle) ----------
      Полное описание категорий/приоритетов/формата — CLAUDE.md, раздел
-     "Плашка-реплика маскота в шапке". Коротко: HERO_LINE_CATEGORIES —
-     список категорий в порядке приоритета (первая подходящая по test()
-     выигрывает), тексты — обычные ключи I18N (ru/kk/en, см. выше), эта
-     структура их не хранит — только перечисляет, какие ключи относятся
-     к какой категории. Существующую логику расписания не трогает —
-     только читает её результаты (almatyNow/serviceDayStart/dayTypeOf/
-     STATIONS_BY_SLUG/SCHEDULE/locateState/dataFromOfflineCache). */
+     "Плашка-реплика маскота в шапке". Коротко: HERO_LINE_STRICT_CATEGORIES —
+     состояния и праздники, первая подходящая по порядку побеждает целиком;
+     HERO_LINE_POOL_CATEGORIES — всё остальное, собираются ключи со ВСЕХ
+     подходящих сейчас категорий в один список и берётся случайный (см.
+     recomputeHeroLine). Тексты — обычные ключи I18N (ru/kk/en, см. выше),
+     сами структуры их не хранят — только перечисляют, какие ключи
+     относятся к какой категории. Существующую логику расписания не
+     трогает — только читает её результаты (almatyNow/serviceDayStart/
+     dayTypeOf/STATIONS_BY_SLUG/SCHEDULE/locateState/dataFromOfflineCache). */
   var HERO_LINE_HISTORY_LEN = 3;
   var HERO_LINE_RECOMPUTE_MIN = 15;
   var WEATHER_ENABLED = false; // включатель погодной категории — см. CLAUDE.md
@@ -2748,7 +2775,16 @@
   var metroClosedNow = false; // отражает то же условие, что уже решает видимость #closedBanner в tickCountdowns()
   var weatherHeroKeys = null; // ключи, подходящие текущей погоде; null = не знаем/выключено/ошибка
 
-  var HERO_LINE_CATEGORIES = [
+  // Два уровня — не один общий список (2026-09-21, по отзыву пользователя:
+  // "почти никогда одно и то же сообщение не должно быть единственным",
+  // исключение только настоящие сервисные состояния). СТРОГИЙ уровень:
+  // первая подходящая категория по порядку побеждает целиком (как было
+  // раньше) — только для офлайн/гео/закрыто и праздничных дат: тут важна
+  // надёжность и приоритет ("праздник — сначала, потом остальное" —
+  // прямая просьба пользователя), не разнообразие. ПУЛ: если ни одна
+  // строгая категория не подошла — собираем ключи со ВСЕХ подходящих
+  // категорий пула в один список и берём случайный (см. recomputeHeroLine).
+  var HERO_LINE_STRICT_CATEGORIES = [
     { id: 'offline', keys: ['heroOffline1', 'heroOffline2', 'heroOffline3'],
       test: function (ctx) { return ctx.offline; } },
     { id: 'geoErr', keys: ['heroGeoErr1', 'heroGeoErr2'],
@@ -2762,27 +2798,43 @@
     { id: 'workingWeekend', keys: ['heroWorkday1'],
       test: function (ctx) { return ctx.isWeekendForcedWorkday; } },
     { id: 'specialDay', dynamicKeys: function (ctx) { return SPECIAL_DAYS[ctx.dateKey] || []; },
-      test: function (ctx) { return !!SPECIAL_DAYS[ctx.dateKey] && SPECIAL_DAYS[ctx.dateKey].length > 0; } },
+      test: function (ctx) { return !!SPECIAL_DAYS[ctx.dateKey] && SPECIAL_DAYS[ctx.dateKey].length > 0; } }
+  ];
+  var HERO_LINE_POOL_CATEGORIES = [
     { id: 'stationDescent', keys: [], // заполнится, когда появятся данные в DESCENT_INFO
       test: function (ctx) { return !!(ctx.station && DESCENT_INFO[ctx.station.slug]); } },
-    { id: 'stationTerminus', keys: ['heroTerminus1', 'heroTerminus2'],
-      test: function (ctx) { return !!ctx.station && ctx.stationIsTerminus; } },
+    // stationTerminus убрана по отзыву пользователя (2026-09-21): "лишний критерий —
+    // если человек постоянно с конечной едет, он одно и то же будет видеть" — у
+    // конечных станций (RMBK/BM) фраза никогда бы не менялась при частом
+    // использовании, что прямо противоречит принципу "почти никогда одно и то же
+    // сообщение не должно быть единственным". Ключи heroTerminus1/2 удалены из I18N.
     { id: 'stationWeekendEst', keys: ['heroWeekendEst1', 'heroWeekendEst2'],
       test: function (ctx) { return !!ctx.station && ctx.stationWeekendEstimated; } },
-    { id: 'morningRush', keys: ['heroMorningRush1'],
+    // Пасхалка про будущую станцию — только пока едем от/через Б. Момышулы,
+    // в общем пуле (не единственное сообщение для станции, см. CLAUDE.md).
+    { id: 'stationKalkaman', keys: ['heroKalkaman1'],
+      test: function (ctx) { return !!ctx.station && ctx.station.slug === 'BM'; } },
+    { id: 'morningRush', keys: ['heroMorningRush1', 'heroMorningRush2', 'heroMorningRush3'],
       test: function (ctx) { return !ctx.metroClosed && ctx.isMorningRush; } },
-    { id: 'eveningRush', keys: ['heroEveningRush1'],
+    { id: 'eveningRush', keys: ['heroEveningRush1', 'heroEveningRush2', 'heroEveningRush3'],
       test: function (ctx) { return !ctx.metroClosed && ctx.isEveningRush; } },
-    { id: 'dayMonday', keys: ['heroMonday1'],
-      test: function (ctx) { return ctx.weekday === 1; } },
+    // Понедельник — раньше одна фраза на весь день; по отзыву пользователя
+    // ("про кофе странно говорить ближе к вечеру") разделён на утро/вечер
+    // по полудню, а не только по узкому окну часа пик.
+    { id: 'dayMondayMorning', keys: ['heroMonday1'],
+      test: function (ctx) { return ctx.weekday === 1 && ctx.isMorningHalf; } },
+    { id: 'dayMondayEvening', keys: ['heroMondayEvening1'],
+      test: function (ctx) { return ctx.weekday === 1 && !ctx.isMorningHalf; } },
     { id: 'dayFriday', keys: ['heroFriday1'],
       test: function (ctx) { return ctx.weekday === 5; } },
     { id: 'dayWeekendMood', keys: ['heroWeekend1', 'heroWeekend2'],
       test: function (ctx) { return ctx.dayType === 'weekend' && !ctx.isHolidayForced; } },
+    { id: 'aphorism', keys: ['heroAphorism1', 'heroAphorism2', 'heroAphorism3', 'heroAphorism4'],
+      test: function () { return true; } },
     { id: 'weather', dynamicKeys: function (ctx) { return ctx.weatherKeys || []; },
       test: function (ctx) { return WEATHER_ENABLED && ctx.weatherKeys && ctx.weatherKeys.length > 0; } },
     { id: 'neutral', keys: ['heroNeutral1', 'heroNeutral2', 'heroNeutral3'],
-      test: function () { return true; } } // гарантированный фолбэк — всегда матчится, список никогда не пуст
+      test: function () { return true; } } // гарантированный фолбэк — пул никогда не бывает пустым
   ];
 
   function buildHeroLineContext() {
@@ -2801,10 +2853,10 @@
       dayType: dayTypeOf(serviceStart),
       weekday: serviceStart.getUTCDay(),
       station: station,
-      stationIsTerminus: !!station && STATIONS.length > 0 && (station.order === 1 || station.order === STATIONS.length),
       stationWeekendEstimated: !!(stSchedule && stSchedule.weekend_estimated),
       isMorningRush: minutesOfDay >= 7 * 60 && minutesOfDay < 9 * 60 + 30,
       isEveningRush: minutesOfDay >= 17 * 60 + 30 && minutesOfDay < 19 * 60 + 30,
+      isMorningHalf: minutesOfDay < 12 * 60, // до полудня — для дневных категорий типа "понедельник"
       weatherKeys: weatherHeroKeys
     };
   }
@@ -2834,10 +2886,25 @@
   function recomputeHeroLine() {
     var ctx = buildHeroLineContext();
     var chosenKey = null;
-    for (var i = 0; i < HERO_LINE_CATEGORIES.length; i++) {
-      var cat = HERO_LINE_CATEGORIES[i];
+    // 1) Строгий приоритет — состояния, потом праздник/рабочая суббота/разовая
+    // дата (в этом порядке, первая подходящая побеждает целиком).
+    for (var i = 0; i < HERO_LINE_STRICT_CATEGORIES.length; i++) {
+      var cat = HERO_LINE_STRICT_CATEGORIES[i];
       var keys = cat.dynamicKeys ? cat.dynamicKeys(ctx) : cat.keys;
       if (keys.length && cat.test(ctx)) { chosenKey = pickHeroLineKey(keys); break; }
+    }
+    // 2) Общий пул — если ни одна строгая категория не подошла, собираем
+    // ключи со ВСЕХ подходящих сейчас категорий пула и берём случайный
+    // (тем же анти-повтором, что и раньше) — так час пик/день недели/погода/
+    // афоризмы не перебивают друг друга молча, а честно перемешиваются.
+    if (!chosenKey) {
+      var pool = [];
+      for (var j = 0; j < HERO_LINE_POOL_CATEGORIES.length; j++) {
+        var pcat = HERO_LINE_POOL_CATEGORIES[j];
+        var pkeys = pcat.dynamicKeys ? pcat.dynamicKeys(ctx) : pcat.keys;
+        if (pkeys.length && pcat.test(ctx)) pool = pool.concat(pkeys);
+      }
+      if (pool.length) chosenKey = pickHeroLineKey(pool);
     }
     if (!chosenKey) return; // neutral всегда матчится и не пуста — сюда доходить не должны
     heroLineCurrentKey = chosenKey;
@@ -3339,7 +3406,7 @@
   // делают разное. На "О метро" подписи нет вовсе — это справочный раздел,
   // не про ожидание. На "Всё расписание" — статичная строка, как и раньше.
   // На "Ближайший поезд" — с 2026-09-20 не статичная строка, а плашка-
-  // реплика маскота (см. HERO_LINE_CATEGORIES/renderHeroLine() выше и
+  // реплика маскота (см. HERO_LINE_STRICT/POOL_CATEGORIES/renderHeroLine() выше и
   // CLAUDE.md) — сюда её не встраивал напрямую, чтобы не дублировать
   // логику показа/скрытия элемента, только зову renderHeroLine() вместо
   // прежнего t('appSubtitle').
