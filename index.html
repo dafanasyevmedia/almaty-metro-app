@@ -4663,16 +4663,81 @@
   // не запускалась) — там заголовка не будет, а generated_at всё равно может
   // быть старым, это два разных, независимых случая.
   var dataFromOfflineCache = false;
-  function fetchJSON(url) {
-    return fetch(url).then(function (r) {
-      if (r.headers.get('X-From-SW-Cache') === '1') dataFromOfflineCache = true;
-      return r.json();
+
+  // Таймаут + резервная копия в localStorage — независимая от sw.js защита
+  // (2026-09-28). До этого единственным щитом от "зависшей" загрузки был
+  // networkFirst() в sw.js (таймаут 5с) — но он спасает, только когда сам
+  // Service Worker реально перехватывает запрос. Внутри Telegram Mini App
+  // поддержка SW не гарантирована (см. "Ограничение по Telegram" выше в этом
+  // файле) — а именно там нередко и сидят с плохим сигналом (рядом со входом
+  // в метро). Без SW plain fetch() ничем не ограничен: если интернет
+  // технически есть, но не отвечает, fetch() не падает с ошибкой — он просто
+  // висит, и Promise.all ниже никогда не резолвится — белый экран без конца,
+  // а не "нет сети" (тот случай уже был прикрыт — см. .catch() ниже).
+  //
+  // Резерв — именно localStorage, не Cache Storage (caches.match()): тот
+  // заполняется только самим Service Worker'ом, и как раз там, где SW не
+  // работает, будет так же пуст. localStorage не зависит от SW вообще,
+  // пишется/читается напрямую из скрипта страницы.
+  var DATA_FETCH_TIMEOUT_MS = 5000;
+  var DATA_CACHE_KEYS = { stations: 'metroCacheStations', schedule: 'metroCacheSchedule', holidays: 'metroCacheHolidays' };
+  function saveDataCacheEntry(name, data) {
+    try { localStorage.setItem(DATA_CACHE_KEYS[name], JSON.stringify(data)); } catch (e) { /* приватный режим/квота — не критично */ }
+  }
+  function readDataCacheEntry(name) {
+    try {
+      var raw = localStorage.getItem(DATA_CACHE_KEYS[name]);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function fetchJSON(url, cacheName) {
+    return new Promise(function (resolve, reject) {
+      var settled = false;
+      // Если сеть не ответила за DATA_FETCH_TIMEOUT_MS — не ждём дальше,
+      // сразу берём резервную копию (если она есть) и отдаём её. Настоящий
+      // fetch() при этом не отменяется — он донашивается в фоне и, если всё
+      // же ответит, просто освежит резервную копию на будущее (ниже).
+      var timer = setTimeout(function () {
+        if (settled) return;
+        var cached = readDataCacheEntry(cacheName);
+        if (cached) {
+          settled = true;
+          dataFromOfflineCache = true;
+          resolve(cached);
+        }
+        // Резерва нет (самый первый визит без сети) — показать всё равно
+        // нечего, ждём настоящий ответ сети дальше, таймер просто гаснет.
+      }, DATA_FETCH_TIMEOUT_MS);
+
+      fetch(url).then(function (r) {
+        if (r.headers.get('X-From-SW-Cache') === '1') dataFromOfflineCache = true;
+        return r.json();
+      }).then(function (data) {
+        clearTimeout(timer);
+        saveDataCacheEntry(cacheName, data); // освежаем резерв всегда, даже если уже ответили из него выше
+        if (settled) return;
+        settled = true;
+        resolve(data);
+      }).catch(function (err) {
+        clearTimeout(timer);
+        if (settled) return;
+        var cached = readDataCacheEntry(cacheName);
+        if (cached) {
+          settled = true;
+          dataFromOfflineCache = true;
+          resolve(cached);
+        } else {
+          settled = true;
+          reject(err);
+        }
+      });
     });
   }
   Promise.all([
-    fetchJSON('data/stations.json'),
-    fetchJSON('data/schedule.json'),
-    fetchJSON('data/holidays.json').catch(function () { return { dates: [], workingWeekends: [] }; })
+    fetchJSON('data/stations.json', 'stations'),
+    fetchJSON('data/schedule.json', 'schedule'),
+    fetchJSON('data/holidays.json', 'holidays').catch(function () { return { dates: [], workingWeekends: [] }; })
   ]).then(function (results) {
     STATIONS = results[0].slice().sort(function (a,b) { return a.order - b.order; });
     SCHEDULE = results[1];
