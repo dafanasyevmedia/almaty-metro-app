@@ -232,6 +232,24 @@
     font-size:12.5px; font-weight:600; line-height:1.4;
     box-shadow:0 8px 22px -10px oklch(0.1 0.04 262 / .8);
   }
+  /* Погодный виджет (2026-09-28) — маленькая плашка справа от #appSubtitle
+     в .hero-bottom (flex:1 у #appSubtitle сам отдаёт ей ровно столько места,
+     сколько нужно, остальное — подписи). Скрыт по умолчанию (display:none в
+     разметке) — показывается только после успешного ответа open-meteo, как
+     и офлайн-маскот (mascot/offline.png) выше — молчаливый фолбэк, никакого
+     "не удалось загрузить погоду" пользователю. Не привязан к вкладке (в
+     отличие от #appSubtitle) — остаётся виден и на "О метро", как и сам
+     маскот в шапке, см. комментарий у updateAppSubtitle(). Цвета — те же
+     захардкоженные oklch, что у текста/лейбла языка в шапке (не var(--text)):
+     .hero-bottom всегда на синем фоне бренда, вне палитры темы страницы. */
+  .weather-widget{
+    flex:none; align-self:flex-end; display:none; align-items:center; gap:5px;
+    background:oklch(0.99 0.003 255 / .18); color:oklch(0.99 0.003 255);
+    border-radius:14px; padding:9px 11px; font-size:12.5px; font-weight:700;
+    white-space:nowrap;
+  }
+  .weather-widget.show{ display:inline-flex; }
+  .weather-widget .weather-icon{ font-size:16px; line-height:1; }
 
   .lang-toggle{ display:inline-flex; gap:3px; background:oklch(0.99 0.003 255 / .18); border-radius:10px; padding:3px; }
   .lang-btn{
@@ -1103,6 +1121,7 @@
   <div class="hero-bottom">
     <img class="hero-mascot" src="mascot/idle.png" alt="" />
     <p id="appSubtitle">Онлайн-расписание — сколько ждать до поезда</p>
+    <span id="weatherWidget" class="weather-widget" aria-hidden="true"><span class="weather-icon"></span><span class="weather-temp"></span></span>
   </div>
 </header>
 
@@ -2928,15 +2947,24 @@
     el.textContent = t(heroLineCurrentKey || 'appSubtitle');
   }
 
-  // Погода (опционально, выключено по умолчанию через WEATHER_ENABLED) —
-  // open-meteo, без ключа/регистрации, координаты фиксированные (центр
-  // города, не геолокация пользователя — под погоду отдельно её не
-  // запрашиваем). Кеш в localStorage на WEATHER_CACHE_MIN минут. Ошибка
-  // или таймаут — категория просто не матчится, никакого "не удалось
-  // загрузить погоду" пользователю не показываем. Результат НЕ подменяет
-  // уже показанную фразу мгновенно — подхватится на следующем плановом
-  // пересчёте (смена станции / 15-минутный таймер), не как мгновенная
-  // замена посреди чтения.
+  // Погода — open-meteo, без ключа/регистрации, координаты фиксированные
+  // (центр города, не геолокация пользователя — под погоду отдельно её не
+  // запрашиваем). Кеш в localStorage на WEATHER_CACHE_MIN минут. Один общий
+  // запрос питает ДВЕ независимые вещи:
+  //  1) погодную категорию плашки-реплики (classifyWeather → weatherHeroKeys) —
+  //     опционально, выключена по умолчанию через WEATHER_ENABLED (см. выше);
+  //     ошибка/таймаут — категория просто не матчится, никакого "не удалось
+  //     загрузить погоду" пользователю не показываем, а уже показанная фраза
+  //     не подменяется мгновенно — подхватится на следующем плановом
+  //     пересчёте (смена станции / 15-минутный таймер).
+  //  2) погодный виджет в шапке (renderWeatherWidget, #weatherWidget,
+  //     2026-09-28) — НЕ зависит от WEATHER_ENABLED (это отдельная, всегда
+  //     включённая фича): иконка + текущая температура, молчаливо скрыт,
+  //     пока нет данных (тот же принцип, что и офлайн-маскот выше — без
+  //     собственного сообщения об ошибке).
+  // Раньше функция называлась fetchWeatherForHeroLine() и была no-op целиком
+  // при WEATHER_ENABLED=false — переименована, т.к. теперь её ответственность
+  // шире одной только плашки.
   function classifyWeather(tempC, weatherCode) {
     var keys = [];
     if (tempC <= -5) keys.push('heroWeatherCold1');
@@ -2945,13 +2973,38 @@
     else if (weatherCode >= 51 && weatherCode <= 82) keys.push('heroWeatherRain1');
     return keys;
   }
-  function fetchWeatherForHeroLine() {
-    if (!WEATHER_ENABLED || dataFromOfflineCache) return;
+  // Коды погоды — по таблице WMO, которую отдаёт open-meteo (см. их
+  // документацию weather_code). Сгруппированы в 6 узнаваемых пиктограмм —
+  // тот же список опасностей, что уже разбирает classifyWeather() выше
+  // (туман/снег/дождь/гроза отдельно от простой облачности).
+  function weatherIcon(code) {
+    if (code === 0) return '☀️';
+    if (code >= 1 && code <= 3) return '⛅';
+    if (code === 45 || code === 48) return '🌫️';
+    if (code >= 51 && code <= 67) return '🌧️';
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return '❄️';
+    if (code >= 80 && code <= 82) return '🌦️';
+    if (code >= 95 && code <= 99) return '⛈️';
+    return '🌡️';
+  }
+  function renderWeatherWidget(tempC, weatherCode) {
+    var el = document.getElementById('weatherWidget');
+    if (!el || tempC == null || weatherCode == null) return;
+    el.querySelector('.weather-icon').textContent = weatherIcon(weatherCode);
+    el.querySelector('.weather-temp').textContent = Math.round(tempC) + '°';
+    el.classList.add('show');
+  }
+  function fetchWeatherData() {
+    if (dataFromOfflineCache) return;
     try {
       var cacheRaw = localStorage.getItem('heroWeatherCache');
       if (cacheRaw) {
         var cache = JSON.parse(cacheRaw);
-        if (Date.now() - cache.ts < WEATHER_CACHE_MIN * 60000) { weatherHeroKeys = cache.keys; return; }
+        if (Date.now() - cache.ts < WEATHER_CACHE_MIN * 60000) {
+          weatherHeroKeys = cache.keys;
+          if (cache.tempC != null) renderWeatherWidget(cache.tempC, cache.weatherCode);
+          return;
+        }
       }
     } catch (e) { /* приватный режим и т.п. */ }
     var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + ALMATY_LAT + '&longitude=' + ALMATY_LON + '&current=temperature_2m,weather_code';
@@ -2963,7 +3016,12 @@
       if (!cur) return;
       var keys = classifyWeather(cur.temperature_2m, cur.weather_code);
       weatherHeroKeys = keys;
-      try { localStorage.setItem('heroWeatherCache', JSON.stringify({ ts: Date.now(), keys: keys })); } catch (e) { /* приватный режим и т.п. */ }
+      renderWeatherWidget(cur.temperature_2m, cur.weather_code);
+      try {
+        localStorage.setItem('heroWeatherCache', JSON.stringify({
+          ts: Date.now(), keys: keys, tempC: cur.temperature_2m, weatherCode: cur.weather_code
+        }));
+      } catch (e) { /* приватный режим и т.п. */ }
     }).catch(function () {
       if (timeoutId) clearTimeout(timeoutId);
       weatherHeroKeys = null;
@@ -2973,6 +3031,10 @@
   // которые сами по себе нигде не считаются "событием" (начался час пик,
   // до закрытия остался час) и не покрыты точечными вызовами ниже по файлу.
   setInterval(recomputeHeroLine, HERO_LINE_RECOMPUTE_MIN * 60000);
+  // Отдельный, более редкий таймер под погоду (WEATHER_CACHE_MIN, обычно
+  // шире HERO_LINE_RECOMPUTE_MIN) — держит виджет в шапке свежим и после
+  // истечения localStorage-кеша, не дожидаясь смены станции/вкладки.
+  setInterval(fetchWeatherData, WEATHER_CACHE_MIN * 60000);
 
   function selectStation(slug, viaGeo, distanceMeters, method) {
     var prevSlug = selectedSlug;
@@ -4767,7 +4829,7 @@
     // Праздники/расписание только что стали известны — пересчитываем плашку-
     // реплику (holiday/stationFacts-категории раньше не могли сработать).
     recomputeHeroLine();
-    fetchWeatherForHeroLine(); // no-op, если WEATHER_ENABLED=false — см. выше
+    fetchWeatherData(); // погодная категория плашки (no-op при WEATHER_ENABLED=false) + виджет в шапке — см. выше
 
     // геолокация
     if (!tryTelegramLocation()) tryBrowserGeolocation();
