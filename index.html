@@ -112,7 +112,7 @@
     --shadow:oklch(0.06 0.02 262);
     --texture:oklch(0.95 0.01 255 / .035);
     --door-a:oklch(0.56 0.15 258); --door-b:oklch(0.33 0.10 262);
-    --obs-turnstile:oklch(0.68 0.03 255); --obs-suitcase:oklch(0.74 0.16 45); --obs-bin:oklch(0.78 0.12 75);
+    --obs-turnstile:oklch(0.68 0.03 255); --obs-suitcase:oklch(0.74 0.16 45); --obs-bin:oklch(0.78 0.12 75); --obs-purple:oklch(0.68 0.14 300); --obs-teal:oklch(0.72 0.12 190); --obs-coin:oklch(0.84 0.15 85);
   }
   /* Светлая тема: системная (prefers-color-scheme) или тема самого Telegram
      (data-tg-theme ставит JS — см. <script> внизу, атрибут уже был, просто раньше
@@ -140,7 +140,7 @@
          в CSS ниже и CLAUDE.md: на светлой карточке дверь должна читаться
          как плотный физический объект, а не как элемент палитры темы. */
       --door-a:oklch(0.42 0.14 258); --door-b:oklch(0.24 0.09 262);
-      --obs-turnstile:oklch(0.62 0.03 255); --obs-suitcase:oklch(0.68 0.16 45); --obs-bin:oklch(0.72 0.12 75);
+      --obs-turnstile:oklch(0.62 0.03 255); --obs-suitcase:oklch(0.68 0.16 45); --obs-bin:oklch(0.72 0.12 75); --obs-purple:oklch(0.6 0.14 300); --obs-teal:oklch(0.62 0.12 190); --obs-coin:oklch(0.78 0.15 80);
     }
   }
   html[data-tg-theme="light"]{
@@ -156,7 +156,7 @@
     --shadow:oklch(0.55 0.08 258 / .18);
     --texture:oklch(0.15 0.02 258 / .025);
     --door-a:oklch(0.42 0.14 258); --door-b:oklch(0.24 0.09 262);
-    --obs-turnstile:oklch(0.62 0.03 255); --obs-suitcase:oklch(0.68 0.16 45); --obs-bin:oklch(0.72 0.12 75);
+    --obs-turnstile:oklch(0.62 0.03 255); --obs-suitcase:oklch(0.68 0.16 45); --obs-bin:oklch(0.72 0.12 75); --obs-purple:oklch(0.6 0.14 300); --obs-teal:oklch(0.62 0.12 190); --obs-coin:oklch(0.78 0.15 80);
   }
   html[data-tg-theme="dark"]{
     --bg:oklch(0.16 0.012 255); --card:oklch(0.20 0.014 255); --card2:oklch(0.24 0.016 255);
@@ -171,7 +171,7 @@
     --shadow:oklch(0.06 0.02 262);
     --texture:oklch(0.95 0.01 255 / .035);
     --door-a:oklch(0.56 0.15 258); --door-b:oklch(0.33 0.10 262);
-    --obs-turnstile:oklch(0.68 0.03 255); --obs-suitcase:oklch(0.74 0.16 45); --obs-bin:oklch(0.78 0.12 75);
+    --obs-turnstile:oklch(0.68 0.03 255); --obs-suitcase:oklch(0.74 0.16 45); --obs-bin:oklch(0.78 0.12 75); --obs-purple:oklch(0.68 0.14 300); --obs-teal:oklch(0.72 0.12 190); --obs-coin:oklch(0.84 0.15 85);
   }
 
   *{box-sizing:border-box;}
@@ -1049,6 +1049,7 @@
     position:absolute; top:0; left:0; right:0; z-index:3; display:flex; justify-content:space-between;
     align-items:center; padding:8px 10px; pointer-events:none;
   }
+  .runner-score-group{ display:flex; gap:6px; }
   .runner-score-tag{
     font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;
     background:oklch(0.1 0.02 262 / .35); color:oklch(0.99 0.003 255); border-radius:9px; padding:4px 8px;
@@ -1489,7 +1490,10 @@
     </div>
     <div class="runner-canvas-wrap" id="runnerCanvasWrap">
       <div class="runner-score-row">
-        <span class="runner-score-tag" id="runnerScoreTag">0 м</span>
+        <span class="runner-score-group">
+          <span class="runner-score-tag" id="runnerScoreTag">0 м</span>
+          <span class="runner-score-tag runner-coin-tag" id="runnerCoinsTag">🪙 0</span>
+        </span>
         <span class="runner-score-tag" id="runnerBestTag">Рекорд: 0 м</span>
       </div>
       <canvas id="runnerCanvas" width="800" height="320"></canvas>
@@ -4001,6 +4005,11 @@
   var runnerT = 0, runnerSpeed = 6.2;
   var runnerObstacles = [];
   var runnerNextSpawnIn = 0;
+  // Монеты (2026-09-29) — отдельный от препятствий массив/таймер спавна,
+  // чтобы частота одних не зависела от частоты других.
+  var runnerCoins = [];
+  var runnerCoinNextSpawnIn = 0;
+  var runnerCoinsCount = 0;
   var runnerY = 0, runnerVy = 0;
   var runnerScore = 0, runnerBest = 0;
   var runnerFrame = 0, runnerFrameTimer = 0;
@@ -4009,9 +4018,11 @@
   function updateRunnerScoreTags() {
     var scoreTag = document.getElementById('runnerScoreTag');
     var bestTag = document.getElementById('runnerBestTag');
+    var coinsTag = document.getElementById('runnerCoinsTag');
     if (!scoreTag || !bestTag) return;
     scoreTag.textContent = t('runnerScore', runnerScore);
     bestTag.textContent = t('runnerBest', runnerBest);
+    if (coinsTag) coinsTag.textContent = '🪙 ' + runnerCoinsCount;
   }
   updateRunnerScoreTags();
 
@@ -4020,6 +4031,9 @@
     runnerSpeed = 6.2;
     runnerObstacles = [];
     runnerNextSpawnIn = 60;
+    runnerCoins = [];
+    runnerCoinNextSpawnIn = 90;
+    runnerCoinsCount = 0;
     runnerY = 0;
     runnerVy = 0;
     runnerScore = 0;
@@ -4029,14 +4043,33 @@
   }
 
   var RUNNER_OBSTACLE_TYPES = ['turnstile', 'suitcase', 'bin'];
+  // Цвет каждого препятствия — случайный из палитры, независимо от формы
+  // (турникет/чемодан/урна) — для визуального разнообразия по прямой
+  // просьбе пользователя ("препятствия разного цвета"), не завязан на тип.
+  var RUNNER_OBSTACLE_COLORS = ['--obs-turnstile', '--obs-suitcase', '--obs-bin', '--obs-purple', '--obs-teal'];
   function runnerSpawnObstacle() {
     var type = RUNNER_OBSTACLE_TYPES[Math.floor(Math.random() * RUNNER_OBSTACLE_TYPES.length)];
+    var colorVar = RUNNER_OBSTACLE_COLORS[Math.floor(Math.random() * RUNNER_OBSTACLE_COLORS.length)];
     var w, h;
     if (type === 'suitcase') { w = 30 + Math.random() * 6; h = 20 + Math.random() * 8; }
     else if (type === 'bin') { w = 18 + Math.random() * 4; h = 26 + Math.random() * 10; }
     else { w = 20 + Math.random() * 4; h = 36 + Math.random() * 16; }
-    runnerObstacles.push({ x: RUNNER_CSS_W + 20, w: w, h: h, type: type });
+    runnerObstacles.push({ x: RUNNER_CSS_W + 20, w: w, h: h, type: type, colorVar: colorVar });
     runnerNextSpawnIn = 55 + Math.random() * 55;
+  }
+
+  var RUNNER_COIN_R = 7;
+  // Стоя, хитбокс персонажа накрывает 6-48px над землёй (см. charTop/charH в
+  // runnerUpdate) — прыжок (RUNNER_JUMP_V/RUNNER_GRAVITY) даёт пик ~124px.
+  // "Низкие" монеты — внутри стоячего хитбокса, собираются на бегу без
+  // прыжка; "высокие" — специально выше 48px, чтобы их нельзя было взять
+  // не прыгая, но заметно ниже пика прыжка — прыжок не обязан быть
+  // идеально точным по времени.
+  function runnerSpawnCoin() {
+    var high = Math.random() < 0.5;
+    var baseY = high ? (65 + Math.random() * 35) : (10 + Math.random() * 10);
+    runnerCoins.push({ x: RUNNER_CSS_W + 20, baseY: baseY });
+    runnerCoinNextSpawnIn = 70 + Math.random() * 70;
   }
 
   function runnerJump() {
@@ -4097,10 +4130,28 @@
       if (runnerObstacles[i].x + runnerObstacles[i].w < -10) runnerObstacles.splice(i, 1);
     }
 
+    runnerCoinNextSpawnIn -= runnerSpeed / 6.2;
+    if (runnerCoinNextSpawnIn <= 0) runnerSpawnCoin();
+    for (var ci = runnerCoins.length - 1; ci >= 0; ci--) {
+      runnerCoins[ci].x -= runnerSpeed;
+      if (runnerCoins[ci].x < -10) runnerCoins.splice(ci, 1);
+    }
+
     var charTop = RUNNER_GROUND_Y - RUNNER_CHAR_H + runnerY + 10;
     var charLeft = RUNNER_CHAR_X + 6;
     var charW = RUNNER_CHAR_W - 12;
     var charH = RUNNER_CHAR_H - 16;
+
+    for (var ck = runnerCoins.length - 1; ck >= 0; ck--) {
+      var coin = runnerCoins[ck];
+      var coinY = RUNNER_GROUND_Y - coin.baseY;
+      if (runnerRectsOverlap(charLeft, charTop, charW, charH, coin.x - RUNNER_COIN_R, coinY - RUNNER_COIN_R, RUNNER_COIN_R * 2, RUNNER_COIN_R * 2)) {
+        runnerCoins.splice(ck, 1);
+        runnerCoinsCount++;
+        updateRunnerScoreTags();
+      }
+    }
+
     for (var j = 0; j < runnerObstacles.length; j++) {
       var o = runnerObstacles[j];
       if (runnerRectsOverlap(charLeft, charTop, charW, charH, o.x, RUNNER_GROUND_Y - o.h, o.w, o.h)) {
@@ -4165,6 +4216,20 @@
     ctx.fillStyle = 'rgba(255,255,255,.35)';
     runnerRR(ctx, topX, groundY - h, topW, Math.max(2, h * 0.08), 2); ctx.fill();
   }
+  function runnerDrawCoin(ctx, x, y, r, color, spin) {
+    // "Монетка" — простой двухцветный диск с бликом + лёгкое сплющивание
+    // по X через `spin` (0..1, из runnerT), имитирует вращение без
+    // отдельных кадров/картинки.
+    var squish = Math.max(0.35, Math.abs(Math.cos(spin)));
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(squish, 1);
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.3, r * 0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
 
   function runnerDraw() {
     runnerCtx.clearRect(0, 0, RUNNER_CSS_W, RUNNER_CSS_H);
@@ -4186,12 +4251,18 @@
     var sleeperOff = (runnerT * runnerSpeed / 6.2 * 1.4) % 34;
     for (var sx = -34; sx < RUNNER_CSS_W + 34; sx += 34) { runnerCtx.fillRect(sx - sleeperOff, RUNNER_GROUND_Y + 6, 18, 5); }
 
-    var colT = runnerCss('--obs-turnstile'), colS = runnerCss('--obs-suitcase'), colB = runnerCss('--obs-bin');
+    var coinColor = runnerCss('--obs-coin');
+    for (var ck = 0; ck < runnerCoins.length; ck++) {
+      var coin = runnerCoins[ck];
+      runnerDrawCoin(runnerCtx, coin.x, RUNNER_GROUND_Y - coin.baseY, RUNNER_COIN_R, coinColor, runnerT * 0.15 + coin.x * 0.05);
+    }
+
     for (var k = 0; k < runnerObstacles.length; k++) {
       var o = runnerObstacles[k];
-      if (o.type === 'suitcase') runnerDrawSuitcase(runnerCtx, o.x, RUNNER_GROUND_Y, o.w, o.h, colS);
-      else if (o.type === 'bin') runnerDrawBin(runnerCtx, o.x, RUNNER_GROUND_Y, o.w, o.h, colB);
-      else runnerDrawTurnstile(runnerCtx, o.x, RUNNER_GROUND_Y, o.w, o.h, colT);
+      var col = runnerCss(o.colorVar || '--obs-turnstile');
+      if (o.type === 'suitcase') runnerDrawSuitcase(runnerCtx, o.x, RUNNER_GROUND_Y, o.w, o.h, col);
+      else if (o.type === 'bin') runnerDrawBin(runnerCtx, o.x, RUNNER_GROUND_Y, o.w, o.h, col);
+      else runnerDrawTurnstile(runnerCtx, o.x, RUNNER_GROUND_Y, o.w, o.h, col);
     }
 
     var cy = RUNNER_GROUND_Y - RUNNER_CHAR_H + runnerY;
