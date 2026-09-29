@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /cal.html
-Disallow: /beta.html
 
 Sitemap: https://ala-metro.org/sitemap.xml
