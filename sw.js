@@ -59,6 +59,8 @@ var PRECACHE_URLS = [
   'mascot/sleeping.png',
   'mascot/waving.png',
   'mascot/peek.png',
+  'mascot/run1.png',
+  'mascot/run2.png',
   'fonts/unbounded-latin.woff2',
   'fonts/unbounded-cyrillic.woff2',
   'fonts/inter-latin.woff2',

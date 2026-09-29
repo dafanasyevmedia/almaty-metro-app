@@ -112,6 +112,7 @@
     --shadow:oklch(0.06 0.02 262);
     --texture:oklch(0.95 0.01 255 / .035);
     --door-a:oklch(0.56 0.15 258); --door-b:oklch(0.33 0.10 262);
+    --obs-turnstile:oklch(0.68 0.03 255); --obs-suitcase:oklch(0.74 0.16 45); --obs-bin:oklch(0.78 0.12 75);
   }
   /* Светлая тема: системная (prefers-color-scheme) или тема самого Telegram
      (data-tg-theme ставит JS — см. <script> внизу, атрибут уже был, просто раньше
@@ -139,6 +140,7 @@
          в CSS ниже и CLAUDE.md: на светлой карточке дверь должна читаться
          как плотный физический объект, а не как элемент палитры темы. */
       --door-a:oklch(0.42 0.14 258); --door-b:oklch(0.24 0.09 262);
+      --obs-turnstile:oklch(0.62 0.03 255); --obs-suitcase:oklch(0.68 0.16 45); --obs-bin:oklch(0.72 0.12 75);
     }
   }
   html[data-tg-theme="light"]{
@@ -154,6 +156,7 @@
     --shadow:oklch(0.55 0.08 258 / .18);
     --texture:oklch(0.15 0.02 258 / .025);
     --door-a:oklch(0.42 0.14 258); --door-b:oklch(0.24 0.09 262);
+    --obs-turnstile:oklch(0.62 0.03 255); --obs-suitcase:oklch(0.68 0.16 45); --obs-bin:oklch(0.72 0.12 75);
   }
   html[data-tg-theme="dark"]{
     --bg:oklch(0.16 0.012 255); --card:oklch(0.20 0.014 255); --card2:oklch(0.24 0.016 255);
@@ -168,6 +171,7 @@
     --shadow:oklch(0.06 0.02 262);
     --texture:oklch(0.95 0.01 255 / .035);
     --door-a:oklch(0.56 0.15 258); --door-b:oklch(0.33 0.10 262);
+    --obs-turnstile:oklch(0.68 0.03 255); --obs-suitcase:oklch(0.74 0.16 45); --obs-bin:oklch(0.78 0.12 75);
   }
 
   *{box-sizing:border-box;}
@@ -994,6 +998,70 @@
   }
   .route-trigger-sm::before{ width:15px; height:15px; }
 
+  /* Мини-игра "Маскот-раннер" (2026-09-29, сначала обкатана как отдельный
+     HTML-артефакт вне репозитория — см. CLAUDE.md, здесь перенесена и
+     подключена к реальным данным станции/расписания). Бейдж — сразу под
+     карточками направлений (буквально "рядом с отсчётом", по просьбе
+     пользователя), нейтральный, как и .route-trigger — вспомогательное
+     действие, не соревнуется за внимание с самим отсчётом. */
+  .runner-badge{
+    display:flex; align-items:center; gap:10px; width:100%; margin-top:10px;
+    padding:9px 12px; border-radius:14px; background:var(--card2); border:1px solid var(--border);
+    font-family:inherit; font-size:12.5px; font-weight:700; color:var(--text); cursor:pointer;
+  }
+  .runner-badge img{ width:26px; height:26px; object-fit:contain; flex:none; }
+  .runner-badge .runner-badge-text{ flex:1; text-align:left; min-width:0; }
+  .runner-badge .runner-badge-arrow{ color:var(--muted); font-size:14px; flex:none; }
+  .runner-badge:active{ transform:scale(.98); }
+
+  /* На весь экран (2026-09-29, по отзыву: тап не работал + маленький экран) —
+     .runner-modal-overlay переопределяет padding общего .feedback-modal (у
+     него 20px со всех сторон, не подходит для fullscreen), .runner-card
+     занимает всю высоту/ширину вьюпорта вместо центрированной карточки,
+     canvas-обёртка растягивается на оставшееся место через flex:1. */
+  .runner-modal-overlay{ padding:0; background:oklch(0.03 0.01 255 / .92); }
+  .runner-card{
+    max-width:none; width:100%; height:100%; max-height:none; margin:0;
+    border-radius:0; padding:12px; padding-top:calc(12px + env(safe-area-inset-top));
+    padding-bottom:calc(12px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column;
+  }
+  .runner-card h2{ font-size:15px; margin:0 0 4px; padding-right:34px; flex:none; }
+  .runner-card .feedback-close{
+    font-size:28px; top:calc(10px + env(safe-area-inset-top)); right:10px; padding:8px;
+  }
+  .runner-hud{
+    display:flex; gap:8px; margin:2px 0 10px; font-size:12px; font-weight:600; color:var(--muted); flex:none;
+  }
+  .runner-hud .runner-hud-item{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    background:var(--card2); border-radius:10px; padding:6px 8px; font-variant-numeric:tabular-nums;
+  }
+  .runner-hud .runner-hud-name{ font-size:10.5px; display:flex; align-items:center; gap:3px; }
+  .runner-hud .runner-hud-item b{ color:var(--text); font-weight:700; font-size:14px; }
+
+  .runner-canvas-wrap{
+    position:relative; border-radius:16px; overflow:hidden; flex:1; min-height:0;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(var(--card-top), var(--card-bot)); border:1px solid var(--border);
+  }
+  .runner-score-row{
+    position:absolute; top:0; left:0; right:0; z-index:3; display:flex; justify-content:space-between;
+    align-items:center; padding:8px 10px; pointer-events:none;
+  }
+  .runner-score-tag{
+    font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;
+    background:oklch(0.1 0.02 262 / .35); color:oklch(0.99 0.003 255); border-radius:9px; padding:4px 8px;
+  }
+  #runnerCanvas{ display:block; max-width:100%; max-height:100%; width:auto; height:auto; touch-action:manipulation; cursor:pointer; }
+  .runner-overlay{
+    position:absolute; inset:0; z-index:4; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:8px; text-align:center;
+    background:oklch(0.1 0.02 262 / .4); color:#fff; padding:16px;
+  }
+  .runner-overlay[hidden]{ display:none; }
+  .runner-overlay p{ font-size:12.5px; margin:0; opacity:.9; }
+  .runner-overlay .runner-hint{ font-size:11px; opacity:.7; }
 
   .route-links{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
   .route-link-item{
@@ -1179,6 +1247,11 @@
         <div class="closed-banner-text" id="closedBannerText"></div>
       </div>
       <div class="directions" id="directions"><!-- заполняется JS --></div>
+      <button class="runner-badge" id="runnerBadge" style="display:none">
+        <img src="mascot/run1.png" alt="" />
+        <span class="runner-badge-text" id="runnerBadgeText">Игра, пока ждёте</span>
+        <span class="runner-badge-arrow">→</span>
+      </button>
       <div class="note holiday" id="holidayNote" style="display:none"></div>
       <div class="note holiday" id="workdayNote" style="display:none"></div>
       <div class="note warn" id="estimatedNote" style="display:none">
@@ -1396,6 +1469,38 @@
     <div class="train-modal-nav">
       <button class="btn" id="trainModalPrevBtn">← Предыдущий</button>
       <button class="btn" id="trainModalNextBtn">Следующий →</button>
+    </div>
+  </div>
+</div>
+
+<div class="feedback-modal runner-modal-overlay" id="runnerModal" style="display:none">
+  <div class="feedback-card runner-card">
+    <button class="feedback-close" id="runnerModalClose" aria-label="Закрыть">×</button>
+    <h2 id="runnerTitle">Мини-игра</h2>
+    <div class="runner-hud">
+      <span class="runner-hud-item">
+        <span class="runner-hud-name"><span id="runnerHudFwdArrow"></span> <span id="runnerHudFwdName"></span></span>
+        <b id="runnerHudFwd">—</b>
+      </span>
+      <span class="runner-hud-item">
+        <span class="runner-hud-name"><span id="runnerHudBwdArrow"></span> <span id="runnerHudBwdName"></span></span>
+        <b id="runnerHudBwd">—</b>
+      </span>
+    </div>
+    <div class="runner-canvas-wrap" id="runnerCanvasWrap">
+      <div class="runner-score-row">
+        <span class="runner-score-tag" id="runnerScoreTag">0 м</span>
+        <span class="runner-score-tag" id="runnerBestTag">Рекорд: 0 м</span>
+      </div>
+      <canvas id="runnerCanvas" width="800" height="320"></canvas>
+      <div class="runner-overlay" id="runnerOverlayStart">
+        <p id="runnerHintStart">Прыгай через препятствия, пока ждёшь поезд.</p>
+        <p class="runner-hint" id="runnerHintTap">Тап / пробел — прыжок</p>
+      </div>
+      <div class="runner-overlay" id="runnerOverlayOver" hidden>
+        <p id="runnerResult">Врезался!</p>
+        <p class="runner-hint" id="runnerHintRestart">Тап — начать заново</p>
+      </div>
     </div>
   </div>
 </div>
@@ -1717,7 +1822,15 @@
       aboutSchemeLinkText: 'Официальная схема линии →',
       aboutSchemeUrl: 'https://metroalmaty.kz/ru/metro-scheme',
       holidayNote: '🎉 Сегодня праздничный день — метро работает по графику выходных.',
-      workdayNote: '📅 Сегодня рабочий день (объявлен вместо выходного) — метро работает по будничному расписанию.'
+      workdayNote: '📅 Сегодня рабочий день (объявлен вместо выходного) — метро работает по будничному расписанию.',
+      runnerBadgeText: 'Игра, пока ждёте',
+      runnerTitle: 'Мини-игра',
+      runnerHintStart: 'Прыгай через препятствия, пока ждёшь поезд.',
+      runnerHintTap: 'Тап / пробел — прыжок',
+      runnerResult: function (score) { return 'Врезался! ' + score + ' м'; },
+      runnerHintRestart: 'Тап — начать заново',
+      runnerScore: function (score) { return score + ' м'; },
+      runnerBest: function (score) { return 'Рекорд: ' + score + ' м'; },
     },
     kk: {
       pageTitle: 'Алматы метросы — кесте',
@@ -1880,7 +1993,15 @@
       aboutSchemeLinkText: 'Желінің ресми схемасы →',
       aboutSchemeUrl: 'https://metroalmaty.kz/kk/metro-scheme',
       holidayNote: '🎉 Бүгін мереке күні — метро демалыс күндерінің кестесі бойынша жұмыс істейді.',
-      workdayNote: '📅 Бүгін жұмыс күні (демалыс орнына жарияланған) — метро жұмыс күндерінің кестесі бойынша жұмыс істейді.'
+      workdayNote: '📅 Бүгін жұмыс күні (демалыс орнына жарияланған) — метро жұмыс күндерінің кестесі бойынша жұмыс істейді.',
+      runnerBadgeText: 'Күте тұрып ойна',
+      runnerTitle: 'Мини-ойын',
+      runnerHintStart: 'Пойызды күткенде кедергілерден секіріп өт.',
+      runnerHintTap: 'Түрту / бос орын — секіру',
+      runnerResult: function (score) { return 'Соқтығысты! ' + score + ' м'; },
+      runnerHintRestart: 'Қайта бастау үшін түртіңіз',
+      runnerScore: function (score) { return score + ' м'; },
+      runnerBest: function (score) { return 'Рекорд: ' + score + ' м'; },
     },
     en: {
       pageTitle: 'Almaty Metro — Schedule',
@@ -2037,7 +2158,15 @@
       aboutSchemeLinkText: 'Official line map →',
       aboutSchemeUrl: 'https://metroalmaty.kz/ru/metro-scheme',
       holidayNote: '🎉 Today is a public holiday — the metro runs on the weekend schedule.',
-      workdayNote: '📅 Today is a working day (declared instead of a day off) — the metro runs on the weekday schedule.'
+      workdayNote: '📅 Today is a working day (declared instead of a day off) — the metro runs on the weekday schedule.',
+      runnerBadgeText: 'Play while you wait',
+      runnerTitle: 'Mini-game',
+      runnerHintStart: 'Jump over obstacles while you wait for your train.',
+      runnerHintTap: 'Tap / space — jump',
+      runnerResult: function (score) { return 'Crashed! ' + score + ' m'; },
+      runnerHintRestart: 'Tap to restart',
+      runnerScore: function (score) { return score + ' m'; },
+      runnerBest: function (score) { return 'Best: ' + score + ' m'; },
     }
   };
 
@@ -3083,6 +3212,7 @@
     document.getElementById('stationRouteBtn').style.display = '';
     document.getElementById('wtgOriginRouteBtn').style.display = '';
     document.getElementById('onayBtn').style.display = '';
+    document.getElementById('runnerBadge').style.display = '';
     document.getElementById('wtgTeaserToggle').style.display = '';
     renderLineStrip(slug);
     renderDirections();
@@ -3497,6 +3627,10 @@
     // Пересчёт плашки-реплики — только на самой смене состояния "метро
     // закрыто/открылось", не каждую секунду (тик идёт раз в секунду, см. ниже).
     if (metroClosedNow !== wasMetroClosedNow) recomputeHeroLine();
+    // Мини-отсчёт внутри игры "Маскот-раннер" — тот же тик, что и вся
+    // остальная live-логика на экране; сама функция ничего не делает, если
+    // модалка игры сейчас закрыта.
+    if (typeof updateRunnerCountdown === 'function') updateRunnerCountdown();
     tickTimer = setTimeout(tickCountdowns, 1000);
   }
 
@@ -3829,6 +3963,297 @@
     }
   }
   wtgCalcBtn.addEventListener('click', wtgCalculate);
+
+  /* ---------- Мини-игра "Маскот-раннер" (только beta.html, 2026-09-29) ----------
+     Сначала обкатана отдельным HTML-артефактом (макет с новыми кадрами бега,
+     вектороно нарисованные препятствия вместо AI-картинок — см. CLAUDE.md),
+     здесь подключена к реальным данным: бейдж показывается только когда
+     выбрана станция (см. selectStation()), а мини-отсчёт внутри модалки не
+     пересчитывает расписание заново, а просто копирует уже отрисованный
+     текст из карточек направлений (.countdown[data-dir]) — один источник
+     правды, обновляется тем же общим тиком (tickCountdowns()). */
+  var runnerModal = document.getElementById('runnerModal');
+  var runnerCanvasWrap = document.getElementById('runnerCanvasWrap');
+  var runnerCanvas = document.getElementById('runnerCanvas');
+  var runnerCtx = runnerCanvas.getContext('2d');
+  var RUNNER_CSS_W = 800, RUNNER_CSS_H = 320;
+  var RUNNER_GROUND_Y = 230;
+  var RUNNER_GRAVITY = 0.62;
+  var RUNNER_JUMP_V = -12.4;
+  var RUNNER_CHAR_X = 80, RUNNER_CHAR_H = 58;
+  // 149x200 — реальный размер mascot/run1.png/run2.png (см. CLAUDE.md, раздел
+  // про мини-игру) — оба кадра приведены к одному холсту заранее, так что
+  // соотношение сторон у них одинаковое.
+  var RUNNER_CHAR_ASPECT = 149 / 200;
+  var RUNNER_CHAR_W = Math.round(RUNNER_CHAR_H * RUNNER_CHAR_ASPECT);
+
+  var runnerImg1 = new Image();
+  var runnerImg1Ready = false;
+  runnerImg1.onload = function () { runnerImg1Ready = true; };
+  runnerImg1.src = 'mascot/run1.png';
+  var runnerImg2 = new Image();
+  var runnerImg2Ready = false;
+  runnerImg2.onload = function () { runnerImg2Ready = true; };
+  runnerImg2.src = 'mascot/run2.png';
+
+  var runnerState = 'idle'; // idle | playing | over
+  var runnerRafId = null;
+  var runnerT = 0, runnerSpeed = 6.2;
+  var runnerObstacles = [];
+  var runnerNextSpawnIn = 0;
+  var runnerY = 0, runnerVy = 0;
+  var runnerScore = 0, runnerBest = 0;
+  var runnerFrame = 0, runnerFrameTimer = 0;
+  try { runnerBest = parseInt(localStorage.getItem('runnerBest') || '0', 10) || 0; } catch (e) { /* приватный режим и т.п. — просто без сохранения рекорда */ }
+
+  function updateRunnerScoreTags() {
+    var scoreTag = document.getElementById('runnerScoreTag');
+    var bestTag = document.getElementById('runnerBestTag');
+    if (!scoreTag || !bestTag) return;
+    scoreTag.textContent = t('runnerScore', runnerScore);
+    bestTag.textContent = t('runnerBest', runnerBest);
+  }
+  updateRunnerScoreTags();
+
+  function runnerReset() {
+    runnerT = 0;
+    runnerSpeed = 6.2;
+    runnerObstacles = [];
+    runnerNextSpawnIn = 60;
+    runnerY = 0;
+    runnerVy = 0;
+    runnerScore = 0;
+    runnerFrame = 0;
+    runnerFrameTimer = 0;
+    updateRunnerScoreTags();
+  }
+
+  var RUNNER_OBSTACLE_TYPES = ['turnstile', 'suitcase', 'bin'];
+  function runnerSpawnObstacle() {
+    var type = RUNNER_OBSTACLE_TYPES[Math.floor(Math.random() * RUNNER_OBSTACLE_TYPES.length)];
+    var w, h;
+    if (type === 'suitcase') { w = 30 + Math.random() * 6; h = 20 + Math.random() * 8; }
+    else if (type === 'bin') { w = 18 + Math.random() * 4; h = 26 + Math.random() * 10; }
+    else { w = 20 + Math.random() * 4; h = 36 + Math.random() * 16; }
+    runnerObstacles.push({ x: RUNNER_CSS_W + 20, w: w, h: h, type: type });
+    runnerNextSpawnIn = 55 + Math.random() * 55;
+  }
+
+  function runnerJump() {
+    if (runnerState === 'idle') {
+      runnerState = 'playing';
+      document.getElementById('runnerOverlayStart').hidden = true;
+      runnerReset();
+      return;
+    }
+    if (runnerState === 'over') {
+      runnerState = 'playing';
+      document.getElementById('runnerOverlayOver').hidden = true;
+      runnerReset();
+      return;
+    }
+    if (runnerState === 'playing' && runnerY === 0) { runnerVy = RUNNER_JUMP_V; }
+  }
+  // Слушатель — на всей обёртке (canvas + оверлеи start/game-over), не только
+  // на самом canvas: оверлеи лежат поверх него (z-index:4) и раньше глушили
+  // тап полностью на экране "старта" (пользователь: "тапаешь и ничего не
+  // происходит") — у них нет своего обработчика, а до canvas событие не
+  // доходило вообще. 2026-09-29.
+  runnerCanvasWrap.addEventListener('pointerdown', function (e) { e.preventDefault(); runnerJump(); });
+  document.addEventListener('keydown', function (e) {
+    if (runnerModal.style.display === 'none') return;
+    if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); runnerJump(); }
+  });
+
+  function runnerRectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+  }
+
+  function runnerUpdate() {
+    if (runnerState !== 'playing') return;
+    runnerT++;
+    runnerSpeed = Math.min(13, 6.2 + runnerT / 380);
+    runnerScore = Math.floor(runnerT / 6);
+    var scoreTag = document.getElementById('runnerScoreTag');
+    if (scoreTag) scoreTag.textContent = t('runnerScore', runnerScore);
+
+    if (runnerY !== 0 || runnerVy !== 0) {
+      runnerVy += RUNNER_GRAVITY;
+      runnerY += runnerVy;
+      if (runnerY > 0) { runnerY = 0; runnerVy = 0; }
+    }
+
+    if (runnerY === 0) {
+      var speedFrac = (runnerSpeed - 6.2) / (13 - 6.2);
+      var framesPerSwitch = Math.round(9 - speedFrac * 4);
+      runnerFrameTimer++;
+      if (runnerFrameTimer >= framesPerSwitch) { runnerFrameTimer = 0; runnerFrame = runnerFrame === 0 ? 1 : 0; }
+    }
+
+    runnerNextSpawnIn -= runnerSpeed / 6.2;
+    if (runnerNextSpawnIn <= 0) runnerSpawnObstacle();
+    for (var i = runnerObstacles.length - 1; i >= 0; i--) {
+      runnerObstacles[i].x -= runnerSpeed;
+      if (runnerObstacles[i].x + runnerObstacles[i].w < -10) runnerObstacles.splice(i, 1);
+    }
+
+    var charTop = RUNNER_GROUND_Y - RUNNER_CHAR_H + runnerY + 10;
+    var charLeft = RUNNER_CHAR_X + 6;
+    var charW = RUNNER_CHAR_W - 12;
+    var charH = RUNNER_CHAR_H - 16;
+    for (var j = 0; j < runnerObstacles.length; j++) {
+      var o = runnerObstacles[j];
+      if (runnerRectsOverlap(charLeft, charTop, charW, charH, o.x, RUNNER_GROUND_Y - o.h, o.w, o.h)) {
+        runnerState = 'over';
+        if (runnerScore > runnerBest) {
+          runnerBest = runnerScore;
+          try { localStorage.setItem('runnerBest', String(runnerBest)); } catch (e) { /* см. выше */ }
+        }
+        updateRunnerScoreTags();
+        document.getElementById('runnerResult').textContent = t('runnerResult', runnerScore);
+        document.getElementById('runnerOverlayOver').hidden = false;
+      }
+    }
+  }
+
+  function runnerCss(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  }
+  function runnerRR(ctx, x, y, w, h, r) {
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function runnerDrawTurnstile(ctx, x, groundY, w, h, color) {
+    var postW = Math.max(4, w * 0.32);
+    var postX = x + (w - postW) / 2;
+    var headH = Math.max(6, h * 0.22);
+    ctx.fillStyle = color;
+    runnerRR(ctx, postX, groundY - h, postW, h, 2); ctx.fill();
+    runnerRR(ctx, x, groundY - h, w, headH, 3); ctx.fill();
+    ctx.save();
+    ctx.translate(postX + postW / 2, groundY - h + headH * 0.65);
+    ctx.rotate(-0.3);
+    runnerRR(ctx, 0, -2, w * 1.15, 4, 2); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.beginPath(); ctx.arc(x + w * 0.5, groundY - h + headH * 0.42, Math.max(1.5, headH * 0.22), 0, Math.PI * 2); ctx.fill();
+  }
+  function runnerDrawSuitcase(ctx, x, groundY, w, h, color) {
+    var bodyH = h * 0.82;
+    var bodyY = groundY - bodyH;
+    runnerRR(ctx, x, bodyY, w, bodyH, Math.min(w, bodyH) * 0.3); ctx.fillStyle = color; ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.5, w * 0.12); ctx.lineCap = 'round';
+    var hw = w * 0.32;
+    ctx.beginPath(); ctx.arc(x + w / 2, bodyY, hw / 2, Math.PI, 0); ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x + w * 0.26, groundY - Math.max(2, h * 0.06), Math.max(2, h * 0.1), 0, Math.PI * 2); ctx.fill();
+  }
+  function runnerDrawBin(ctx, x, groundY, w, h, color) {
+    var topW = w * 0.72;
+    var topX = x + (w - topW) / 2;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(topX, groundY - h); ctx.lineTo(topX + topW, groundY - h); ctx.lineTo(x + w, groundY); ctx.lineTo(x, groundY);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    runnerRR(ctx, topX, groundY - h, topW, Math.max(2, h * 0.08), 2); ctx.fill();
+  }
+
+  function runnerDraw() {
+    runnerCtx.clearRect(0, 0, RUNNER_CSS_W, RUNNER_CSS_H);
+
+    runnerCtx.save();
+    runnerCtx.strokeStyle = runnerCss('--border');
+    runnerCtx.globalAlpha = 0.35;
+    runnerCtx.lineWidth = 1;
+    var off = (runnerT * 0.6) % 26;
+    for (var x = -RUNNER_CSS_H; x < RUNNER_CSS_W; x += 26) {
+      runnerCtx.beginPath(); runnerCtx.moveTo(x - off, 0); runnerCtx.lineTo(x - off + RUNNER_CSS_H, RUNNER_CSS_H); runnerCtx.stroke();
+    }
+    runnerCtx.restore();
+
+    runnerCtx.strokeStyle = runnerCss('--rail');
+    runnerCtx.lineWidth = 3;
+    runnerCtx.beginPath(); runnerCtx.moveTo(0, RUNNER_GROUND_Y); runnerCtx.lineTo(RUNNER_CSS_W, RUNNER_GROUND_Y); runnerCtx.stroke();
+    runnerCtx.fillStyle = runnerCss('--rail');
+    var sleeperOff = (runnerT * runnerSpeed / 6.2 * 1.4) % 34;
+    for (var sx = -34; sx < RUNNER_CSS_W + 34; sx += 34) { runnerCtx.fillRect(sx - sleeperOff, RUNNER_GROUND_Y + 6, 18, 5); }
+
+    var colT = runnerCss('--obs-turnstile'), colS = runnerCss('--obs-suitcase'), colB = runnerCss('--obs-bin');
+    for (var k = 0; k < runnerObstacles.length; k++) {
+      var o = runnerObstacles[k];
+      if (o.type === 'suitcase') runnerDrawSuitcase(runnerCtx, o.x, RUNNER_GROUND_Y, o.w, o.h, colS);
+      else if (o.type === 'bin') runnerDrawBin(runnerCtx, o.x, RUNNER_GROUND_Y, o.w, o.h, colB);
+      else runnerDrawTurnstile(runnerCtx, o.x, RUNNER_GROUND_Y, o.w, o.h, colT);
+    }
+
+    var cy = RUNNER_GROUND_Y - RUNNER_CHAR_H + runnerY;
+    var frameToShow = (runnerY === 0) ? runnerFrame : 1;
+    var img = (frameToShow === 0) ? runnerImg1 : runnerImg2;
+    var imgReady = (frameToShow === 0) ? runnerImg1Ready : runnerImg2Ready;
+    if (imgReady) runnerCtx.drawImage(img, RUNNER_CHAR_X, cy, RUNNER_CHAR_W, RUNNER_CHAR_H);
+  }
+
+  function runnerLoop() {
+    runnerUpdate();
+    runnerDraw();
+    runnerRafId = requestAnimationFrame(runnerLoop);
+  }
+
+  // Мини-отсчёт внутри модалки — просто копирует уже отрисованный текст из
+  // карточек направлений на главном экране (обновляются каждую секунду в
+  // tickCountdowns()), а не пересчитывает расписание заново — один источник
+  // правды. Дёргается из tickCountdowns() только пока модалка открыта, и
+  // один раз сразу при открытии (см. openRunnerModal()). Название станции
+  // направления (.dir-name) добавлено 2026-09-29 по отзыву — без него было
+  // не видно, в сторону какой станции идёт отсчёт.
+  function updateRunnerCountdown() {
+    if (!runnerModal || runnerModal.style.display === 'none') return;
+    ['forward', 'backward'].forEach(function (dirKey) {
+      var src = document.querySelector('.countdown[data-dir="' + dirKey + '"]');
+      var srcCard = src ? src.closest('.dir-card') : null;
+      var arrowEl = srcCard ? srcCard.querySelector('.dir-arrow') : null;
+      var nameEl = srcCard ? srcCard.querySelector('.dir-name') : null;
+      var hudArrow = document.getElementById(dirKey === 'forward' ? 'runnerHudFwdArrow' : 'runnerHudBwdArrow');
+      var hudName = document.getElementById(dirKey === 'forward' ? 'runnerHudFwdName' : 'runnerHudBwdName');
+      var hudVal = document.getElementById(dirKey === 'forward' ? 'runnerHudFwd' : 'runnerHudBwd');
+      if (!src || !hudVal) return;
+      if (hudArrow && arrowEl) hudArrow.textContent = arrowEl.textContent;
+      if (hudName && nameEl) hudName.textContent = nameEl.textContent;
+      hudVal.textContent = src.textContent;
+    });
+  }
+
+  function openRunnerModal() {
+    runnerModal.style.display = '';
+    runnerState = 'idle';
+    document.getElementById('runnerOverlayStart').hidden = false;
+    document.getElementById('runnerOverlayOver').hidden = true;
+    runnerReset();
+    runnerDraw();
+    updateRunnerCountdown();
+    if (runnerRafId == null) runnerRafId = requestAnimationFrame(runnerLoop);
+    trackEvent('runner_open', {});
+  }
+  function closeRunnerModal() {
+    runnerModal.style.display = 'none';
+    if (runnerRafId != null) { cancelAnimationFrame(runnerRafId); runnerRafId = null; }
+  }
+  document.getElementById('runnerBadge').addEventListener('click', openRunnerModal);
+  document.getElementById('runnerModalClose').addEventListener('click', closeRunnerModal);
+  runnerModal.addEventListener('click', function (e) {
+    if (e.target === runnerModal) closeRunnerModal(); // клик по тёмному фону, не по карточке
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && runnerModal.style.display !== 'none') closeRunnerModal();
+  });
 
   /* ---------- Форма обратной связи ----------
      Без бэкенда — POST через AJAX-эндпоинт FormSubmit.co прямо на почту
@@ -4667,6 +5092,12 @@
       wtgRouteToggle.classList.contains('open') ? t('wtgHideStations') : t('wtgShowAllStations');
     document.getElementById('stationRouteBtn').setAttribute('aria-label', t('routeTrigger'));
     document.getElementById('onayRowText').textContent = t('onayRowText');
+    document.getElementById('runnerBadgeText').textContent = t('runnerBadgeText');
+    document.getElementById('runnerTitle').textContent = t('runnerTitle');
+    document.getElementById('runnerHintStart').textContent = t('runnerHintStart');
+    document.getElementById('runnerHintTap').textContent = t('runnerHintTap');
+    document.getElementById('runnerHintRestart').textContent = t('runnerHintRestart');
+    if (typeof updateRunnerScoreTags === 'function') updateRunnerScoreTags(); // счёт/рекорд — своя функция, зависит от текущего score/best
     document.getElementById('shareLink').textContent = t('shareLinkText');
     document.getElementById('iosInstallText').innerHTML = t('iosInstallTipMsg');
     document.getElementById('wtgOriginRouteBtn').textContent = t('wtgRouteBtn');
