@@ -232,24 +232,35 @@
     font-size:12.5px; font-weight:600; line-height:1.4;
     box-shadow:0 8px 22px -10px oklch(0.1 0.04 262 / .8);
   }
-  /* Погодный виджет (2026-09-28) — маленькая плашка справа от #appSubtitle
-     в .hero-bottom (flex:1 у #appSubtitle сам отдаёт ей ровно столько места,
-     сколько нужно, остальное — подписи). Скрыт по умолчанию (display:none в
-     разметке) — показывается только после успешного ответа open-meteo, как
-     и офлайн-маскот (mascot/offline.png) выше — молчаливый фолбэк, никакого
-     "не удалось загрузить погоду" пользователю. Не привязан к вкладке (в
-     отличие от #appSubtitle) — остаётся виден и на "О метро", как и сам
-     маскот в шапке, см. комментарий у updateAppSubtitle(). Цвета — те же
-     захардкоженные oklch, что у текста/лейбла языка в шапке (не var(--text)):
-     .hero-bottom всегда на синем фоне бренда, вне палитры темы страницы. */
+  /* Погодный виджет (2026-09-28, компоновка "B" утверждена пользователем
+     2026-09-29 после показа трёх макетов) — маленькая плашка справа от
+     #appSubtitle в .hero-bottom (flex:1 у #appSubtitle сам отдаёт ей ровно
+     столько места, сколько нужно, остальное — подписи). Два яруса:
+     "сейчас" (иконка+градус) сверху крупнее, диапазон дня мин/макс снизу
+     мельче и приглушённее — тот же порядок значимости, что был у одного
+     "сейчас" раньше, просто с добавленным уточнением под ним. Скрыт по
+     умолчанию (display:none в разметке) — показывается только после
+     успешного ответа open-meteo, как и офлайн-маскот (mascot/offline.png)
+     выше — молчаливый фолбэк, никакого "не удалось загрузить погоду"
+     пользователю. Не привязан к вкладке (в отличие от #appSubtitle) —
+     остаётся виден и на "О метро", как и сам маскот в шапке, см.
+     комментарий у updateAppSubtitle(). Цвета — те же захардкоженные oklch,
+     что у текста/лейбла языка в шапке (не var(--text)): .hero-bottom
+     всегда на синем фоне бренда, вне палитры темы страницы. */
   .weather-widget{
-    flex:none; align-self:flex-end; display:none; align-items:center; gap:5px;
+    flex:none; align-self:flex-end; display:none; flex-direction:column; align-items:flex-end;
     background:oklch(0.99 0.003 255 / .18); color:oklch(0.99 0.003 255);
-    border-radius:14px; padding:9px 11px; font-size:12.5px; font-weight:700;
-    white-space:nowrap;
+    border-radius:14px; padding:8px 11px; font-size:12.5px; font-weight:700;
+    white-space:nowrap; gap:2px;
   }
   .weather-widget.show{ display:inline-flex; }
+  .weather-widget .weather-now{ display:flex; align-items:center; gap:5px; }
   .weather-widget .weather-icon{ font-size:16px; line-height:1; }
+  /* Диапазон дня — своя строка снизу, display:none в разметке (не в этом
+     CSS-правиле) до первого успешного ответа с данными daily; см.
+     renderWeatherWidget() — если сервер вдруг не прислал daily-часть,
+     остаётся скрытым, а не показывает пустую строку. */
+  .weather-widget .weather-range{ font-size:11px; font-weight:600; color:oklch(0.99 0.003 255 / .72); }
 
   .lang-toggle{ display:inline-flex; gap:3px; background:oklch(0.99 0.003 255 / .18); border-radius:10px; padding:3px; }
   .lang-btn{
@@ -1121,7 +1132,10 @@
   <div class="hero-bottom">
     <img class="hero-mascot" src="mascot/idle.png" alt="" />
     <p id="appSubtitle">Онлайн-расписание — сколько ждать до поезда</p>
-    <span id="weatherWidget" class="weather-widget" aria-hidden="true"><span class="weather-icon"></span><span class="weather-temp"></span></span>
+    <span id="weatherWidget" class="weather-widget" aria-hidden="true">
+      <span class="weather-now"><span class="weather-icon"></span><span class="weather-temp"></span></span>
+      <span class="weather-range" style="display:none"></span>
+    </span>
   </div>
 </header>
 
@@ -2987,11 +3001,22 @@
     if (code >= 95 && code <= 99) return '⛈️';
     return '🌡️';
   }
-  function renderWeatherWidget(tempC, weatherCode) {
+  // tempMin/tempMax — дневной диапазон (см. daily= в URL ниже), необязательные
+  // параметры: если сервер не прислал daily-часть (частичный ответ, старая
+  // localStorage-запись до этой правки) — просто не показываем строку
+  // диапазона, а не пустографку "undefined / undefined".
+  function renderWeatherWidget(tempC, weatherCode, tempMin, tempMax) {
     var el = document.getElementById('weatherWidget');
     if (!el || tempC == null || weatherCode == null) return;
     el.querySelector('.weather-icon').textContent = weatherIcon(weatherCode);
     el.querySelector('.weather-temp').textContent = Math.round(tempC) + '°';
+    var rangeEl = el.querySelector('.weather-range');
+    if (tempMin != null && tempMax != null) {
+      rangeEl.textContent = Math.round(tempMin) + '° / ' + Math.round(tempMax) + '°';
+      rangeEl.style.display = '';
+    } else {
+      rangeEl.style.display = 'none';
+    }
     el.classList.add('show');
   }
   function fetchWeatherData() {
@@ -3002,24 +3027,36 @@
         var cache = JSON.parse(cacheRaw);
         if (Date.now() - cache.ts < WEATHER_CACHE_MIN * 60000) {
           weatherHeroKeys = cache.keys;
-          if (cache.tempC != null) renderWeatherWidget(cache.tempC, cache.weatherCode);
+          if (cache.tempC != null) renderWeatherWidget(cache.tempC, cache.weatherCode, cache.tempMin, cache.tempMax);
           return;
         }
       }
     } catch (e) { /* приватный режим и т.п. */ }
-    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + ALMATY_LAT + '&longitude=' + ALMATY_LON + '&current=temperature_2m,weather_code';
+    // daily=temperature_2m_max,min — дневной диапазон для того же самого
+    // запроса, что уже нужен под "сейчас" (current=...), один fetch на
+    // обе цифры. timezone=Asia/Almaty — явно, не 'auto': сутки для
+    // daily-агрегации должны считаться по алматинскому времени, а не по
+    // UTC/GMT по умолчанию (иначе диапазон мог бы захватить кусок другого
+    // дня). forecast_days=1 — нужен только сегодняшний день, не неделя.
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + ALMATY_LAT + '&longitude=' + ALMATY_LON +
+      '&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min' +
+      '&timezone=' + encodeURIComponent('Asia/Almaty') + '&forecast_days=1';
     var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     var timeoutId = controller ? setTimeout(function () { controller.abort(); }, WEATHER_FETCH_TIMEOUT_MS) : null;
     fetch(url, controller ? { signal: controller.signal } : {}).then(function (r) { return r.json(); }).then(function (data) {
       if (timeoutId) clearTimeout(timeoutId);
       var cur = data && data.current;
       if (!cur) return;
+      var daily = data && data.daily;
+      var tempMax = (daily && daily.temperature_2m_max) ? daily.temperature_2m_max[0] : null;
+      var tempMin = (daily && daily.temperature_2m_min) ? daily.temperature_2m_min[0] : null;
       var keys = classifyWeather(cur.temperature_2m, cur.weather_code);
       weatherHeroKeys = keys;
-      renderWeatherWidget(cur.temperature_2m, cur.weather_code);
+      renderWeatherWidget(cur.temperature_2m, cur.weather_code, tempMin, tempMax);
       try {
         localStorage.setItem('heroWeatherCache', JSON.stringify({
-          ts: Date.now(), keys: keys, tempC: cur.temperature_2m, weatherCode: cur.weather_code
+          ts: Date.now(), keys: keys, tempC: cur.temperature_2m, weatherCode: cur.weather_code,
+          tempMin: tempMin, tempMax: tempMax
         }));
       } catch (e) { /* приватный режим и т.п. */ }
     }).catch(function () {
