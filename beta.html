@@ -1014,19 +1014,35 @@
   .runner-badge .runner-badge-arrow{ color:var(--muted); font-size:14px; flex:none; }
   .runner-badge:active{ transform:scale(.98); }
 
-  .runner-card{ max-width:420px; padding:18px; }
-  .runner-card h2{ font-size:16px; margin:0 0 4px; padding-right:26px; }
+  /* На весь экран (2026-09-29, по отзыву: тап не работал + маленький экран) —
+     .runner-modal-overlay переопределяет padding общего .feedback-modal (у
+     него 20px со всех сторон, не подходит для fullscreen), .runner-card
+     занимает всю высоту/ширину вьюпорта вместо центрированной карточки,
+     canvas-обёртка растягивается на оставшееся место через flex:1. */
+  .runner-modal-overlay{ padding:0; background:oklch(0.03 0.01 255 / .92); }
+  .runner-card{
+    max-width:none; width:100%; height:100%; max-height:none; margin:0;
+    border-radius:0; padding:12px; padding-top:calc(12px + env(safe-area-inset-top));
+    padding-bottom:calc(12px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column;
+  }
+  .runner-card h2{ font-size:15px; margin:0 0 4px; padding-right:34px; flex:none; }
+  .runner-card .feedback-close{
+    font-size:28px; top:calc(10px + env(safe-area-inset-top)); right:10px; padding:8px;
+  }
   .runner-hud{
-    display:flex; gap:8px; margin:2px 0 12px; font-size:12px; font-weight:600; color:var(--muted);
+    display:flex; gap:8px; margin:2px 0 10px; font-size:12px; font-weight:600; color:var(--muted); flex:none;
   }
   .runner-hud .runner-hud-item{
-    flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
     background:var(--card2); border-radius:10px; padding:6px 8px; font-variant-numeric:tabular-nums;
   }
-  .runner-hud .runner-hud-item b{ color:var(--text); font-weight:700; }
+  .runner-hud .runner-hud-name{ font-size:10.5px; display:flex; align-items:center; gap:3px; }
+  .runner-hud .runner-hud-item b{ color:var(--text); font-weight:700; font-size:14px; }
 
   .runner-canvas-wrap{
-    position:relative; border-radius:16px; overflow:hidden;
+    position:relative; border-radius:16px; overflow:hidden; flex:1; min-height:0;
+    display:flex; align-items:center; justify-content:center;
     background:linear-gradient(var(--card-top), var(--card-bot)); border:1px solid var(--border);
   }
   .runner-score-row{
@@ -1037,7 +1053,7 @@
     font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;
     background:oklch(0.1 0.02 262 / .35); color:oklch(0.99 0.003 255); border-radius:9px; padding:4px 8px;
   }
-  #runnerCanvas{ display:block; width:100%; touch-action:manipulation; cursor:pointer; }
+  #runnerCanvas{ display:block; max-width:100%; max-height:100%; width:auto; height:auto; touch-action:manipulation; cursor:pointer; }
   .runner-overlay{
     position:absolute; inset:0; z-index:4; display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:8px; text-align:center;
@@ -1457,15 +1473,21 @@
   </div>
 </div>
 
-<div class="feedback-modal" id="runnerModal" style="display:none">
+<div class="feedback-modal runner-modal-overlay" id="runnerModal" style="display:none">
   <div class="feedback-card runner-card">
     <button class="feedback-close" id="runnerModalClose" aria-label="Закрыть">×</button>
     <h2 id="runnerTitle">Мини-игра</h2>
     <div class="runner-hud">
-      <span class="runner-hud-item"><span id="runnerHudFwdArrow"></span> <b id="runnerHudFwd">—</b></span>
-      <span class="runner-hud-item"><span id="runnerHudBwdArrow"></span> <b id="runnerHudBwd">—</b></span>
+      <span class="runner-hud-item">
+        <span class="runner-hud-name"><span id="runnerHudFwdArrow"></span> <span id="runnerHudFwdName"></span></span>
+        <b id="runnerHudFwd">—</b>
+      </span>
+      <span class="runner-hud-item">
+        <span class="runner-hud-name"><span id="runnerHudBwdArrow"></span> <span id="runnerHudBwdName"></span></span>
+        <b id="runnerHudBwd">—</b>
+      </span>
     </div>
-    <div class="runner-canvas-wrap">
+    <div class="runner-canvas-wrap" id="runnerCanvasWrap">
       <div class="runner-score-row">
         <span class="runner-score-tag" id="runnerScoreTag">0 м</span>
         <span class="runner-score-tag" id="runnerBestTag">Рекорд: 0 м</span>
@@ -3952,6 +3974,7 @@
      текст из карточек направлений (.countdown[data-dir]) — один источник
      правды, обновляется тем же общим тиком (tickCountdowns()). */
   var runnerModal = document.getElementById('runnerModal');
+  var runnerCanvasWrap = document.getElementById('runnerCanvasWrap');
   var runnerCanvas = document.getElementById('runnerCanvas');
   var runnerCtx = runnerCanvas.getContext('2d');
   var RUNNER_CSS_W = 800, RUNNER_CSS_H = 320;
@@ -4032,7 +4055,12 @@
     }
     if (runnerState === 'playing' && runnerY === 0) { runnerVy = RUNNER_JUMP_V; }
   }
-  runnerCanvas.addEventListener('pointerdown', function (e) { e.preventDefault(); runnerJump(); });
+  // Слушатель — на всей обёртке (canvas + оверлеи start/game-over), не только
+  // на самом canvas: оверлеи лежат поверх него (z-index:4) и раньше глушили
+  // тап полностью на экране "старта" (пользователь: "тапаешь и ничего не
+  // происходит") — у них нет своего обработчика, а до canvas событие не
+  // доходило вообще. 2026-09-29.
+  runnerCanvasWrap.addEventListener('pointerdown', function (e) { e.preventDefault(); runnerJump(); });
   document.addEventListener('keydown', function (e) {
     if (runnerModal.style.display === 'none') return;
     if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); runnerJump(); }
@@ -4184,17 +4212,22 @@
   // карточек направлений на главном экране (обновляются каждую секунду в
   // tickCountdowns()), а не пересчитывает расписание заново — один источник
   // правды. Дёргается из tickCountdowns() только пока модалка открыта, и
-  // один раз сразу при открытии (см. openRunnerModal()).
+  // один раз сразу при открытии (см. openRunnerModal()). Название станции
+  // направления (.dir-name) добавлено 2026-09-29 по отзыву — без него было
+  // не видно, в сторону какой станции идёт отсчёт.
   function updateRunnerCountdown() {
     if (!runnerModal || runnerModal.style.display === 'none') return;
     ['forward', 'backward'].forEach(function (dirKey) {
       var src = document.querySelector('.countdown[data-dir="' + dirKey + '"]');
       var srcCard = src ? src.closest('.dir-card') : null;
       var arrowEl = srcCard ? srcCard.querySelector('.dir-arrow') : null;
+      var nameEl = srcCard ? srcCard.querySelector('.dir-name') : null;
       var hudArrow = document.getElementById(dirKey === 'forward' ? 'runnerHudFwdArrow' : 'runnerHudBwdArrow');
+      var hudName = document.getElementById(dirKey === 'forward' ? 'runnerHudFwdName' : 'runnerHudBwdName');
       var hudVal = document.getElementById(dirKey === 'forward' ? 'runnerHudFwd' : 'runnerHudBwd');
       if (!src || !hudVal) return;
       if (hudArrow && arrowEl) hudArrow.textContent = arrowEl.textContent;
+      if (hudName && nameEl) hudName.textContent = nameEl.textContent;
       hudVal.textContent = src.textContent;
     });
   }
