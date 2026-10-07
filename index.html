@@ -5345,7 +5345,13 @@
     fetchJSON('data/schedule.json', 'schedule'),
     fetchJSON('data/holidays.json', 'holidays').catch(function () { return { dates: [], workingWeekends: [] }; })
   ]).then(function (results) {
-    STATIONS = results[0].slice().sort(function (a,b) { return a.order - b.order; });
+    // pending:true — станция заготовлена в data/stations.json (см. CLAUDE.md,
+    // "Инфраструктура под станцию Калкаман"), но ещё физически не открыта и у
+    // неё нет данных в data/schedule.json — скрываем от пользователей целиком,
+    // не только от расписания, чтобы не показывать выбираемую, но нерабочую
+    // станцию на живом сайте.
+    STATIONS = results[0].filter(function (s) { return !s.pending; })
+      .sort(function (a,b) { return a.order - b.order; });
     SCHEDULE = results[1];
     HOLIDAYS = (results[2] && results[2].dates) || [];
     WORKING_WEEKENDS = (results[2] && results[2].workingWeekends) || [];
