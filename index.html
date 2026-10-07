@@ -3374,14 +3374,17 @@
     peekChance.backward = { forMinutes: null, show: false };
 
     var order = STATIONS_BY_SLUG[selectedSlug].order;
-    var toBM = STATIONS_BY_SLUG['BM'];
-    var toRMBK = STATIONS_BY_SLUG['RMBK'];
+    // По order (не по slug'ам 'BM'/'RMBK') — чтобы при добавлении новой станции
+    // в конец линии (см. CLAUDE.md, "Инфраструктура под станцию Калкаман")
+    // направление само указывало на неё, без правки этого места.
+    var toFarEnd = STATIONS[STATIONS.length - 1];
+    var toNearEnd = STATIONS[0];
 
-    // Стрелка совпадает с направлением на схеме станций выше: Б. Момышулы — правый
-    // конец линии, Райымбек батыра — левый.
+    // Стрелка совпадает с направлением на схеме станций выше: дальний конец
+    // линии (сейчас Б. Момышулы) — справа, ближний (Райымбек батыра) — слева.
     var dirs = [
-      { key: 'forward',  arrow: '→', name: stationName(toBM) },
-      { key: 'backward', arrow: '←', name: stationName(toRMBK) }
+      { key: 'forward',  arrow: '→', name: stationName(toFarEnd) },
+      { key: 'backward', arrow: '←', name: stationName(toNearEnd) }
     ];
 
     dirs.forEach(function (d) {
@@ -3559,7 +3562,7 @@
           lastFirstMinutes[dirKey] = first.minutes;
           // "Этот поезд — только до X" — считаем не каждый тик, а только когда
           // first.minutes реально сменился (см. lastFarReach выше). Настоящий
-          // конец линии в эту сторону — toBM/toRMBK (уже посчитаны выше в
+          // конец линии в эту сторону — toFarEnd/toNearEnd (уже посчитаны выше в
           // renderDirections), сравниваем именно с их индексом, не с STATIONS
           // напрямую, чтобы не дублировать поиск. 2026-09-12.
           var shortTurnEl = document.querySelector('[data-dir-shortturn="' + dirKey + '"]');
@@ -3868,9 +3871,10 @@
     var originIdx = STATIONS.findIndex(function (s) { return s.slug === selectedSlug; });
     var destIdx = STATIONS.findIndex(function (s) { return s.slug === destSlug; });
     var direction = destIdx > originIdx ? 'forward' : 'backward';
-    var toBM = STATIONS_BY_SLUG['BM'];
-    var toRMBK = STATIONS_BY_SLUG['RMBK'];
-    var dirLabel = t('wtgTowards', direction === 'forward' ? stationName(toBM) : stationName(toRMBK));
+    // По order, не по slug — см. комментарий в renderDirections().
+    var toFarEnd = STATIONS[STATIONS.length - 1];
+    var toNearEnd = STATIONS[0];
+    var dirLabel = t('wtgTowards', direction === 'forward' ? stationName(toFarEnd) : stationName(toNearEnd));
 
     var now = almatyNow();
     var serviceStart = serviceDayStart(now);
@@ -4974,11 +4978,12 @@
     var cols = document.getElementById('fullScheduleCols');
     cols.innerHTML = '';
 
-    var toBM = STATIONS_BY_SLUG['BM'], toRMBK = STATIONS_BY_SLUG['RMBK'];
+    // По order, не по slug — см. комментарий в renderDirections().
+    var toFarEnd = STATIONS[STATIONS.length - 1], toNearEnd = STATIONS[0];
     var dirs = [
       // Стрелки — как на схеме станций (см. renderDirections), а не обе "→".
-      { key: 'forward', title: '→ ' + stationName(toBM) },
-      { key: 'backward', title: '← ' + stationName(toRMBK) }
+      { key: 'forward', title: '→ ' + stationName(toFarEnd) },
+      { key: 'backward', title: '← ' + stationName(toNearEnd) }
     ];
 
     var now = almatyNow();
@@ -5360,7 +5365,7 @@
     document.querySelectorAll('.daytype-toggle .btn').forEach(function (b) {
       b.classList.toggle('active', b.dataset.daytype === fullDayType);
     });
-    fullStationSelect.value = 'RMBK';
+    fullStationSelect.value = STATIONS[0].slug; // первая станция линии, не хардкод 'RMBK'
     syncStationTriggers();
 
     renderFooter();
