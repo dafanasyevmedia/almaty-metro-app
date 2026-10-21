@@ -1692,6 +1692,9 @@
       heroCityDay1: 'С Днём города, Алматы!',
       heroCityDay2: 'Сегодня в Алматы праздник — с Днём города!',
       heroCityDay3: 'Алматы, с днём рождения! А вам хорошей поездки',
+      heroRepublicDay1: 'С Днём Республики Казахстан!',
+      heroRepublicDay2: 'Сегодня праздник — День Республики. Хорошей поездки!',
+      heroRepublicDay3: 'С Днём Республики! А метро — по расписанию выходных',
       heroWeekendEst1: 'На выходные для этой станции расписание посчитали сами, на сайте метро его нет',
       heroWeekendEst2: 'В выходные интервалы здесь посчитали по соседним станциям',
       heroMorningRush1: 'Час пик — на платформе может быть многолюдно',
@@ -1859,6 +1862,9 @@
       heroCityDay1: 'Алматы, Қала күні құтты болсын!',
       heroCityDay2: 'Бүгін Алматының мерекесі — Қала күні құтты болсын!',
       heroCityDay3: 'Алматы, туған күніңізбен! Ал сізге жақсы жол тілеймін',
+      heroRepublicDay1: 'Қазақстан Республикасының күнімен!',
+      heroRepublicDay2: 'Бүгін мереке — Республика күні. Жолыңыз болсын!',
+      heroRepublicDay3: 'Республика күні құтты болсын! Метро демалыс кестесі бойынша жүреді',
       heroWeekendEst1: 'Бұл бекеттің демалыс кестесін өзіміз есептедік — метро сайтында ол жоқ',
       heroWeekendEst2: 'Демалыс күндері мұндағы аралықтарды көрші бекеттер бойынша есептедік',
       heroMorningRush1: 'Қарбалас уақыт — платформада адам көп болуы мүмкін',
@@ -2028,6 +2034,9 @@
       heroCityDay1: 'Happy City Day, Almaty!',
       heroCityDay2: 'It’s Almaty City Day — enjoy the celebrations!',
       heroCityDay3: 'Happy birthday, Almaty! And have a great ride',
+      heroRepublicDay1: 'Happy Republic Day, Kazakhstan!',
+      heroRepublicDay2: 'It’s Republic Day today — have a great trip!',
+      heroRepublicDay3: 'Happy Republic Day! The metro runs on the weekend schedule today',
       heroWeekendEst1: 'We calculated this station’s weekend schedule ourselves — it’s not on the metro’s site',
       heroWeekendEst2: 'We calculated weekend intervals here from the neighboring stations',
       heroMorningRush1: 'Rush hour — the platform might be crowded',
@@ -2936,7 +2945,8 @@
   // календарным "сейчас". Добавить новый праздник — одна запись здесь +
   // ключи в I18N, логику категории трогать не нужно.
   var SPECIAL_DAYS = {
-    '2026-09-20': ['heroCityDay1', 'heroCityDay2', 'heroCityDay3'] // День города Алматы
+    '2026-09-20': ['heroCityDay1', 'heroCityDay2', 'heroCityDay3'], // День города Алматы
+    '2026-10-25': ['heroRepublicDay1', 'heroRepublicDay2', 'heroRepublicDay3'] // День Республики (сама дата праздника — воскресенье; перенесённый выходной 26-го идёт по общей категории holiday)
   };
   var metroClosedNow = false; // отражает то же условие, что уже решает видимость #closedBanner в tickCountdowns()
   var weatherHeroKeys = null; // ключи, подходящие текущей погоде; null = не знаем/выключено/ошибка
