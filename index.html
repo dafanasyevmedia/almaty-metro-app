@@ -1692,6 +1692,9 @@
       heroCityDay1: 'С Днём города, Алматы!',
       heroCityDay2: 'Сегодня в Алматы праздник — с Днём города!',
       heroCityDay3: 'Алматы, с днём рождения! А вам хорошей поездки',
+      heroRepublicDay1: 'С Днём Республики Казахстан!',
+      heroRepublicDay2: 'Сегодня праздник — День Республики. Хорошей поездки!',
+      heroRepublicDay3: 'С Днём Республики! А метро — по расписанию выходных',
       heroWeekendEst1: 'На выходные для этой станции расписание посчитали сами, на сайте метро его нет',
       heroWeekendEst2: 'В выходные интервалы здесь посчитали по соседним станциям',
       heroMorningRush1: 'Час пик — на платформе может быть многолюдно',
@@ -1859,6 +1862,9 @@
       heroCityDay1: 'Алматы, Қала күні құтты болсын!',
       heroCityDay2: 'Бүгін Алматының мерекесі — Қала күні құтты болсын!',
       heroCityDay3: 'Алматы, туған күніңізбен! Ал сізге жақсы жол тілеймін',
+      heroRepublicDay1: 'Қазақстан Республикасының күнімен!',
+      heroRepublicDay2: 'Бүгін мереке — Республика күні. Жолыңыз болсын!',
+      heroRepublicDay3: 'Республика күні құтты болсын! Метро демалыс кестесі бойынша жүреді',
       heroWeekendEst1: 'Бұл бекеттің демалыс кестесін өзіміз есептедік — метро сайтында ол жоқ',
       heroWeekendEst2: 'Демалыс күндері мұндағы аралықтарды көрші бекеттер бойынша есептедік',
       heroMorningRush1: 'Қарбалас уақыт — платформада адам көп болуы мүмкін',
@@ -2028,6 +2034,9 @@
       heroCityDay1: 'Happy City Day, Almaty!',
       heroCityDay2: 'It’s Almaty City Day — enjoy the celebrations!',
       heroCityDay3: 'Happy birthday, Almaty! And have a great ride',
+      heroRepublicDay1: 'Happy Republic Day, Kazakhstan!',
+      heroRepublicDay2: 'It’s Republic Day today — have a great trip!',
+      heroRepublicDay3: 'Happy Republic Day! The metro runs on the weekend schedule today',
       heroWeekendEst1: 'We calculated this station’s weekend schedule ourselves — it’s not on the metro’s site',
       heroWeekendEst2: 'We calculated weekend intervals here from the neighboring stations',
       heroMorningRush1: 'Rush hour — the platform might be crowded',
@@ -2936,7 +2945,8 @@
   // календарным "сейчас". Добавить новый праздник — одна запись здесь +
   // ключи в I18N, логику категории трогать не нужно.
   var SPECIAL_DAYS = {
-    '2026-09-20': ['heroCityDay1', 'heroCityDay2', 'heroCityDay3'] // День города Алматы
+    '2026-09-20': ['heroCityDay1', 'heroCityDay2', 'heroCityDay3'], // День города Алматы
+    '2026-10-25': ['heroRepublicDay1', 'heroRepublicDay2', 'heroRepublicDay3'] // День Республики (сама дата праздника — воскресенье; перенесённый выходной 26-го идёт по общей категории holiday)
   };
   var metroClosedNow = false; // отражает то же условие, что уже решает видимость #closedBanner в tickCountdowns()
   var weatherHeroKeys = null; // ключи, подходящие текущей погоде; null = не знаем/выключено/ошибка
@@ -3374,14 +3384,17 @@
     peekChance.backward = { forMinutes: null, show: false };
 
     var order = STATIONS_BY_SLUG[selectedSlug].order;
-    var toBM = STATIONS_BY_SLUG['BM'];
-    var toRMBK = STATIONS_BY_SLUG['RMBK'];
+    // По order (не по slug'ам 'BM'/'RMBK') — чтобы при добавлении новой станции
+    // в конец линии (см. CLAUDE.md, "Инфраструктура под станцию Калкаман")
+    // направление само указывало на неё, без правки этого места.
+    var toFarEnd = STATIONS[STATIONS.length - 1];
+    var toNearEnd = STATIONS[0];
 
-    // Стрелка совпадает с направлением на схеме станций выше: Б. Момышулы — правый
-    // конец линии, Райымбек батыра — левый.
+    // Стрелка совпадает с направлением на схеме станций выше: дальний конец
+    // линии (сейчас Б. Момышулы) — справа, ближний (Райымбек батыра) — слева.
     var dirs = [
-      { key: 'forward',  arrow: '→', name: stationName(toBM) },
-      { key: 'backward', arrow: '←', name: stationName(toRMBK) }
+      { key: 'forward',  arrow: '→', name: stationName(toFarEnd) },
+      { key: 'backward', arrow: '←', name: stationName(toNearEnd) }
     ];
 
     dirs.forEach(function (d) {
@@ -3559,7 +3572,7 @@
           lastFirstMinutes[dirKey] = first.minutes;
           // "Этот поезд — только до X" — считаем не каждый тик, а только когда
           // first.minutes реально сменился (см. lastFarReach выше). Настоящий
-          // конец линии в эту сторону — toBM/toRMBK (уже посчитаны выше в
+          // конец линии в эту сторону — toFarEnd/toNearEnd (уже посчитаны выше в
           // renderDirections), сравниваем именно с их индексом, не с STATIONS
           // напрямую, чтобы не дублировать поиск. 2026-09-12.
           var shortTurnEl = document.querySelector('[data-dir-shortturn="' + dirKey + '"]');
@@ -3868,9 +3881,10 @@
     var originIdx = STATIONS.findIndex(function (s) { return s.slug === selectedSlug; });
     var destIdx = STATIONS.findIndex(function (s) { return s.slug === destSlug; });
     var direction = destIdx > originIdx ? 'forward' : 'backward';
-    var toBM = STATIONS_BY_SLUG['BM'];
-    var toRMBK = STATIONS_BY_SLUG['RMBK'];
-    var dirLabel = t('wtgTowards', direction === 'forward' ? stationName(toBM) : stationName(toRMBK));
+    // По order, не по slug — см. комментарий в renderDirections().
+    var toFarEnd = STATIONS[STATIONS.length - 1];
+    var toNearEnd = STATIONS[0];
+    var dirLabel = t('wtgTowards', direction === 'forward' ? stationName(toFarEnd) : stationName(toNearEnd));
 
     var now = almatyNow();
     var serviceStart = serviceDayStart(now);
@@ -4974,11 +4988,12 @@
     var cols = document.getElementById('fullScheduleCols');
     cols.innerHTML = '';
 
-    var toBM = STATIONS_BY_SLUG['BM'], toRMBK = STATIONS_BY_SLUG['RMBK'];
+    // По order, не по slug — см. комментарий в renderDirections().
+    var toFarEnd = STATIONS[STATIONS.length - 1], toNearEnd = STATIONS[0];
     var dirs = [
       // Стрелки — как на схеме станций (см. renderDirections), а не обе "→".
-      { key: 'forward', title: '→ ' + stationName(toBM) },
-      { key: 'backward', title: '← ' + stationName(toRMBK) }
+      { key: 'forward', title: '→ ' + stationName(toFarEnd) },
+      { key: 'backward', title: '← ' + stationName(toNearEnd) }
     ];
 
     var now = almatyNow();
@@ -5340,7 +5355,13 @@
     fetchJSON('data/schedule.json', 'schedule'),
     fetchJSON('data/holidays.json', 'holidays').catch(function () { return { dates: [], workingWeekends: [] }; })
   ]).then(function (results) {
-    STATIONS = results[0].slice().sort(function (a,b) { return a.order - b.order; });
+    // pending:true — станция заготовлена в data/stations.json (см. CLAUDE.md,
+    // "Инфраструктура под станцию Калкаман"), но ещё физически не открыта и у
+    // неё нет данных в data/schedule.json — скрываем от пользователей целиком,
+    // не только от расписания, чтобы не показывать выбираемую, но нерабочую
+    // станцию на живом сайте.
+    STATIONS = results[0].filter(function (s) { return !s.pending; })
+      .sort(function (a,b) { return a.order - b.order; });
     SCHEDULE = results[1];
     HOLIDAYS = (results[2] && results[2].dates) || [];
     WORKING_WEEKENDS = (results[2] && results[2].workingWeekends) || [];
@@ -5360,7 +5381,7 @@
     document.querySelectorAll('.daytype-toggle .btn').forEach(function (b) {
       b.classList.toggle('active', b.dataset.daytype === fullDayType);
     });
-    fullStationSelect.value = 'RMBK';
+    fullStationSelect.value = STATIONS[0].slug; // первая станция линии, не хардкод 'RMBK'
     syncStationTriggers();
 
     renderFooter();

@@ -40,6 +40,10 @@ EN_NAMES = {
     "MSK": "Moskva",
     "SA": "Saryarqa",
     "BM": "Bauyrjan Momyshuly",
+    # Калкаман — ещё не открыта (pending:true в data/stations.json), slug
+    # "KLKM" пока условный (реального кода в API метро для неё нет, подтвердить
+    # в день открытия, см. CLAUDE.md). Романизация — с казахской Википедии.
+    "KLKM": "Kalkaman",
 }
 
 
@@ -177,21 +181,37 @@ def log_drift(changes: list[dict]) -> None:
 def main() -> int:
     stations = json.loads(STATIONS_FILE.read_text(encoding="utf-8"))
     stations_by_slug = {s["slug"]: s for s in stations}
-    stations_by_order = {s["order"]: s for s in stations}
+    # pending:true — станция заготовлена в data/stations.json заранее (см.
+    # CLAUDE.md, "Инфраструктура под станцию Калкаман"), но ещё физически не
+    # открыта и её нет в API метро. Исключаем такие станции отовсюду в этом
+    # проходе — из определения "конечной" (max_order), из поиска соседа для
+    # оценки выходных и из самого скачивания — как будто их нет в файле
+    # вообще, пока флаг не снят. Иначе: (а) try/fetch на несуществующий slug
+    # уронит весь скрипт для ВСЕХ станций (см. except ниже — одна ошибка
+    # сейчас прерывает весь прогон), (б) max_order сдвинется раньше времени
+    # и собьёт определение direction1/2 у настоящей текущей конечной
+    # (Б. Момышулы) ещё до того, как сам API реально станет считать её
+    # промежуточной.
+    active_stations = [s for s in stations if not s.get("pending")]
+    stations_by_order = {s["order"]: s for s in active_stations}
     result = {
         "generated_at": datetime.now(tz=ALMATY_TZ).isoformat(),
         "source": f"{API_BASE}/schedule/{{slug}}",
         "stations": {},
     }
 
-    max_order = max(s["order"] for s in stations)
+    max_order = max(s["order"] for s in active_stations)
+
+    for st in stations:
+        if st.get("pending"):
+            print(f"  {st['slug']:6s} -> пропускаем (pending: станция ещё не открыта)", file=sys.stderr)
 
     # Проход 1: скачиваем и раскладываем сырые данные по станциям. Оценку
     # недостающих выходных откладываем на проход 2 — там она может понадобиться
     # станция, которая по порядку в списке идёт позже текущей (напр. для Абая
     # нужен Байконыр, а он в списке станций идёт после).
     raw = {}
-    for st in sorted(stations, key=lambda s: s["order"]):
+    for st in sorted(active_stations, key=lambda s: s["order"]):
         slug = st["slug"]
         print(f"  {slug:6s} -> {API_BASE}/schedule/{slug}", file=sys.stderr)
         try:
