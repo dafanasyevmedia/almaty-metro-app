@@ -25,6 +25,16 @@ DRIFT_LOG_FILE = ROOT / "data" / "schedule_drift_log.jsonl"
 ALMATY_TZ = timezone(timedelta(hours=5))
 MAX_ATTEMPTS = 5
 
+# Выше скольки процентов разницы в числе рейсов (для одной станции/дня недели/
+# направления, относительно прошлого часового снимка) считаем скачок подозрительным
+# и НЕ применяем его — см. reject_anomalies(). Подобрано по реальному инциденту
+# 2026-09-24..2026-10-02: число выходных рейсов металось 121→80→89→146→78 сразу по
+# всем станциям одновременно (между собой за пределами ~15%) и само откатилось —
+# похоже на временный глюк источника, а не на правку графика. Настоящее изменение
+# в тот же период (будни, 17 октября, +3..+5 рейсов на фоне ~145) держалось стабильно
+# и укладывалось в ~3% — порог 15% его бы пропустил не раздумывая.
+ANOMALY_THRESHOLD = 0.15
+
 # API не отдаёт английские названия станций (только ru/kk через current_station_locales),
 # поэтому держим их здесь вручную. Источник — англоязычная Википедия
 # (https://en.wikipedia.org/wiki/Almaty_Metro), написания скопированы как есть.
@@ -124,6 +134,52 @@ def fetch_station_payload(slug: str) -> dict:
     raise RuntimeError(f"API не отдал будние расписание для {slug} за {MAX_ATTEMPTS} попыток: {last_payload}")
 
 
+def reject_anomalies(new_stations: dict, old_stations: dict) -> list[dict]:
+    """Ловит подозрительные скачки ЧИСЛА рейсов (станция/день недели/направление)
+    относительно прошлого часового снимка и откатывает конкретно их на старое
+    значение — ПРЯМО В new_stations (мутирует), прежде чем результат уйдёт в
+    diff_schedules()/запись файла. Так аномалия не попадает на живой сайт сама
+    по себе — только после того, как кто-то посмотрит на неё в
+    schedule_drift_log.jsonl (поле "anomalies" у строки прогона, см. log_drift())
+    и либо решит, что это реальное изменение (тогда следующий же час, когда
+    источник снова отдаст то же самое, порог всё равно будет превышен и снимок
+    опять откатится — "ручное подтверждение" в этом смысле означает не "нажать
+    кнопку", а руками разобраться и при необходимости подправить данные/порог,
+    не полагаться, что само рассосётся), либо (как было в реальном инциденте
+    2026-09-24..2026-10-02, см. ANOMALY_THRESHOLD) — что это временный глюк
+    источника, и ничего руками трогать не нужно, он сам откатится обратно.
+
+    Намеренно НЕ пытается быть умнее (не копит историю между запусками, не
+    требует повторного подтверждения на следующий час) — простой вариант,
+    выбранный явно вместо автоподтверждения по двум похожим снимкам подряд."""
+    anomalies = []
+    for slug, new_entry in new_stations.items():
+        old_entry = old_stations.get(slug)
+        if not old_entry:
+            continue  # новая станция — не с чем сравнивать, не её случай
+        for daytype in ("weekday", "weekend"):
+            for direction in ("forward", "backward"):
+                old_list = ((old_entry.get(daytype) or {}).get(direction)) or []
+                new_list = ((new_entry.get(daytype) or {}).get(direction)) or []
+                old_count = len(old_list)
+                new_count = len(new_list)
+                if old_count == 0:
+                    continue  # не с чем сравнивать в процентах — не её случай
+                pct_change = abs(new_count - old_count) / old_count
+                if pct_change <= ANOMALY_THRESHOLD:
+                    continue
+                anomalies.append({
+                    "station": slug,
+                    "daytype": daytype,
+                    "direction": direction,
+                    "old_count": old_count,
+                    "new_count": new_count,
+                    "pct_change": round(pct_change, 3),
+                })
+                new_entry[daytype][direction] = old_list  # откат — новое не применяем
+    return anomalies
+
+
 def diff_schedules(old_stations: dict, new_stations: dict) -> list[dict]:
     """Сравнивает предыдущий и только что скачанный schedule.json (по станциям/
     дню недели/направлению) — диагностика для отслеживания того, насколько часто
@@ -158,23 +214,31 @@ def diff_schedules(old_stations: dict, new_stations: dict) -> list[dict]:
     return changes
 
 
-def log_drift(changes: list[dict]) -> None:
+def log_drift(changes: list[dict], anomalies: list[dict] | None = None) -> None:
     """Дописывает одну строку JSON (JSONL) за запуск — есть расхождения или нет.
     Специально одна строка на весь прогон, а не на каждую станцию/направление —
     иначе лог раздувается (11 станций × 2 дня недели × 2 направления = 44
     проверки в час), а по одной строке в час видно и сам факт "проверяли,
     расхождений не было" (важно для оценки частоты — иначе непонятно, пропуск в
-    логе значит "не менялось" или "джоба не запустилась")."""
+    логе значит "не менялось" или "джоба не запустилась").
+
+    `anomalies` (см. reject_anomalies()) — отдельное поле, не часть `changes`:
+    то, что было ОТКЛОНЕНО этим прогоном (значит, в `changes` уже не попадёт —
+    откат делает новый снимок равным старому) и ждёт, чтобы кто-то посмотрел
+    на него руками."""
     entry = {
         "checked_at": datetime.now(tz=ALMATY_TZ).isoformat(),
         "changed_count": len(changes),
         "changes": changes,
+        "anomalies": anomalies or [],
     }
     with DRIFT_LOG_FILE.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    if anomalies:
+        print(f"  !!! АНОМАЛИЯ: {len(anomalies)} скачков отклонено, оставлено прежнее значение — проверить руками (см. {DRIFT_LOG_FILE.name})", file=sys.stderr)
     if changes:
         print(f"  !! Расхождения с предыдущим снимком: {len(changes)} (см. {DRIFT_LOG_FILE.name})", file=sys.stderr)
-    else:
+    elif not anomalies:
         print("  Расхождений с предыдущим снимком не обнаружено", file=sys.stderr)
 
 
@@ -319,11 +383,17 @@ def main() -> int:
         result["stations"][slug] = entry
 
     # Сравниваем с тем, что лежало в schedule.json ДО перезаписи (то есть с прошлым
-    # запуском скрипта, час назад) — диагностика дрейфа расписания, см. diff_schedules().
+    # запуском скрипта, час назад) — сначала откатываем подозрительные скачки
+    # (reject_anomalies — ПРЯМО В result["stations"], до diff_schedules), потом уже
+    # считаем обычный дрейф для лога (см. diff_schedules()). Порядок важен: если
+    # аномалию не откатить до diff_schedules(), она попадёт в result/в файл как
+    # обычное "изменение" — именно этого и нужно избежать.
     if OUTPUT_FILE.exists():
         try:
             old_result = json.loads(OUTPUT_FILE.read_text(encoding="utf-8"))
-            log_drift(diff_schedules(old_result.get("stations", {}), result["stations"]))
+            old_stations = old_result.get("stations", {})
+            anomalies = reject_anomalies(result["stations"], old_stations)
+            log_drift(diff_schedules(old_stations, result["stations"]), anomalies)
         except (json.JSONDecodeError, OSError) as exc:
             print(f"  (не удалось сравнить с предыдущим снимком: {exc})", file=sys.stderr)
 
