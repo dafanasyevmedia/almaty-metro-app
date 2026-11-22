@@ -2953,9 +2953,8 @@
     peekChance.backward = { forMinutes: null, show: false };
 
     var order = STATIONS_BY_SLUG[selectedSlug].order;
-    // По order (не по slug'ам 'BM'/'RMBK') — чтобы при добавлении новой станции
-    // в конец линии (см. CLAUDE.md, "Инфраструктура под станцию Калкаман")
-    // направление само указывало на неё, без правки этого места.
+    // Концы линии берутся по order, а не по slug'ам 'BM'/'RMBK': новая станция в конце линии
+    // подхватывается без правок.
     var toFarEnd = STATIONS[STATIONS.length - 1];
     var toNearEnd = STATIONS[0];
 
@@ -4724,11 +4723,9 @@
     fetchJSON('data/schedule.json', 'schedule'),
     fetchJSON('data/holidays.json', 'holidays').catch(function () { return { dates: [], workingWeekends: [] }; })
   ]).then(function (results) {
-    // pending:true — станция заготовлена в data/stations.json (см. CLAUDE.md,
-    // "Инфраструктура под станцию Калкаман"), но ещё физически не открыта и у
-    // неё нет данных в data/schedule.json — скрываем от пользователей целиком,
-    // не только от расписания, чтобы не показывать выбираемую, но нерабочую
-    // станцию на живом сайте.
+    // pending:true — станция заведена в data/stations.json, но ещё не открыта и данных в
+    // data/schedule.json у неё нет. Скрывается целиком, чтобы не показывать выбираемую, но
+    // нерабочую станцию.
     STATIONS = results[0].filter(function (s) { return !s.pending; })
       .sort(function (a,b) { return a.order - b.order; });
     SCHEDULE = results[1];
