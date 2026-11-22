@@ -56,19 +56,10 @@
 <link rel="manifest" href="site.webmanifest" />
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  /* Шрифты — свои файлы (fonts/*.woff2), не Google Fonts CDN (2026-08-28).
-     Причина: офлайн (см. sw.js) кросс-доменный кеш шрифтов оказался
-     ненадёжным (гонка между регистрацией Service Worker и самым первым,
-     самым ранним запросом шрифта из <head> — то срабатывает, то нет), плюс
-     так на один внешний домен меньше вообще всегда (актуально у входа в
-     метро при слабом сигнале). Unbounded и Inter у Google — variable fonts:
-     один файл покрывает весь диапазон начертаний, поэтому весов в src не
-     указано — font-weight ниже задан диапазоном, а не одним числом.
-     Подмножества unicode-range — ровно те, что реально нужны интерфейсу
-     (см. CLAUDE.md "Свои файлы шрифтов"): latin (цифры/английский),
-     cyrillic (русский), и отдельно cyrillic-ext только для Inter — там
-     живут специфичные казахские буквы (ә/ғ/қ/ң/ө/ұ/ү), которых нет в
-     Unbounded (он и не используется для казахского текста, см. ниже). */
+  /* Шрифты — свои файлы fonts/*.woff2 (same-origin, покрываются кешем Service Worker, внешних доменов нет).
+     Unbounded и Inter — variable fonts: один файл на unicode-range покрывает все веса,
+     поэтому font-weight задан диапазоном. cyrillic-ext нужен только Inter (казахские
+     ә/ғ/қ/ң/ө/ұ/ү); Unbounded для казахского текста не используется. */
   @font-face{
     font-family:"Unbounded"; font-style:normal; font-weight:500 700; font-display:swap;
     src:url("fonts/unbounded-latin.woff2") format("woff2");
@@ -100,11 +91,9 @@
     --border:oklch(0.30 0.02 255 / .55);
     --accent:oklch(0.82 0.19 132); --accent-ink:oklch(0.16 0.012 255); --accent-soft:oklch(0.82 0.19 132 / .14);
     --success:var(--accent); --danger:oklch(0.72 0.17 25); --warn:oklch(0.78 0.17 75);
-    /* Редизайн "2a" (2026-09-20, см. CLAUDE.md) — синяя шапка-герой + объём
-       карточек + фоновая текстура. --brand/--brand2 только для градиента
-       шапки (сама шапка не меняется от темы — см. header{} ниже), у
-       --card-top/--card-bot/--rail/--edge/--shadow/--texture свои значения
-       в каждом из 4 блоков темы. */
+    /* --brand/--brand2 — градиент шапки (одинаковы во всех темах). --card-top/--card-bot,
+       --rail, --edge, --shadow, --texture, --door-a/--door-b имеют свои значения в каждом
+       из четырёх блоков темы. */
     --brand:oklch(0.52 0.15 258); --brand2:oklch(0.31 0.10 262);
     --card-top:oklch(0.24 0.035 262); --card-bot:oklch(0.20 0.025 262);
     --rail:oklch(0.5 0.07 258 / .65);
@@ -114,10 +103,9 @@
     --door-a:oklch(0.56 0.15 258); --door-b:oklch(0.33 0.10 262);
     --obs-turnstile:oklch(0.68 0.03 255); --obs-suitcase:oklch(0.74 0.16 45); --obs-bin:oklch(0.78 0.12 75); --obs-purple:oklch(0.68 0.14 300); --obs-teal:oklch(0.72 0.12 190); --obs-coin:oklch(0.84 0.15 85);
   }
-  /* Светлая тема: системная (prefers-color-scheme) или тема самого Telegram
-     (data-tg-theme ставит JS — см. <script> внизу, атрибут уже был, просто раньше
-     его не читал CSS). Тот же акцентный hue (132), но темнее/насыщеннее для
-     контраста на белом — чистый неоновый лайм на белом фоне почти не читается. */
+  /* Светлая тема: системная (prefers-color-scheme) или тема Telegram (data-tg-theme,
+     ставит JS). Акцент того же оттенка (132), но темнее и насыщеннее — неоновый лайм
+     на белом не читается. */
   @media (prefers-color-scheme: light){
     :root{
       --bg:oklch(0.98 0.004 255); --card:oklch(0.995 0.002 255); --card2:oklch(0.93 0.008 255);
@@ -125,20 +113,16 @@
       --border:oklch(0.84 0.012 255 / .9);
       --accent:oklch(0.55 0.16 132); --accent-ink:oklch(0.99 0.003 255); --accent-soft:oklch(0.55 0.16 132 / .12);
       --danger:oklch(0.55 0.17 25); --warn:oklch(0.55 0.16 75);
-      /* Светлый эквивалент "2a" — в макете есть только тёмный вариант,
-         это моя интерпретация в том же языке (см. CLAUDE.md, раздел
-         редизайна): бренд чуть ярче/насыщеннее для контраста на белом
-         (тот же приём, что уже применён к --accent выше), тень мягкая
-         голубовато-серая вместо почти чёрной, edge-подсветка — белая. */
+      /* Бренд чуть ярче для контраста на белом, тень мягкая голубовато-серая,
+         edge-подсветка белая. */
       --brand:oklch(0.58 0.15 258); --brand2:oklch(0.42 0.14 262);
       --card-top:oklch(0.99 0.004 255); --card-bot:oklch(0.95 0.01 258);
       --rail:oklch(0.75 0.05 258 / .55);
       --edge:oklch(1 0 0 / .7);
       --shadow:oklch(0.55 0.08 258 / .18);
       --texture:oklch(0.15 0.02 258 / .025);
-      /* Двери темнее даже light-темских --brand/--brand2 — см. .doors-fx
-         в CSS ниже и CLAUDE.md: на светлой карточке дверь должна читаться
-         как плотный физический объект, а не как элемент палитры темы. */
+      /* Двери темнее --brand/--brand2: на светлой карточке дверь должна читаться
+         как плотный объект (см. .doors-fx). */
       --door-a:oklch(0.42 0.14 258); --door-b:oklch(0.24 0.09 262);
       --obs-turnstile:oklch(0.62 0.03 255); --obs-suitcase:oklch(0.68 0.16 45); --obs-bin:oklch(0.72 0.12 75); --obs-purple:oklch(0.6 0.14 300); --obs-teal:oklch(0.62 0.12 190); --obs-coin:oklch(0.78 0.15 80);
     }
@@ -176,11 +160,7 @@
 
   *{box-sizing:border-box;}
   html{ -webkit-tap-highlight-color:transparent; }
-  /* Едва заметная диагональная штриховка по всей странице — часть
-     редизайна "2a" (2026-09-20, см. CLAUDE.md). Фиксированный фон (не
-     прокручивается вместе с контентом) — та же текстура видна в одном
-     и том же месте экрана независимо от скролла, как лёгкая фактура
-     материала, а не декор одного конкретного блока. */
+  /* Диагональная штриховка по всей странице; фон фиксирован и не скроллится с контентом. */
   body{
     margin:0; color:var(--text); min-height:100vh; background:var(--bg);
     background-image:repeating-linear-gradient(115deg, var(--texture) 0 1px, transparent 1px 22px);
@@ -190,12 +170,9 @@
   }
   .brand,.countdown{ font-family:"Unbounded","Inter",sans-serif; }
 
-  /* Шапка-"герой" — редизайн "2a" (2026-09-20, см. CLAUDE.md). Синий
-     градиент и белый текст/кнопки языка НЕ зависят от темы страницы
-     (--brand/--brand2 те же в тёмной и светлой — сама плашка всегда
-     синяя, это единственный настоящий "цвет бренда" на экране), только
-     нижний стоп градиента — var(--bg), чтобы шапка плавно переходила в
-     фон страницы независимо от темы. */
+  /* Шапка-«герой». Градиент, белый текст и кнопки языка не зависят от темы страницы
+     (--brand/--brand2 одинаковы в обеих темах); нижний стоп градиента — var(--bg),
+     поэтому шапка плавно переходит в фон. */
   header{
     position:relative; max-width:640px; margin:0 auto; overflow:hidden;
     border-radius:0 0 22px 22px; padding:18px 16px 20px;
@@ -210,47 +187,25 @@
   header h1{ font-size:15px; margin:0; font-weight:600; letter-spacing:-.2px; color:oklch(0.99 0.003 255); }
 
   .hero-bottom{ position:relative; display:flex; align-items:flex-end; gap:12px; margin-top:14px; }
-  /* Маскот в шапке — крупный (64px), рядом с плашкой-"репликой", как в
-     макете. Маленький логотип, который раньше стоял рядом с самим
-     заголовком "Метро Алматы" (.logo-mark, 28px), убран — по отзыву
-     пользователя 2026-09-20 два маскота на одном экране (этот и
-     .locate-mascot чуть ниже, в карточке геолокации) читались как
-     дубль; выбор остановился на КРУПНОМ (тут), а не на маленьком у
-     заголовка — первая попытка (2026-09-20, тем же вечером) убрала не
-     тот и была отменена пользователем. */
+  /* Маскот в шапке рядом с плашкой-репликой. */
   .hero-mascot{
     width:64px; height:64px; flex:none; object-fit:contain;
     filter:drop-shadow(0 10px 18px oklch(0.18 0.05 262 / .5));
     animation:bob 4.2s ease-in-out infinite;
   }
   @keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
-  /* #appSubtitle — тот же элемент/id, что и раньше (JS его не трогали,
-     только контейнер/стиль вокруг), теперь оформлен как белая плашка
-     поверх синей шапки, вне палитры темы по той же причине, что и текст
-     шапки выше. На вкладке "О метро" JS по-прежнему прячет весь элемент
-     (display:none, см. updateAppSubtitle()) — там остаётся один маскот
-     без плашки. */
+  /* #appSubtitle — белая плашка-реплика поверх синей шапки, цвета вне палитры темы.
+     На вкладке «О метро» JS скрывает её целиком (updateAppSubtitle()), остаётся один маскот. */
   #appSubtitle{
     flex:1; min-width:0; margin:0; background:oklch(0.99 0.003 255 / .94); color:oklch(0.2 0.02 262);
     border-radius:16px 16px 16px 6px; padding:10px 13px;
     font-size:12.5px; font-weight:600; line-height:1.4;
     box-shadow:0 8px 22px -10px oklch(0.1 0.04 262 / .8);
   }
-  /* Погодный виджет (2026-09-28, компоновка "B" утверждена пользователем
-     2026-09-29 после показа трёх макетов) — маленькая плашка справа от
-     #appSubtitle в .hero-bottom (flex:1 у #appSubtitle сам отдаёт ей ровно
-     столько места, сколько нужно, остальное — подписи). Два яруса:
-     "сейчас" (иконка+градус) сверху крупнее, диапазон дня мин/макс снизу
-     мельче и приглушённее — тот же порядок значимости, что был у одного
-     "сейчас" раньше, просто с добавленным уточнением под ним. Скрыт по
-     умолчанию (display:none в разметке) — показывается только после
-     успешного ответа open-meteo, как и офлайн-маскот (mascot/offline.png)
-     выше — молчаливый фолбэк, никакого "не удалось загрузить погоду"
-     пользователю. Не привязан к вкладке (в отличие от #appSubtitle) —
-     остаётся виден и на "О метро", как и сам маскот в шапке, см.
-     комментарий у updateAppSubtitle(). Цвета — те же захардкоженные oklch,
-     что у текста/лейбла языка в шапке (не var(--text)): .hero-bottom
-     всегда на синем фоне бренда, вне палитры темы страницы. */
+  /* Погодный виджет — плашка справа от #appSubtitle. Два яруса: «сейчас» (иконка + градус)
+     и ниже диапазон дня мин/макс. Скрыт (display:none в разметке), показывается только
+     после успешного ответа open-meteo; при ошибке остаётся скрытым. Виден на всех вкладках.
+     Цвета захардкожены (не var(--text)): .hero-bottom всегда на синем фоне. */
   .weather-widget{
     flex:none; align-self:flex-end; display:none; flex-direction:column; align-items:flex-end;
     background:oklch(0.99 0.003 255 / .18); color:oklch(0.99 0.003 255);
@@ -260,10 +215,8 @@
   .weather-widget.show{ display:inline-flex; }
   .weather-widget .weather-now{ display:flex; align-items:center; gap:5px; }
   .weather-widget .weather-icon{ font-size:16px; line-height:1; }
-  /* Диапазон дня — своя строка снизу, display:none в разметке (не в этом
-     CSS-правиле) до первого успешного ответа с данными daily; см.
-     renderWeatherWidget() — если сервер вдруг не прислал daily-часть,
-     остаётся скрытым, а не показывает пустую строку. */
+  /* Диапазон дня: display:none в разметке; renderWeatherWidget() показывает строку,
+     только если сервер прислал daily-данные. */
   .weather-widget .weather-range{ font-size:11px; font-weight:600; color:oklch(0.99 0.003 255 / .72); }
 
   .lang-toggle{ display:inline-flex; gap:3px; background:oklch(0.99 0.003 255 / .18); border-radius:10px; padding:3px; }
@@ -279,11 +232,8 @@
   .view.active{ display:block; animation:fadeIn .3s ease; }
   @keyframes fadeIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none;} }
 
-  /* Объём карточек — редизайн "2a" (2026-09-20, см. CLAUDE.md): лёгкий
-     градиент сверху вниз + верхняя edge-подсветка + мягкая тень снизу,
-     вместо плоской заливки var(--card). --card/--card2 остались как
-     были — по-прежнему используются местами (селекты, лейбл языка и
-     т.п.), просто карточки теперь берут отдельные --card-top/--card-bot. */
+  /* Объём карточек: градиент --card-top → --card-bot, верхняя edge-подсветка и мягкая
+     тень снизу. --card/--card2 используются в остальных элементах (селекты, лейбл языка). */
   .card{
     background:linear-gradient(var(--card-top), var(--card-bot));
     border-radius:18px; padding:18px; margin-bottom:12px;
@@ -301,23 +251,15 @@
   .locate-row .dot.far{ background:var(--warn); }
   .locate-text{ flex:1; font-size:13.5px; color:var(--muted); line-height:1.4; }
   .locate-text b{ color:var(--text); font-weight:700; }
-  /* Название станции в "Ближайшая станция: X" — кликабельно, 2026-09-04.
-     Если сейчас показана/выбрана другая станция (переключились через
-     подсказку или вручную), тап сюда возвращает к честно ближайшей —
-     не только "туда" (подсказка ниже), но и "обратно", без похода в
-     выпадающий список. Подчёркивание пунктиром — тот же приём, что для
-     обычных текстовых ссылок, но без синего цвета ссылки (это по-прежнему
-     часть обычного статусного текста, не отдельный элемент интерфейса). */
+  /* Название станции в «Ближайшая станция: X» — кнопка: если выбрана другая станция,
+     тап возвращает к ближайшей по GPS. */
   .locate-station-btn{
     all:unset; color:var(--text); font-weight:700; cursor:pointer;
     border-bottom:1px dashed var(--muted);
   }
   .locate-station-btn:active{ opacity:.7; }
-  /* Подсказка "вы также недалеко от X" — 2026-09-04, см. isAmbiguous() в
-     JS и CLAUDE.md. accent-soft, не сплошной accent и не --warn: это не
-     ошибка и не главный акцент экрана, а спокойное "на заметку, можно
-     переключить одним тапом" — тот же приглушённо-акцентный язык, что и
-     у .line-dot.active. */
+  /* Подсказка «вы также недалеко от X» (см. isAmbiguous()): один тап переключает на
+     соседнюю станцию. --accent-soft, а не --warn — это не ошибка. */
   .locate-hint{
     display:none; align-items:center; gap:8px; width:100%; text-align:left;
     margin-top:10px; padding:9px 12px; border-radius:12px;
@@ -334,18 +276,13 @@
   }
   .btn:active{ transform:scale(.96); opacity:.85; }
   .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
-  /* На границе расписания (самый первый/последний поезд, что мы можем
-     найти) — кнопка "Предыдущий"/"Следующий" в модалке поезда просто
-     гаснет, а не тихо ничего не делает по клику. 2026-09-12. */
+  /* Кнопка гаснет на границе расписания (первый/последний поезд в модалке поезда). */
   .btn:disabled{ opacity:.35; cursor:default; }
   .btn:disabled:active{ transform:none; }
 
-  /* Заглушка "мы переехали" — показывается только на старом адресе
-     dafanasyevmedia.github.io (см. проверку hostname в начале <script> внизу).
-     Оверлей на весь экран поверх остального содержимого — само приложение при
-     этом даже не инициализируется (early return), чтобы не запрашивать
-     геолокацию и не тратить время зря у тех, кто сюда случайно/по старой
-     закладке зашёл. */
+  /* Заглушка «мы переехали» — только на старом адресе dafanasyevmedia.github.io
+     (проверка hostname в начале основного <script>). Оверлей на весь экран; приложение
+     при этом не инициализируется, геолокация не запрашивается. */
   .moved-notice{
     position:fixed; inset:0; z-index:9999; display:flex; align-items:center;
     justify-content:center; background:var(--bg); padding:24px;
@@ -362,14 +299,9 @@
     color:var(--text); font-size:15px; font-weight:600; font-family:inherit; margin-top:10px;
     appearance:none; -webkit-appearance:none;
   }
-  /* Кнопка-триггер модалки выбора станции — визуально один в один как
-     select{} выше (тот же паддинг/радиус/фон/шеврон), просто <button>
-     вместо <select>: сами селекты (stationSelect/wtgDestSelect/
-     fullStationSelect) остаются в DOM скрытыми и по-прежнему хранят
-     значение — вся существующая логика (wtgCalculate, renderFullSchedule,
-     populateStationSelects и т.п.) продолжает работать без изменений,
-     меняется только то, как человек это значение выбирает. См.
-     openStationModal()/CLAUDE.md. */
+  /* Кнопка-триггер модалки выбора станции, оформлена как select{}. Сами <select>
+     (stationSelect, wtgDestSelect, fullStationSelect) остаются в DOM скрытыми и хранят
+     значение; модалка (openStationModal()) только меняет его и диспатчит change. */
   .station-picker-trigger{
     width:100%; padding:12px 36px 12px 14px; border-radius:13px; border:1px solid var(--border);
     background:var(--card2) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%238a94ab" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>') no-repeat right 12px center;
@@ -379,23 +311,13 @@
   .station-picker-trigger:active{ opacity:.85; }
   .sched-controls .station-picker-trigger{ margin-top:0; }
 
-  /* Модалка выбора станции — вертикальная линия (та же идея, что у
-     горизонтальной .line-track на "Ближайшем поезде", просто в столбик:
-     .station-modal-line::before — сплошная линия, точки и подписи
-     станций — обычные строки поверх неё). 2026-09-04. */
+  /* Модалка выбора станции — вертикальная линия: .station-modal-line::before рисует
+     линию, точки и подписи — строки поверх неё. */
   .station-modal-card{ max-width:340px; padding:20px 18px; }
   .station-modal-card h2{ padding-left:4px; }
-  /* Маскот с подзорной трубой (far.png, тот же файл, что в строке
-     геолокации) — "высматривает" станцию в списке. Крупный, в свободном
-     углу карточки (справа снизу от коротких названий станций).
-     z-index:0 — НАМЕРЕННО ниже .station-modal-row (z-index:1): на
-     казахском/английском самые длинные названия ("М. Әуезов атындағы
-     театр", 24 симв.) доходят почти до края карточки, так что маскот
-     местами окажется позади текста — это ожидаемо и безопасно, текст
-     всегда читается поверх картинки, а не наоборот. pointer-events:none,
-     чтобы декоративный элемент не перехватывал клики по строкам.
-     2026-09-07 (переехал сюда из шапки — было два маскота на одном
-     экране, оставили один, но крупнее). */
+  /* Маскот в свободном углу карточки. z-index:0 ниже .station-modal-row (z-index:1):
+     длинные названия (kk «М. Әуезов атындағы театр») доходят до края и перекрывают
+     картинку — текст всегда поверх. pointer-events:none — не перехватывает клики. */
   .station-modal-mascot{
     position:absolute; right:10px; bottom:10px; width:104px; height:104px;
     object-fit:contain; z-index:0; pointer-events:none;
@@ -424,22 +346,11 @@
   }
   .station-modal-name{ font-size:14.5px; font-weight:600; }
   .station-modal-row.active .station-modal-name{ color:var(--accent); font-weight:700; }
-  /* Метка "рядом с вами по GPS" — тонкое кольцо вокруг обычной (не
-     активной) точки, как маркер геопозиции на картах. Не рисуем, если
-     геоближайшая станция и так активна (её уже выделяет большая залитая
-     точка) — см. renderStationModalList()/CLAUDE.md. 2026-09-04.
-     Размеры — только целые числа (16px, не 15px; margin -8px, не
-     -7.5px), а box-sizing:border-box — ОБЯЗАТЕЛЬНО указан явно, а не
-     унаследован от глобального `*{box-sizing:border-box}` (строка ~132):
-     на псевдоэлементах `::after`/`::before` этот `*` в браузере не
-     срабатывает (тот же приём уже используется в .tab-btn::before выше
-     по файлу). Без явного border-box рамка 2px добавлялась ПОВЕРХ
-     ширины 16px (итоговый диаметр — 20px, не 16px), а отступ -8px
-     центрировал не тот размер — кольцо визуально уезжало на ~2px
-     вниз-вправо от точки. Поймал не через getBoundingClientRect()
-     (у ::after его нет) — наложил поверх настоящий элемент с той же
-     версткой и getComputedStyle() сверил box-sizing построчно.
-     2026-09-04. */
+  /* Метка «рядом с вами по GPS» — кольцо вокруг обычной (не активной) точки, как маркер
+     геопозиции на картах. Для активной станции не рисуется (её выделяет заливка). См. renderStationModalList().
+     Размеры целые (16px, margin -8px), box-sizing:border-box задан явно: на псевдоэлементах
+     глобальное `*{box-sizing:border-box}` не действует, и без этого рамка 2px увеличивала бы
+     диаметр до 20px и кольцо сдвигалось бы относительно точки. */
   .station-modal-dotwrap.is-near::after{
     content:''; position:absolute; top:50%; left:50%; width:16px; height:16px;
     box-sizing:border-box; margin:-8px 0 0 -8px; border:2px solid var(--accent);
@@ -447,24 +358,15 @@
   }
   .station-modal-near-tag{ color:var(--muted); font-weight:500; font-size:11.5px; margin-left:6px; }
 
-  /* Модалка "расписание конкретного поезда" (2026-09-08, переработана
-     2026-09-09) — тот же .station-modal-line/-row/-dotwrap/-dot, что и в
-     выборе станции, просто без кликабельности (это не выбор, а просмотр) и
-     с добавленным временем справа (.train-modal-time, margin-left:auto —
-     дожимает его к правому краю без переопределения justify-content на
-     всём ряду). Список ВСЕГДА в одном и том же порядке (Райымбек батыра →
-     Б. Момышулы), независимо от того, по какой карточке направления
-     тапнули — активная (.active) станция не обязательно первая в списке,
-     это просто та, что совпадает с выбранной (originIdx). */
+  /* Модалка «расписание конкретного поезда» — те же .station-modal-line/-row/-dotwrap/-dot, что
+     в выборе станции, но без выбора и с временем справа (.train-modal-time, margin-left:auto).
+     Список всегда в одном порядке (Райымбек батыра → Б. Момышулы) независимо от карточки,
+     по которой тапнули; .active — станция, совпадающая с выбранной (originIdx). */
   .train-modal-line{ padding:6px 0 4px; }
-  /* "Предыдущий"/"Следующий" рядом, а не одна полноширинная кнопка "Показать
-     следующий поезд" — по отзыву пользователя, раз добавляем ещё и
-     "предыдущий", логичнее сразу парой. 2026-09-12. */
+  /* Кнопки «Предыдущий»/«Следующий» парой в модалке поезда. */
   .train-modal-nav{ display:flex; gap:8px; margin-top:14px; }
   .train-modal-nav .btn{ flex:1; }
-  /* "Это последний/первый поезд на сегодня" — почему кнопка(и) погасли,
-     а не просто тихо разблокированная серая кнопка без объяснения.
-     2026-09-12. */
+  /* Пояснение, почему кнопка «Предыдущий»/«Следующий» погашена («последний/первый поезд на сегодня»). */
   .train-modal-nav-msg{
     font-size:12.5px; color:var(--muted); text-align:center; line-height:1.4;
     margin-top:10px;
@@ -475,20 +377,11 @@
     font-variant-numeric:tabular-nums; flex:none;
   }
   .train-modal-row.active .train-modal-time{ color:var(--accent); }
-  /* Станции — платформы под ширину маркера, а не кружки, чтобы поезд
-     визуально въезжал в них целиком, как на горизонтальной линии
-     (.line-dot/.line-dot.active) — та же идея, просто ширина/высота
-     поменяны местами: маркер тут повёрнут на 90° (см. .train-modal-marker
-     ниже), значит и платформа под него должна быть "стоя", а не "лёжа".
-     Переопределяем ТОЛЬКО внутри .train-modal-row — .station-modal-dot в
-     обычной модалке выбора станции (stationModal) остаётся кружком, это
-     разные экраны с разным смыслом (там — выбор станции, тут — просмотр
-     схемы конкретного рейса). Специфичность у `.train-modal-row.active
-     .station-modal-dot` та же, что у `.station-modal-row.active
-     .station-modal-dot` выше по файлу (тоже 3 класса) — побеждает по
-     порядку в файле (этот блок идёт позже), не переопределял его
-     нарочно повышенной специфичностью, чтобы не путать в будущем.
-     2026-09-09. */
+  /* Станции в модалке поезда — платформы под ширину маркера (повёрнутого на 90°, поэтому «стоя»),
+     чтобы поезд визуально въезжал в них целиком, как на горизонтальной линии (.line-dot).
+     Переопределяется только внутри .train-modal-row: в модалке выбора станции .station-modal-dot
+     остаётся кружком. Специфичность та же, что у `.station-modal-row.active .station-modal-dot`;
+     приоритет — порядком в файле. */
   .train-modal-row .station-modal-dot{
     width:8px; height:16px; border-radius:4px; background:var(--muted); opacity:.4;
   }
@@ -496,48 +389,24 @@
     width:11px; height:20px; opacity:1; background:var(--accent-soft); border:1.5px solid var(--accent);
     border-radius:5.5px; box-shadow:0 0 12px -2px var(--accent);
   }
-  /* Соединительная линия — цветом сливается с обычными (непроехавшими)
-     платформами, а не идёт отдельной полосой другого цвета поверх них
-     (var(--border) по умолчанию у .station-modal-line::before — другой
-     оттенок, чем var(--muted) у платформ). По просьбе пользователя,
-     2026-09-09: та же пара цвет+прозрачность, что у неактивной
-     .station-modal-dot выше. */
+  /* Соединительная линия того же цвета и прозрачности, что неактивные платформы. */
   .train-modal-line::before{ background:var(--muted); opacity:.4; }
-  /* Станции, которые поезд уже проехал — просто тусклее целиком (не трогаем
-     цвета по отдельности, opacity сразу гасит и точку, и текст, и время
-     одинаково) — по отзыву пользователя, "которые не проехал — как
-     обычно", то есть менять нужно только проехавшие. 2026-09-09. */
+  /* Станции, которые поезд уже проехал (или не касается): opacity гасит точку, текст и время разом. */
   .train-modal-row.passed{ opacity:.4; }
-  /* "Поезд дальше не идёт"/"начинает движение отсюда" — вставляется между
-     строками станций (не внутри ряда — там уже время+название делят
-     ширину), только когда рейс реально короткий/ночной. 2026-09-12. */
+  /* «Поезд дальше не идёт»/«начинает движение отсюда» — вставляется между строками станций
+     (внутри ряда время и название уже делят ширину), только для коротких/ночных рейсов. */
   .train-modal-endpoint-note{
     font-size:11px; color:var(--warn); font-weight:600; text-align:left;
     padding:2px 6px 8px 34px; margin-top:-4px;
   }
-  /* Маркер — тот же силуэт/path, что у .train-marker.fwd на горизонтальной
-     линии. `top` выставляется в JS (updateTrainModalMarker) по факту
-     измеренных пиксельных центров строк (getRowCenters), а не по проценту
-     от высоты контейнера — имена станций разной длины дают разную высоту
-     строки (перенос на 2 строки на казахском/английском), так что процент
-     от общей высоты "поплыл" бы точно так же, как раньше плыли платформы
-     на горизонтальной линии (см. .line-track выше) — тут этот баг заранее
-     не повторяем.
-     Список теперь ВСЕГДА в одном порядке (см. выше), а едет поезд в разные
-     стороны — значит и маркер должен смотреть в разные стороны: .dir-
-     forward (к Б. Момышулы, вниз по списку) — нос вниз (rotate(90deg));
-     .dir-backward (к Райымбек батыра, вверх по списку) — нос вверх
-     (rotate(-90deg)). rotate — ПОСЛЕ translate(-50%,-50%), то есть вокруг
-     уже отцентрированной по (left,top) точки, тот же приём, что и
-     центрирование .line-dot.
-     left:18px (не 16px, как у линии/платформ) — по отзыву пользователя
-     маркер визуально стоял чуть левее центра платформы при заезде;
-     платформы центрируются через flex внутри .station-modal-dotwrap, а
-     маркер — фиксированным left, эти две системы координат не обязаны
-     совпадать день в день (тот же класс проблемы, что раньше был у
-     платформ на горизонтальной линии, только тут разница мельче и её
-     проще было просто подвинуть на глаз/по факту, чем городить общий
-     промер). 2026-09-09. */
+  /* Маркер — тот же силуэт, что у .train-marker.fwd. `top` выставляет JS
+     (updateTrainModalMarker) по измеренным центрам строк (getRowCenters), а не процентом:
+     названия станций переносятся на 2 строки, и высота строк неодинакова.
+     Список всегда в одном порядке, поэтому направление задаёт класс: .dir-forward
+     (к Б. Момышулы, вниз) — rotate(90deg), .dir-backward (вверх) — rotate(-90deg);
+     rotate идёт после translate(-50%,-50%), то есть вокруг центра точки (left, top).
+     left:18px, а не 16px: платформы центрируются flex-ом внутри .station-modal-dotwrap,
+     маркер — фиксированным left, и 18px визуально попадает в центр платформы. */
   .train-modal-marker{
     position:absolute; left:18px; top:0; width:16px; height:8px; z-index:2;
     background:var(--accent); pointer-events:none;
@@ -591,10 +460,8 @@
     font-weight:800; letter-spacing:.3px; border-radius:5px; padding:1px 4px; margin-left:4px;
     vertical-align:2px; line-height:1.3;
   }
-  /* Свёрнутый по умолчанию блок "Когда выезжать" на "Ближайшем поезде"
-     (раньше — отдельная вкладка, см. CLAUDE.md, объединение 2026-09-01).
-     Иконка — тот же секундомер, что раньше был у вкладки, просто теперь
-     как обычная currentColor-маска у строки-заголовка. */
+  /* Блок «Когда выезжать» на «Ближайшем поезде», свёрнут по умолчанию.
+     Иконка — currentColor-маска у строки-заголовка. */
   .wtg-teaser-toggle{
     display:flex; width:100%; align-items:center; gap:10px; text-align:left;
     background:var(--card); border:none; border-radius:18px; padding:16px 18px; margin-bottom:12px;
@@ -618,13 +485,9 @@
   .wtg-teaser-body{ display:none; }
   .wtg-teaser-body .card:first-child{ margin-top:0; }
 
-  /* Оплата ONAY — отдельной строкой сразу под тизером "Когда выезжать",
-     2026-09-03. Специально НЕ внутри wtg-teaser-body/wtg-action-row —
-     нужна видимой независимо от того, раскрывали блок и считали ли
-     маршрут, а не только после расчёта. На всю ширину и тем же паддингом/
-     радиусом, что у wtg-teaser-toggle сверху — читается как парная строка,
-     а не случайно забытая картинка (была просто голым лого без подписи —
-     пользователь справедливо заметил, что смотрится одиноко). */
+  /* Оплата ONAY — отдельная строка под тизером «Когда выезжать». Вне .wtg-teaser-body:
+     видна независимо от того, раскрыт ли блок и посчитан ли маршрут. Паддинг и радиус
+     те же, что у .wtg-teaser-toggle. */
   .onay-row{
     display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px;
     margin:0 0 12px; padding:16px 18px; border-radius:18px;
@@ -634,10 +497,8 @@
   .onay-row img{ height:20px; width:auto; display:block; flex:none; }
   .onay-row:active{ transform:scale(.98); }
 
-  /* Подсказка "На экран Домой" — карточка того же языка, что и .disclaimer
-     (иконка + текст), плюс крестик закрытия. Показывается/скрывается и
-     запоминается закрытие в JS (isIOSInstallTipCandidate(), 2026-09-06,
-     см. CLAUDE.md) — тут только внешний вид. */
+  /* Подсказка «На экран Домой» — карточка в стиле .disclaimer (иконка + текст) с крестиком.
+     Показ и запоминание закрытия — в JS (isIOSInstallTipCandidate()); здесь только вид. */
   .ios-install-tip{
     display:flex; gap:9px; align-items:flex-start; background:var(--card);
     border-radius:14px; padding:11px 34px 11px 14px; margin:0 0 12px; position:relative;
@@ -659,22 +520,11 @@
     content:''; position:absolute; left:6px; right:6px; top:50%; height:2px; margin-top:-1px;
     background:var(--rail); border-radius:2px;
   }
-  /* Станция — платформа по ширине поезда (train-marker — 16px), не точка.
-     Обкатано на прототипе ("Станции-платформы"): пришлось поправить
-     привязку поезда с носа на центр (см. .train-marker margin-left ниже),
-     иначе при стоянке поезд торчал мимо симметричной платформы. Но и
-     этого оказалось мало: раньше точки стояли через flex
-     (justify-content:space-between — перераспределяет место с учётом
-     реальной ширины КАЖДОГО элемента), а поезд — через проценты. Пока
-     точки были крошечные (7-15px), расхождение было незаметно; на
-     платформах (16-20px, да ещё активная заметно шире остальных) оно
-     превратилось в реальный сдвиг на несколько пикселей — поезд
-     "стоял" не в центре своей платформы. Убрали flex, точки теперь
-     тоже через `left:calc(...)` (та же формула, что у поезда,
-     см. renderLineStrip) + `transform:translate(-50%,-50%)` для
-     центрирования по обеим осям сразу — центр платформы и центр
-     "припаркованного" поезда гарантированно совпадают, а не только на
-     глаз. 2026-09-06. */
+  /* Станция — платформа по ширине поезда (.train-marker — 16px). Положение задаётся
+     той же формулой `left:calc(...)`, что и у поезда (см. renderLineStrip), плюс
+     transform:translate(-50%,-50%): центр платформы и «припаркованного» поезда совпадают.
+     Flex с space-between здесь не подходит — он учитывает реальную ширину каждой платформы
+     (активная шире остальных), и поезд, позиционируемый процентами, смещался бы. */
   .line-dot{
     position:absolute; top:50%; width:16px; height:8px; border-radius:4px; background:var(--muted);
     opacity:.4; transition:all .2s; cursor:pointer; transform:translate(-50%, -50%);
@@ -686,24 +536,17 @@
     border-radius:5.5px; box-shadow:0 0 12px -2px var(--accent);
   }
   .line-dot.active:hover{ transform:translate(-50%, -50%); }
-  /* "Поезд на станции" — рамка/заливка/размер платформы НЕ меняются
-     (по отзыву — оставить как есть), только усиливается свечение — см.
-     .docked toggle в renderTrainMarkers()/CLAUDE.md. 2026-09-06. */
+  /* «Поезд на станции» — усиливается только свечение, размер и рамка платформы те же
+     (класс .docked переключает renderTrainMarkers()). */
   .line-dot.active.docked{
     box-shadow:0 0 22px 0px var(--accent);
   }
   .line-ends{ display:flex; justify-content:space-between; margin:6px 2px 0; font-size:10.5px; color:var(--muted2); font-weight:600; }
   .line-ends span{ max-width:44%; } .line-ends span:last-child{ text-align:right; }
 
-  /* Силуэт поезда (не "пуля"/полигон, как раньше) + хвост-свечение позади —
-     обкатано на прототипе (Artifact "Поезд-комета"), форма подогнана под
-     реальную иконку-референс пользователя: замерил её силуэт по пикселям
-     (canvas, построчный анализ альфа-канала) и подобрал кривые Безье под
-     те же пропорции — нос НЕсимметричный (верхний край скошен от самого
-     начала, нижний почти плоский до кончика), кончик носа ниже центра
-     корпуса. .bwd — не transform:scaleX(-1) от .fwd, а отдельный
-     зеркальный path/градиент, как и раньше в этом блоке (тот же приём,
-     что был у старого clip-path на два полигона). 2026-09-06. */
+  /* Силуэт поезда + хвост-свечение позади. Нос несимметричный: верхний край скошен от
+     самого начала, нижний почти плоский до кончика, кончик ниже центра корпуса.
+     .bwd — отдельный зеркальный path и градиент, а не scaleX(-1) от .fwd. */
   .train-marker{
     position:absolute; top:50%; left:0; width:16px; height:8px; margin-top:-4px; margin-left:-8px;
     pointer-events:none; z-index:2; transition:left .95s linear, top .3s ease; animation:trainPulse 1.7s ease-in-out infinite;
@@ -735,8 +578,8 @@
   .directions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:400px){ .directions{ grid-template-columns:1fr; } }
 
-  /* Ночью, когда закрыты все направления сразу — одна общая полоса со спящим
-     маскотом вместо двух одинаковых "метро закрыто" в карточках (см. tickCountdowns). */
+  /* Когда закрыты оба направления сразу — одна общая полоса со спящим маскотом вместо
+     двух одинаковых «метро закрыто» в карточках (см. tickCountdowns). */
   .closed-banner{ display:flex; align-items:center; gap:14px; padding:6px 4px 14px; }
   .closed-banner img{ width:72px; height:72px; flex:none; object-fit:contain; }
   .closed-banner-text{ font-size:14px; color:var(--muted); line-height:1.4; }
@@ -751,10 +594,8 @@
     box-shadow:inset 0 1px 0 var(--edge), 0 10px 24px -14px var(--shadow);
     --tier:var(--muted); --tier2:var(--muted);
   }
-  /* Тап по карточке — открывает расписание именно этого поезда по станциям
-     (см. openTrainModal, 2026-09-08). Только у карточек с реальным
-     отсчётом — у "unavailable" (конечная станция, поездов нет) кликать
-     нечего, курсор/press-эффект туда не добавляем. */
+  /* Тап по карточке открывает расписание этого поезда по станциям (openTrainModal).
+     Только у карточек с отсчётом; у «unavailable» (конечная станция) нажимать нечего. */
   .dir-card.tappable{ cursor:pointer; }
   .dir-card.tappable:active{ transform:scale(.98); border-color:var(--tier); }
   .dir-card.wait-normal{ --tier:var(--accent); --tier2:var(--accent); }
@@ -769,13 +610,9 @@
     50%{ box-shadow:0 0 16px 3px oklch(0.82 0.19 132 / .45); }
   }
   .dir-card.wait-pulse{ animation:waitPulseGlow 1s ease-in-out infinite; }
-  /* Блик фар — редизайн "2a" (2026-09-20, см. CLAUDE.md). Только на
-     карточке с активным ("скоро") отсчётом — .wait-soon, не на всех
-     карточках сразу и не на самой линии/рельсе (её решили не
-     анимировать вовсе, см. .line-track::before выше — оба направления
-     движутся по одному рельсу, "бегущий" рельс читался бы как одно
-     направление). .dir-card::after свободен (::before занят прогресс-
-     баром выше), конфликта нет. */
+  /* Блик фар — только на карточке со скорым отправлением (.wait-soon). Сам рельс
+     не анимируется: по нему идут поезда в обе стороны, и бегущий рельс читался бы как
+     одно направление. .dir-card::before занят прогресс-баром, ::after свободен. */
   @keyframes headlight{ 0%{ transform:translateX(-120%); } 60%,100%{ transform:translateX(320%); } }
   .dir-card.wait-soon::after{
     content:''; position:absolute; top:0; bottom:0; left:0; width:34%;
@@ -788,12 +625,8 @@
     .doors-fx .seam{ animation:none; opacity:0; }
   }
 
-  /* Двери — редизайн "3a: Стекло" (2026-09-20, см. CLAUDE.md). Раньше
-     плоская заливка var(--success) — тот же лайм, что у отсчёта и
-     активной платформы, а лайм в этом приложении означает "живые данные",
-     не декорацию, конфликтовал по смыслу. Теперь синий градиент в тон
-     шапки/карточек, стеклянное окно с бликом, вспышка по шву — лайма на
-     створках больше нет нигде. */
+  /* Двери: синий градиент в тон шапки, стеклянное окно с бликом, вспышка по шву.
+     Лаймовый цвет (--success) зарезервирован за «живыми данными» и на створках не используется. */
   .doors-fx{ position:absolute; inset:0; z-index:5; display:flex; pointer-events:none; animation:doorsFadeOut 1.5s ease-in forwards; }
   .doors-fx .door{
     position:relative; flex:1;
@@ -806,7 +639,7 @@
     box-shadow:inset 2px 0 6px -2px oklch(0.10 0.03 262 / .8),
                inset 0 1px 0 oklch(0.85 0.06 258 / .35);
   }
-  /* Окно — стекло, не плоский прямоугольник: сдвинуто от шва наружу. */
+  /* Окно — стекло, сдвинуто от шва наружу. */
   .doors-fx .door::after{
     content:''; position:absolute; top:14%; bottom:36%; left:16%; right:12%;
     border-radius:4px;
@@ -815,7 +648,7 @@
     box-shadow:inset 0 0 12px oklch(0.10 0.03 262 / .5);
   }
   .doors-fx .door.right::after{ left:12%; right:16%; }
-  /* Блик на стекле левой створки — ::before у .door свободен. */
+  /* Блик на стекле левой створки (::before у .door свободен). */
   .doors-fx .door.left::before{
     content:''; position:absolute; top:14%; bottom:36%; left:16%; width:26%;
     background:linear-gradient(120deg, oklch(0.97 0.02 240 / .32), transparent 70%);
@@ -826,14 +659,10 @@
   @keyframes doorCloseLeft{ 0%{ transform:translateX(-100%); } 35%, 60%{ transform:translateX(0); } }
   @keyframes doorCloseRight{ 0%{ transform:translateX(100%); } 35%, 60%{ transform:translateX(0); } }
   @keyframes doorsFadeOut{ 0%, 60%{ opacity:1; } 100%{ opacity:0; } }
-  /* Вспышка по шву — отдельный узел (.seam, добавлен в playDoorsFx), не
-     псевдоэлемент .doors-fx: оба псевдоэлемента контейнера свободны, но
-     вспышке нужен свой z-порядок ПОВЕРХ обеих створок, а элементы одного
-     контейнера рисуются в порядке DOM — проще отдельным span после дверей,
-     чем городить z-index на псевдоэлементе внешнего контейнера. Фазы
-     привязаны к doorCloseLeft/Right (створки сомкнуты на 35-60%): вспышка
-     нарастает к 30%, гаснет к 60% — синхронно с началом doorsFadeOut. Если
-     тайминги дверей поменяются, двигать seamGlow вместе с ними. */
+  /* Вспышка по шву — отдельный span (.seam, добавляется в playDoorsFx) после створок:
+     ей нужен z-порядок поверх обеих, а элементы контейнера рисуются в порядке DOM.
+     Фазы привязаны к doorCloseLeft/Right (створки сомкнуты на 35–60%): нарастает к 30%,
+     гаснет к 60%, синхронно с doorsFadeOut. При изменении таймингов дверей менять seamGlow вместе с ними. */
   .doors-fx .seam{
     position:absolute; top:0; bottom:0; left:50%; width:3px; margin-left:-1.5px;
     background:linear-gradient(oklch(0.95 0.05 240 / 0),
@@ -843,13 +672,10 @@
     pointer-events:none;
   }
   @keyframes seamGlow{ 0%,20%{ opacity:0; } 30%,45%{ opacity:1; } 60%,100%{ opacity:0; } }
-  /* Маскот выезжает с края карточки в последние PEEK_ARRIVE_SEC секунд перед
-     отправлением (см. tickCountdowns) — z-index НИЖЕ doors-fx (5), поэтому когда
-     поезд отправляется и играет анимация дверей, она перекрывает маскота сверху;
-     сам элемент удаляется в этот же момент (см. playDoorsFx), так что к моменту,
-     когда двери исчезают, маскота там уже нет. Карточка (.dir-card) обрезает
-     лишнее через overflow:hidden — этим и создаётся эффект "выезжает из-за края",
-     без необходимости рисовать дверь на самой картинке маскота. */
+  /* Маскот выезжает с края карточки в последние PEEK_ARRIVE_SEC секунд перед отправлением
+     (см. tickCountdowns). z-index ниже .doors-fx (5): при отправлении playDoorsFx сразу
+     удаляет маскота, и двери закрываются поверх. Карточка обрезает его через overflow:hidden —
+     эффект «выезжает из-за края» без нарисованной двери на самой картинке. */
   .peek-mascot-wait{
     position:absolute; z-index:4; right:-6px; bottom:0; width:64px; height:auto;
     pointer-events:none; transform:translateX(55px); opacity:0;
@@ -874,10 +700,8 @@
   .dir-card.wait-soon .countdown{ color:var(--accent); }
   .dir-card .countdown small{ font-size:13px; font-weight:600; color:var(--muted); font-family:"Inter",sans-serif; }
   .dir-card .next-after{ font-size:11.5px; color:var(--muted2); margin-top:6px; font-weight:500; }
-  /* "Этот поезд — только до X" — короткий/ночной рейс, не идёт до конечной
-     (см. trainFarReach, CLAUDE.md). Цвет предупреждения (var(--warn)) —
-     та же роль, что у .offline-note: не ошибка, но важно не пропустить.
-     2026-09-12. */
+  /* «Этот поезд — только до X» — короткий/ночной рейс (см. trainFarReach). --warn, как у .offline-note:
+     не ошибка, но важно не пропустить. */
   .dir-card .short-turn-note{ font-size:11px; color:var(--warn); margin-top:6px; font-weight:600; line-height:1.35; }
   .dir-card .closed{ font-size:12.5px; color:var(--muted); line-height:1.4; font-weight:500; }
   .dir-card.unavailable{ opacity:.5; }
@@ -887,13 +711,8 @@
   .note.warn{ color:var(--warn); }
   .note.holiday{ color:var(--accent); font-weight:600; }
 
-  /* max-width здесь — не 640px, а 640-32=608: main тоже упирается в 640px,
-     но у него ещё и свои 16px+16px padding по бокам, из-за которых
-     карточки внутри реально шире 608px не бывают. .disclaimer/.offline-note
-     лежат СНАРУЖИ main (не могут унаследовать его padding), так что ширину
-     приходится дублировать вручную — иначе на широких экранах этот блок
-     оказывается на 32px шире карточек и торчит по бокам (было замечено
-     пользователем 2026-09-01). */
+  /* max-width 608px = 640 (ширина main) − 32 (его боковой padding). .disclaimer/.offline-note
+     лежат вне main и его padding не наследуют, поэтому ширину считают сами — так они выровнены с карточками. */
   .disclaimer{
     display:flex; gap:9px; align-items:flex-start; background:var(--card);
     border-radius:14px; padding:11px 14px; margin:0 auto 12px;
@@ -901,17 +720,14 @@
   }
   .disclaimer .icon{ display:none; }
 
-  /* Показывается, только если Service Worker реально отдал JSON из офлайн-кеша
-     (см. sw.js + X-From-SW-Cache в fetchJSON ниже) — не просто "давно не
-     обновлялось", а именно "прямо сейчас нет сети". */
+  /* Показывается, только если Service Worker отдал JSON из офлайн-кеша (заголовок
+     X-From-SW-Cache, см. fetchJSON) — то есть сети прямо сейчас нет. */
   .offline-note{
     display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--warn);
     border-radius:14px; padding:9px 14px; margin:0 auto 12px;
     max-width:608px; width:calc(100% - 32px); font-size:12.5px; color:var(--warn); line-height:1.45; font-weight:600;
   }
-  /* mascot/offline.png — новая поза (2026-09-07), файл появится позже —
-     если файла ещё нет, браузер просто не покажет пустую картинку (alt=""),
-     текст баннера при этом не ломается. */
+  /* Если mascot/offline.png не загрузился, картинка скрывается (onerror в разметке). */
   .offline-note-mascot{ width:34px; height:34px; flex:none; object-fit:contain; }
 
   .about-h2{ font-size:14px; font-weight:600; margin:0 0 10px; letter-spacing:-.2px; }
@@ -924,8 +740,7 @@
 
   footer.meta{ text-align:center; color:var(--muted2); font-size:11px; padding:10px 16px 22px; line-height:1.7; font-weight:500; max-width:640px; margin:0 auto; }
 
-  /* Раньше тут был один "Написать нам" — с 2026-09-06 рядом "Поделиться"
-     (см. shareLink в JS/CLAUDE.md), общий отступ переехал на обёртку. */
+  /* Ссылки под футером: «Написать нам» и «Поделиться». */
   .footer-links{ display:flex; justify-content:center; gap:18px; margin:-12px auto 22px; }
   .feedback-link{
     display:block; text-align:center; font-size:11.5px;
@@ -962,8 +777,7 @@
   .feedback-status.ok{ color:var(--success); }
   .feedback-status.err{ color:var(--danger); }
 
-  /* Кнопка "Маршрут" — обычная видимая кнопка с текстом, без иконок и без
-     расчёта на hover/tooltip (тачскрин, наводить нечем). */
+  /* Кнопка «Маршрут» — обычная кнопка с текстом, без расчёта на hover/tooltip (тачскрин). */
   .route-trigger{
     display:inline-flex; align-items:center; gap:7px; margin-top:8px;
     padding:6px 12px 6px 9px; border-radius:9px; background:var(--card2); border:1px solid var(--border);
@@ -978,19 +792,11 @@
   }
   .route-trigger:active{ transform:scale(.96); }
 
-  /* Компактный вариант — рядом с названием станции/подписью поля, а не
-     отдельной строкой. Нейтральный, приглушённый — это вспомогательное
-     действие, не хочет соревноваться за внимание с основными кнопками.
-     На "Ближайшем поезде" (#stationRouteBtn) с 2026-09-05 без подписи —
-     решили, что одной иконки достаточно, увеличили её (было 9px) вместо
-     мелкого бейджика с текстом. Пробовали 22px вровень с высотой шрифта
-     названия станции — по отзыву слишком крупно, остановились на 15px
-     (тот же размер, что у ::before в .route-trigger по умолчанию —
-     см. выше). Текст остался только в aria-label (см. JS,
-     applyLanguage()) — для скринридеров. Отступы у бейджика — строго
-     симметричные (padding:3px), иначе квадрат перестаёт быть квадратом
-     и иконка внутри визуально смещается не по центру; подъём над
-     базовой линией текста — через margin-bottom, не через отступы. */
+  /* Компактный вариант — рядом с названием станции, а не отдельной строкой. Нейтральный и
+     приглушённый: вспомогательное действие. На «Ближайшем поезде» (#stationRouteBtn) без подписи,
+     только иконка 15px; текст — в aria-label (applyLanguage()). Отступы строго симметричные
+     (padding:3px) — иначе квадрат перестаёт быть квадратом и иконка смещается; подъём над
+     базовой линией текста — через margin-bottom. */
   .station-name-row{ display:inline-flex; align-items:flex-end; gap:7px; min-width:0; flex-wrap:wrap; }
   .route-trigger-sm{
     padding:3px; margin-bottom:4px; gap:3px; font-size:9.5px;
@@ -998,12 +804,8 @@
   }
   .route-trigger-sm::before{ width:15px; height:15px; }
 
-  /* Мини-игра "Маскот-раннер" (2026-09-29, сначала обкатана как отдельный
-     HTML-артефакт вне репозитория — см. CLAUDE.md, здесь перенесена и
-     подключена к реальным данным станции/расписания). Бейдж — сразу под
-     карточками направлений (буквально "рядом с отсчётом", по просьбе
-     пользователя), нейтральный, как и .route-trigger — вспомогательное
-     действие, не соревнуется за внимание с самим отсчётом. */
+  /* Мини-игра «Маскот-раннер». Бейдж — под карточками направлений; нейтральный, как
+     .route-trigger: вспомогательное действие, не конкурирует с отсчётом. */
   .runner-badge{
     display:flex; align-items:center; gap:10px; width:100%; margin-top:10px;
     padding:9px 12px; border-radius:14px; background:var(--card2); border:1px solid var(--border);
@@ -1014,11 +816,8 @@
   .runner-badge .runner-badge-arrow{ color:var(--muted); font-size:14px; flex:none; }
   .runner-badge:active{ transform:scale(.98); }
 
-  /* На весь экран (2026-09-29, по отзыву: тап не работал + маленький экран) —
-     .runner-modal-overlay переопределяет padding общего .feedback-modal (у
-     него 20px со всех сторон, не подходит для fullscreen), .runner-card
-     занимает всю высоту/ширину вьюпорта вместо центрированной карточки,
-     canvas-обёртка растягивается на оставшееся место через flex:1. */
+  /* Модалка игры на весь экран: .runner-modal-overlay сбрасывает padding общего .feedback-modal,
+     .runner-card занимает весь вьюпорт, обёртка canvas растягивается через flex:1. */
   .runner-modal-overlay{ padding:0; background:oklch(0.03 0.01 255 / .92); }
   .runner-card{
     max-width:none; width:100%; height:100%; max-height:none; margin:0;
@@ -1074,10 +873,8 @@
   .route-link-item:active{ transform:scale(.97); }
 
   .wtg-action-row{ display:flex; gap:8px; margin-top:14px; }
-  /* Нейтральные, не зелёные — это вспомогательные действия, не хотим,
-     чтобы спорили по вниманию с "Посчитать" (тот один настоящий акцент
-     на этом экране). Тот же приглушённый вид, что и у мелкого бейджика
-     "Маршрут до станции" на "Ближайшем поезде". */
+  /* Нейтральный вид (не зелёный): вспомогательные действия не конкурируют с «Посчитать» —
+     единственным акцентом на этом экране. */
   .wtg-action-row .btn{
     flex:1; margin-top:0; background:var(--card2); color:var(--text); border:1px solid var(--border);
   }
@@ -1104,10 +901,7 @@
   .daytype-toggle .btn{ flex:1; }
   .daytype-toggle .btn.active{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
 
-  /* Порог поднят с 400 до 480px (2026-09-01, по просьбе пользователя —
-     раздел казался мелким): у большинства современных телефонов (390-430px)
-     ширина экрана раньше всё ещё укладывала две колонки рядом, ужимая
-     чипы времени в ~185px — теперь у них одна широкая колонка. */
+  /* Одна колонка на экранах до 480px: две колонки рядом ужимают чипы времени. */
   .sched-cols{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:480px){ .sched-cols{ grid-template-columns:1fr; } }
   .sched-col-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; user-select:none; margin:0 0 10px; padding:2px 0; }
@@ -1123,11 +917,9 @@
   .chip.past{ opacity:.35; }
   .chip.next{ background:var(--accent); color:var(--accent-ink); border-color:transparent; font-weight:700; }
 
-  /* Схлопнутые "прошедшие часы" (2026-09-01) — по умолчанию скрыты, чтобы
-     вечером сразу было видно расписание с текущего часа, а не листать вниз
-     мимо десятка тусклых прошедших часов. Показывается только для дня,
-     который реально сегодня (viewingCurrentDayType) — у другого дня недели
-     нет понятия "прошедшее". */
+  /* Схлопнутые «прошедшие часы»: по умолчанию скрыты, чтобы вечером расписание начиналось
+     с текущего часа. Только для дня, который идёт сегодня (viewingCurrentDayType) —
+     у другого дня недели понятия «прошедшее» нет. */
   .sched-earlier-toggle{
     display:flex; align-items:center; gap:6px; width:100%; margin:0 0 12px;
     padding:7px 2px; border:none; border-bottom:1px solid var(--border); background:none;
@@ -1141,7 +933,7 @@
   .spinner{ width:16px;height:16px;border-radius:50%;border:2.5px solid var(--border); border-top-color:var(--accent); animation:spin .8s linear infinite; flex:none; }
   @keyframes spin{ to{ transform:rotate(360deg);} }
 
-  /* bottom nav — три вкладки (те же .tab-btn, что и раньше), теперь снизу */
+  /* Нижняя навигация — три вкладки (.tab-btn). */
   .bottom-nav{
     position:fixed; left:0; right:0; bottom:0; z-index:10; display:flex; justify-content:center;
     background:var(--card); border-top:1px solid var(--border);
@@ -1153,9 +945,8 @@
     font-family:"Inter",sans-serif; font-size:10.5px; font-weight:600; cursor:pointer; border-radius:12px;
   }
   .tab-btn.active{ color:var(--accent); }
-  /* Иконки вкладок — SVG-маски (icons/*.svg), однотонные, красятся через
-     currentColor: неактивная вкладка серая, активная — зелёная, без лишних
-     файлов-запросов (зашиты как data-URI, доступны и офлайн через SW). */
+  /* Иконки вкладок — SVG-маски (icons/*.svg) в виде data-URI, красятся через currentColor:
+     неактивная вкладка серая, активная зелёная; отдельных запросов нет, работают офлайн. */
   .tab-btn::before{
     content:''; width:19px; height:19px; box-sizing:border-box; background-color:currentColor;
     -webkit-mask-size:contain; mask-size:contain;
@@ -1260,9 +1051,8 @@
       </div>
     </div>
 
-    <!-- "Когда выезжать" — раньше отдельная вкладка, с 2026-09-01 свёрнутый
-         блок прямо здесь: своей станции отправления у него нет, это всегда
-         selectedSlug сверху (см. CLAUDE.md). -->
+    <!-- «Когда выезжать» — свёрнутый блок на «Ближайшем поезде». Станции отправления у него нет:
+         это всегда selectedSlug из верхней карточки. -->
     <button class="wtg-teaser-toggle" id="wtgTeaserToggle" style="display:none">
       <span class="wtg-teaser-icon"></span>
       <span class="wtg-teaser-text" id="wtgTeaserText">На какой поезд успеть, чтобы быть на месте вовремя</span>
@@ -1306,21 +1096,15 @@
       </div>
     </div>
 
-    <!-- Отдельно от тизера/расчёта — видна всегда, как только выбрана
-         станция, независимо от того, раскрывали ли "Когда выезжать" и
-         считали ли маршрут (см. CLAUDE.md). Стоит ПОСЛЕ wtgTeaserBody
-         (не между toggle и body, как раньше) — иначе при раскрытом
-         расчёте кнопка "зависала" наверху, между заголовком и самим
-         расчётом, а не уходила под него. 2026-09-04. -->
+    <!-- ONAY — видна всегда, как только выбрана станция, независимо от раскрытия «Когда выезжать»
+         и расчёта. Стоит после wtgTeaserBody, чтобы при раскрытом расчёте уходить под него. -->
     <button class="onay-row" id="onayBtn" style="display:none">
       <span class="onay-row-text" id="onayRowText">Оплатить проезд в метро</span>
       <img src="icons/onay.svg" alt="ONAY" />
     </button>
 
-    <!-- "Добавить на экран Домой" — только вне Telegram, только iOS Safari
-         (см. isIOSInstallTipCandidate()/CLAUDE.md). Внизу основного экрана,
-         не глобально — тут его увидят те, кто реально дошёл до расписания,
-         а не мешает на любой другой вкладке. -->
+    <!-- «Добавить на экран Домой» — только вне Telegram и только iOS Safari
+         (см. isIOSInstallTipCandidate()). Внизу основного экрана, не на всех вкладках. -->
     <div class="ios-install-tip" id="iosInstallTip" style="display:none">
       <button class="ios-install-close" id="iosInstallClose" aria-label="Закрыть">×</button>
       <svg class="ios-share-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1440,10 +1224,8 @@
   </div>
 </div>
 
-<!-- Модалка выбора станции — заменяет нативные <select> во всех трёх
-     местах (ручной выбор, "До станции", "Всё расписание"), 2026-09-04.
-     Один общий компонент, открывается с контекстом: openStationModal()
-     запоминает, какой именно скрытый <select> нужно обновить (см. JS). -->
+<!-- Модалка выбора станции — общий компонент для трёх мест (ручной выбор, «До станции»,
+     «Всё расписание»). openStationModal() запоминает, какой скрытый <select> обновлять. -->
 <div class="feedback-modal" id="stationModal" style="display:none">
   <div class="feedback-card station-modal-card">
     <button class="feedback-close" id="stationModalClose" aria-label="Закрыть">×</button>
@@ -1453,13 +1235,9 @@
   </div>
 </div>
 
-<!-- Модалка "расписание конкретного поезда" — открывается тапом по карточке
-     направления на "Ближайшем поезде" (см. renderDirections/openTrainModal,
-     2026-09-08; переработана 2026-09-09 — список всегда в одном порядке,
-     все станции сразу, кнопка "следующий поезд"). Тот же визуальный язык,
-     что у stationModal (вертикальная линия станций), плюс живой маркер
-     поезда (#trainModalMarker), позиционируется по той же логике, что и на
-     горизонтальной линии (estimateFullPath() + dwellFrac) — см. CLAUDE.md. -->
+<!-- Модалка «расписание конкретного поезда» — открывается тапом по карточке направления
+     (renderDirections/openTrainModal). Тот же вид, что у stationModal, плюс живой маркер поезда
+     (#trainModalMarker), позиция считается через estimateFullPath() и dwellFrac(). -->
 <div class="feedback-modal" id="trainModal" style="display:none">
   <div class="feedback-card station-modal-card">
     <button class="feedback-close" id="trainModalClose" aria-label="Закрыть">×</button>
@@ -1521,22 +1299,17 @@
 (function(){
   "use strict";
 
-  // Старый адрес (GitHub Pages) — вместо приложения показываем заглушку
-  // "мы переехали" со ссылкой на ala-metro.org и не инициализируем ничего
-  // остальное (не спрашиваем геолокацию и т.п. у тех, кто сюда случайно/по
-  // старой закладке попал). Проверяем только этот конкретный домен, а не
-  // "всё, что не ala-metro.org" — иначе задело бы и предпросмотровые адреса
-  // Vercel (*.vercel.app), и локальную разработку.
+  // Старый адрес (GitHub Pages): вместо приложения показываем заглушку «мы переехали» и
+  // ничего не инициализируем (геолокация не запрашивается). Проверяется именно этот hostname,
+  // а не «всё, кроме ala-metro.org» — иначе заглушка появилась бы на *.vercel.app и локально.
   if (window.location.hostname === 'dafanasyevmedia.github.io') {
     document.getElementById('movedNotice').style.display = '';
     return;
   }
 
-  // Офлайн-доступ (см. sw.js + CLAUDE.md) — регистрируем после полной загрузки
-  // страницы, чтобы не соревноваться за сеть с основными ресурсами. Внутри
-  // самого Telegram (WebView) Service Worker может быть недоступен вовсе —
-  // особенно на iOS — тогда просто ничего не произойдёт, приложение работает
-  // как обычно, просто без офлайн-кеша.
+  // Офлайн-доступ (см. sw.js): Service Worker регистрируется после load, чтобы не конкурировать
+  // за сеть с основными ресурсами. Внутри Telegram WebView (особенно iOS) он может быть недоступен —
+  // приложение тогда работает без офлайн-кеша.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').catch(function () { /* нет офлайна — не критично */ });
@@ -1545,10 +1318,9 @@
 
   /* ---------- Telegram Mini App bootstrap ---------- */
   var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-  // Вне настоящего Telegram-клиента telegram-web-app.js подставляет заглушку
-  // (platform === 'unknown', пустой initData), которая всегда отдаёт colorScheme
-  // "light" — из-за этого страница игнорировала бы системную тёмную тему при
-  // обычном открытии в браузере. Применяем тему Telegram только внутри Telegram.
+  // Вне настоящего Telegram-клиента telegram-web-app.js подставляет заглушку (platform === 'unknown',
+  // пустой initData) с colorScheme всегда "light" — она перебила бы системную тёмную тему.
+  // Поэтому тема Telegram применяется только внутри Telegram.
   var insideTelegram = !!(tg && tg.platform && tg.platform !== 'unknown');
   if (tg) {
     try {
@@ -1563,18 +1335,12 @@
     } catch (e) { /* работаем как обычная веб-страница */ }
   }
 
-  /* ---------- "Добавить на экран Домой" (только iOS Safari, не Telegram) ----------
-     Просили показывать инструкцию только пользователям сайта на iOS —
-     не внутри Telegram Mini App (там своя логика открытия, "на экран
-     Домой" через Safari просто не имеет смысла) и не в других браузерах
-     на iOS (Chrome/Firefox/Edge/Opera для iOS всё равно работают через
-     WebKit и в UA есть слово Safari, но у них НЕТ пункта "На экран
-     Домой" в меню "Поделиться" — с ними инструкция была бы неверной,
-     отличаем по их собственным токенам в UA). Не показываем повторно,
-     если уже установлено (navigator.standalone) или пользователь once
-     закрыл крестиком (localStorage, чтобы не надоедать на каждый визит —
-     это просто "не показывать снова", а не поведенческая память вроде
-     той, что откатили в фиче с геолокацией, см. CLAUDE.md). 2026-09-06. */
+  /* ---------- «Добавить на экран Домой» (только iOS Safari, не Telegram) ----------
+     Инструкция показывается только в Safari на iOS: Chrome/Firefox/Edge/Opera для iOS тоже
+     работают на WebKit и содержат "Safari" в UA, но пункта «На экран Домой» в их меню нет —
+     их отсеиваем по собственным токенам UA (CriOS/FxiOS/EdgiOS/OPiOS), как и встроенные
+     браузеры Facebook/Instagram. Не показывается, если уже установлено (navigator.standalone)
+     или закрыто крестиком (флаг в localStorage). */
   function isIOSInstallTipCandidate() {
     var ua = navigator.userAgent;
     if (!/iPhone|iPad|iPod/i.test(ua)) return false;
@@ -1597,14 +1363,10 @@
   });
 
   /* ---------- Поделиться приложением ----------
-     Внутри Telegram — открываем нативный экран "переслать" через
-     t.me/share/url (tg.openTelegramLink, отдельный метод от tg.openLink —
-     именно он открывает t.me-ссылки внутри самого клиента, а не в
-     системном браузере). Снаружи — Web Share API (мобильный Safari/
-     Chrome показывают системное меню "Поделиться"); если и его нет —
-     копируем ссылку в буфер и на секунду меняем текст кнопки, чтобы
-     дать понять, что сработало; если и буфера нет — просто открываем
-     ссылку, скопировать можно будет из адресной строки. 2026-09-06. */
+     Внутри Telegram — нативный экран «переслать» через t.me/share/url (tg.openTelegramLink открывает
+     t.me-ссылки внутри клиента, в отличие от tg.openLink). Снаружи — Web Share API; без него —
+     ссылка копируется в буфер, текст кнопки на 1.6 с меняется на подтверждение; без буфера —
+     ссылка просто открывается. */
   var SHARE_URL = location.origin + '/';
   document.getElementById('shareLink').addEventListener('click', function () {
     var btn = this;
@@ -1634,14 +1396,10 @@
   /* ---------- Локализация (ru / kk) ---------- */
   var LANG_STORAGE_KEY = 'almatyMetroLang';
 
-  // Казахские падежные окончания у времени ("09:53-те", "22:34-ке") зависят
-  // от последнего произнесённого числительного — минут, а если минут "00",
-  // то часов (Kazakh: "елу үш" → последнее слово "үш" определяет и гармонию
-  // гласных, и звонкость окончания; для чисел вида X0 без единиц — по слову
-  // десятков: "жиырма" и т.п.). Разобрано и проверено на паре примеров
-  // вместе с пользователем 2026-08-29 (см. CLAUDE.md) — правило выведено из
-  // этих примеров и общей грамматики, не сверено целиком с носителем языка,
-  // так что для непроверенных значений стоит перепроверить при случае.
+  // Казахские падежные окончания у времени ("09:53-те", "22:34-ке") определяются последним
+  // произнесённым числительным: минутами, а при "00" минут — часами. Слово единиц задаёт гармонию
+  // гласных и звонкость окончания; для чисел вида X0 — слово десятков ("жиырма" и т.п.).
+  // Правило выведено из примеров и общей грамматики, с носителем целиком не сверено.
   var KK_ONES_CLASS = { 1:'front-voiced', 2:'front-voiced', 3:'front-voiceless', 4:'front-voiceless', 5:'front-voiceless', 6:'back-voiced', 7:'front-voiced', 8:'front-voiced', 9:'back-voiced' };
   var KK_TENS_CLASS = { 1:'back-voiced', 2:'back-voiced', 3:'back-voiced', 4:'back-voiceless', 5:'front-voiced' };
   var KK_CASE_SUFFIX = {
@@ -1671,10 +1429,8 @@
       appSubtitle: 'Онлайн-расписание — сколько ждать до поезда',
       appSubtitleWhentogo: 'На какой поезд успеть, чтобы быть на месте вовремя',
       appSubtitleFull: 'Полное расписание по всем станциям',
-      // Плашка-реплика маскота в шапке (см. HERO_LINE_STRICT_CATEGORIES/
-      // HERO_LINE_POOL_CATEGORIES и CLAUDE.md,
-      // раздел "Плашка-реплика маскота в шапке") — каждая фраза отдельный ключ,
-      // сама плашка ничего не хардкодит, только перечисляет эти ключи.
+      // Фразы плашки-реплики в шапке: каждая — отдельный ключ; категории и приоритеты
+      // заданы в HERO_LINE_STRICT_CATEGORIES / HERO_LINE_POOL_CATEGORIES.
       heroOffline1: 'Мы офлайн, но я подтянул данные из кеша. Скорее всего расписание правильное',
       heroOffline2: 'С интернетом проблемы, но я запомнил расписание прошлый раз.',
       heroOffline3: 'Нет сети, но расписание всё равно под рукой',
@@ -1687,8 +1443,7 @@
       heroHoliday1: 'Сегодня особый день — метро едет по графику выходных',
       heroHoliday2: 'Расписание сегодня отличается от обычного — сверьтесь на всякий случай',
       heroWorkday1: 'Сегодня суббота, но все работают. Метро едет по будничному расписанию',
-      // Конкретные даты (SPECIAL_DAYS) — не общие праздники из holidays.json,
-      // а разовые поздравления с конкретным событием на конкретный год.
+      // Поздравления на конкретные даты (SPECIAL_DAYS) — не общие праздники из holidays.json.
       heroCityDay1: 'С Днём города, Алматы!',
       heroCityDay2: 'Сегодня в Алматы праздник — с Днём города!',
       heroCityDay3: 'Алматы, с днём рождения! А вам хорошей поездки',
@@ -1842,8 +1597,7 @@
       appSubtitle: 'Онлайн-кесте — пойызды қанша күту керек',
       appSubtitleWhentogo: 'Уақытында жету үшін қай пойызға үлгеру керек',
       appSubtitleFull: 'Барлық бекеттердің толық кестесі',
-      // kk-переводы плашки — черновик (AI + без сверки с носителем, как и
-      // остальные kk-строки проекта на момент написания, см. CLAUDE.md).
+      // kk-переводы плашки не сверены с носителем.
       heroOffline1: 'Біз офлайнбыз, бірақ мен кэштен деректерді тартып алдым. Кесте, сірә, дұрыс',
       heroOffline2: 'Интернетте мәселе бар, бірақ мен өткен жолғы кестені есімде сақтап қалдым.',
       heroOffline3: 'Интернет жоқ, бірақ кесте қолда',
@@ -1897,10 +1651,8 @@
       wtgErrorLabel: 'Қате',
       wtgSameStationMsg: 'Шығу және баратын бекет бірдей.',
       wtgNoTimeMsg: 'Уақытты көрсетіңіз.',
-      // "бағытындағы" (не "бағытында") — этот кусок в реальном UI ни разу не
-      // стоит отдельным предложением, только как определение перед "пойыз"/
-      // "пойыздың" в wtgBoardTrain/wtgNextTrainTowards, поэтому нужна именно
-      // притяжательно-относительная форма.
+      // "бағытындағы" (не "бағытында"): фраза всегда стоит определением перед "пойыз"/"пойыздың"
+      // (wtgBoardTrain/wtgNextTrainTowards), поэтому нужна притяжательно-относительная форма.
       wtgTowards: function (name) { return '«' + name + '» бағытындағы'; },
       wtgClosedTitle: 'Бұл уақытта метро жұмыс істемейді',
       wtgClosedMsg: function (closing, opening) { return 'Метро шамамен ' + closing + ' – ' + opening + ' аралығында жабық — таксимен жүрген дұрыс.'; },
@@ -2204,9 +1956,8 @@
   }
 
   /* ---------- Google Analytics (GA4) — события использования ---------- */
-  // gtag подключён в <head>; на всякий случай (блокировщики рекламы могут вырезать
-  // сам скрипт googletagmanager.com, тогда window.gtag не определится) оборачиваем
-  // в try/catch — аналитика не должна ронять приложение.
+  // gtag подключён в <head>. Блокировщики рекламы могут вырезать googletagmanager.com, и тогда
+  // window.gtag не определён — отправка обёрнута в try/catch, аналитика не должна ронять приложение.
   function trackEvent(name, params) {
     if (typeof window.gtag === 'function') {
       try { window.gtag('event', name, params || {}); } catch (e) { /* игнорируем */ }
@@ -2223,15 +1974,10 @@
     if (almatyDate.getUTCHours() < 3) d.setUTCDate(d.getUTCDate() - 1);
     return d;
   }
-  // Государственные праздники Казахстана — метро в эти дни работает по графику
-  // выходных, даже если день будний. Список дат грузится из data/holidays.json
-  // (обновляется вручную раз в год — см. CLAUDE.md).
-  //
-  // Календарь работает в ОБЕ стороны (по ст. 85 ТК РК власти могут не только
-  // сделать будний день выходным, но и наоборот — объявить субботу рабочей,
-  // чтобы "занять" её выходной статус и слепить длинный блок выходных вокруг
-  // праздника). HOLIDAYS переводит будни в выходные, WORKING_WEEKENDS —
-  // выходные в будни; при конфликте WORKING_WEEKENDS в приоритете.
+  // Государственные праздники Казахстана: в эти дни метро работает по графику выходных, даже
+  // если день будний. Даты грузятся из data/holidays.json. Календарь работает в обе стороны:
+  // HOLIDAYS переводит будни в выходные, WORKING_WEEKENDS (суббота/воскресенье, объявленные
+  // рабочими) — выходные в будни; при конфликте приоритет у WORKING_WEEKENDS.
   var HOLIDAYS = [];
   var WORKING_WEEKENDS = [];
   function dateKey(d) {
@@ -2246,8 +1992,8 @@
   function isWorkingWeekendDate(d) {
     return WORKING_WEEKENDS.indexOf(dateKey(d)) !== -1;
   }
-  // Праздник, который выпал на будний день (а не на и так уже выходной) —
-  // именно в этом случае стоит показать пояснение, почему расписание "не как обычно".
+  // Праздник, выпавший на будний день (не на и так выходной): только тогда стоит объяснять,
+  // почему расписание «не как обычно».
   function isHolidayForcedWeekend(d) {
     var wd = d.getUTCDay();
     return !isWorkingWeekendDate(d) && isHolidayDate(d) && wd !== 0 && wd !== 6;
@@ -2278,12 +2024,8 @@
     var a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
     return 2 * R * Math.asin(Math.sqrt(a));
   }
-  // Ближайший к (lat, lon) вход/выход станции — у станции может быть
-  // несколько (data/stations.json, поле exits), у метро Алматы обычно
-  // 2-6 наземных павильонов на станцию, разбросанных по кварталу вокруг
-  // подземного зала. Если exits не заданы (не должно случаться для наших
-  // 11 станций, но на всякий случай) — откатываемся на основную точку
-  // станции. См. CLAUDE.md, раздел про выходы станций (2026-09-01).
+  // Ближайший к (lat, lon) вход/выход станции (data/stations.json, поле exits: обычно 2–6
+  // наземных павильонов на станцию). Без exits берётся основная точка станции.
   function nearestExitPoint(lat, lon, station) {
     var exits = (station.exits && station.exits.length) ? station.exits : [{ lat: station.lat, lon: station.lon }];
     var best = exits[0], bestDist = Infinity;
@@ -2293,9 +2035,8 @@
     });
     return { lat: best.lat, lon: best.lon, distance: bestDist };
   }
-  // Возвращает не только ближайшую станцию, но и вторую по расстоянию
-  // (.second) — нужно, чтобы отличить однозначный случай от "стоите
-  // где-то на границе между двумя станциями" (см. isAmbiguous ниже).
+  // Возвращает ближайшую станцию и вторую по расстоянию (.second) — нужна, чтобы отличить
+  // однозначный случай от положения на границе между двумя станциями (см. isAmbiguous).
   function nearestStation(lat, lon, stations) {
     var best = null, second = null;
     stations.forEach(function (s) {
@@ -2309,65 +2050,23 @@
     });
     return { station: best.station, distance: best.distance, second: second };
   }
-  // Последняя известная геолокация пользователя — используется, чтобы для
-  // карт/.ics брать координаты БЛИЖАЙШЕГО выхода станции, а не условный
-  // "центр" (который может быть в квартале от реального входа). Если
-  // геолокации не было (ручной выбор станции, отказано в разрешении) —
-  // используем основную точку станции как запасной вариант.
+  // Последняя известная геолокация: по ней для карт и .ics выбирается ближайший к человеку выход
+  // станции. Без геолокации (ручной выбор, отказ в разрешении) используется основная точка станции.
   var lastKnownGeo = null; // {lat, lon}
   function bestStationPoint(station) {
     if (lastKnownGeo) return nearestExitPoint(lastKnownGeo.lat, lastKnownGeo.lon, station);
     return { lat: station.lat, lon: station.lon };
   }
 
-  /* ---------- Неоднозначная геолокация (2026-09-04) ----------
-     Кейс пользователя: стоишь на перекрёстке (напр. Абая-Алтынсарина) —
-     по прямой ближе одна станция (Сарыарка), но реально многие ходят/едут
-     до другой (Москва) — так удобнее по факту улиц/автобусов, а прямая
-     линия этого не знает. Раньше человек мог не заметить, что выбралась
-     "не та" станция, и ориентироваться по чужому расписанию.
-     Порог — не абсолютные метры, а отношение: если вторая станция дальше
-     первой не более чем на AMBIGUOUS_RATIO (и обе в пределах разумной
-     пешей дистанции AMBIGUOUS_MAX_M) — считаем случай неоднозначным и
-     предлагаем альтернативу, а не молча показываем "победителя" по
-     доле метров. Числа — отправная точка, есть смысл подкрутить по
-     реальным жалобам пользователей.
-     Пробовали ещё и запоминать выбор по координатам (localStorage) — по
-     здравом размышлении пользователь попросил откатить: если хоть раз
-     тапнуть подсказку, "ближайшая станция" наверху переставала быть
-     честно ближайшей ("Ваша станция" вместо неё), что только запутывало —
-     тем более выбранная станция и так видна чуть ниже, в самом
-     выпадающем списке. Сделали проще: подсказка — чисто разовая
-     реакция на конкретный расчёт геолокации, не сохраняется никуда.
-
-     AMBIGUOUS_RATIO поднят с 1.3 до 2.0 (2026-09-04, по факту проверки
-     на реальном перекрёстке Абая-Алтынсарина). Тот самый мотивирующий
-     кейс не сработал на 1.3 — посчитал по координатам этого перекрёстка
-     (взял их из 2ГИС): до Сарыарки 349м, до Москвы 581м, отношение
-     1.66 — а порог 1.3 требовал не больше 454м. Проверили с пользователем,
-     что делает подъём порога геометрически (зона неоднозначности вдоль
-     линии между соседними станциями расширяется в обе стороны от
-     середины) — осознанно выбрали больший запас (2.0), а не тютелька
-     в тютельку под 1.66, чтобы не пришлось возвращаться к этому же
-     разговору при следующей похожей жалобе.
-
-     AMBIGUOUS_MAX_M поднят с 900 до 2000 (2026-09-08) — кейс пользователя:
-     едет на автобусе к метро, ещё на подъезде (не пешком), между двумя
-     станциями, хочет видеть варианты для обеих заранее, а не только
-     когда уже дойдёт пешком. Проверили по реальным координатам станций,
-     что для пешехода вдоль самой линии это ничего не меняет — даже в
-     середине САМОГО длинного перегона (Сарыарка–Б. Момышулы, 1841м)
-     расстояние до ближайшей станции всего ~920м, то есть почти вся
-     линия и так укладывалась в старые 900м; новый порог расширяет
-     подсказку только для случая "еду издалека", не добавляя лишних
-     срабатываний тем, кто уже рядом с линией.
-
-     Уменьшен с 2000 до 1700 (2026-09-09, по прямой просьбе пользователя,
-     без отдельного мотивирующего кейса — видимо, 2000 оказался чуть
-     шире, чем нужно на практике). Вывод про пешеходов вдоль линии выше
-     остаётся в силе и подавно: 1700 всё ещё покрывает весь пешеходный
-     диапазон (~920м в худшей точке), сужается только "дальний" запас
-     для случая "еду издалека". */
+  /* ---------- Неоднозначная геолокация ----------
+     Когда пользователь между двумя станциями, по прямой ближе одна, а удобнее может быть другая
+     (улицы, автобусы). Случай считается неоднозначным, если вторая станция дальше первой не более
+     чем в AMBIGUOUS_RATIO раз и обе ближе AMBIGUOUS_MAX_M; тогда под статусом показывается
+     подсказка #locateHint с альтернативой. Порог — отношение, а не метры: важно, насколько станции
+     «конкурируют». Пример — перекрёсток Абая–Алтынсарина: 349 м до Сарыарки и 581 м до Москвы (1.66).
+     AMBIGUOUS_MAX_M покрывает всю пешую зону (даже в середине самого длинного перегона, 1841 м,
+     до ближайшей станции ~920 м) и сверх этого — случай «еду издалека». Выбор из подсказки нигде
+     не сохраняется: подсказка пересчитывается при каждой геолокации. */
   var AMBIGUOUS_RATIO = 2.0;
   var AMBIGUOUS_MAX_M = 1700;
   function isAmbiguous(res) {
@@ -2428,19 +2127,10 @@
     };
   }
 
-  // Поезд по СМЕЩЕНИЮ от "ближайшего предстоящего" (offset 0), а не только
-  // вперёд — используется модалкой "расписание поезда" для кнопок
-  // "Предыдущий"/"Следующий" (2026-09-12). offset>0 — более поздние поезда
-  // (то же самое, что и nextTrains), offset<0 — уже отправившиеся сегодня
-  // (для истории, "что я пропустил"). "Якорь" (offset 0) — тот же самый
-  // элемент timeline, который nextTrains().trains[0] вернул бы: первый с
-  // minutes >= nowMinutes (тот же -0.001 эпсилон, что и там, специально
-  // одинаковый, чтобы offset 0 здесь и trains[0] там всегда указывали на
-  // один и тот же поезд). Возвращает null, если сместились за пределы
-  // существующих данных (раньше самого первого или позже самого
-  // последнего поезда в этом timeline) — не поездов "на сегодня", а
-  // вообще всех, что есть в собранной шкале (см. buildTimeline — она уже
-  // включает хвост следующих суток).
+  // Поезд по смещению от ближайшего предстоящего (offset 0); для кнопок «Предыдущий»/«Следующий»
+  // в модалке поезда. offset>0 — более поздние поезда, offset<0 — уже отправившиеся. Якорь
+  // (offset 0) — тот же элемент, что nextTrains().trains[0] (одинаковый эпсилон -0.001).
+  // Возвращает null за пределами собранной шкалы (она включает хвост следующих суток, см. buildTimeline).
   function trainAtOffset(slug, direction, offset) {
     var now = almatyNow();
     var start = serviceDayStart(now);
@@ -2471,15 +2161,13 @@
     }
     return lo; // == timeline.length, если такого элемента нет
   }
-  // Разумный потолок на время в пути между соседними станциями — если "сопоставленный"
-  // приезд получается дальше, чем это физически может быть один перегон, значит это
-  // не тот поезд (дыра в данных на границе смены часов работы и т.п.) — лучше не
-  // показывать точку, чем показывать её ползущей неправдоподобно долго.
+  // Потолок времени в пути между соседними станциями: если сопоставленный приезд дальше, чем
+  // может быть один перегон, это не тот поезд (дыра в данных на границе смены режима работы) —
+  // лучше не показывать маркер, чем показывать его ползущим неправдоподобно долго.
   var MAX_SEGMENT_MIN = 8;
 
-  // "Стоянка" на станции: точка доезжает до станции на DWELL_MIN раньше расписания
-  // и трогается в путь на DWELL_MIN позже — чтобы визуально казалось, что поезд
-  // ненадолго стоит, а не мгновенно телепортируется на перегон и обратно.
+  // «Стоянка» на станции: маркер приезжает на DWELL_MIN раньше расписания и уезжает на DWELL_MIN
+  // позже — визуально поезд ненадолго стоит, а не телепортируется на перегон и обратно.
   var DWELL_MIN = 10 / 60; // 10 секунд
   function dwellFrac(now, dep, arr) {
     var span = arr - dep;
@@ -2489,12 +2177,10 @@
     return (now - dep - DWELL_MIN) / (span - 2 * DWELL_MIN);
   }
 
-  // Оценка времени в пути на перегоне по спискам отправлений (медиана по всем
-  // сматченным парам "первое время после dep"). Используется как запасной вариант,
-  // когда у станции нет собственного списка в нужном направлении (конечные
-  // станции — Б. Момышулы не "едет дальше вперёд", Райымбек батыра не "едет
-  // дальше назад") — тогда время перегона берём из ОБРАТНОГО направления той же
-  // пары станций (те же рельсы, то же расстояние), а не оставляем перегон "пустым".
+  // Оценка времени в пути на перегоне по спискам отправлений (медиана по сопоставленным парам
+  // «первое время после dep»). Запасной вариант, когда у станции нет списка в нужном направлении
+  // (конечные: у Б. Момышулы нет «вперёд», у Райымбек батыра — «назад»): время перегона берётся
+  // из обратного направления той же пары станций (те же рельсы, то же расстояние).
   function medianSegmentTravelMin(depTimeline, arrTimeline) {
     if (!depTimeline.length || !arrTimeline.length) return null;
     var samples = [];
@@ -2512,11 +2198,9 @@
   }
 
   /* ---------- "Когда выезжать" — расчёт по цепочке станций ---------- */
-  // Сопоставляет тот же физический поезд между соседними станциями — та же
-  // идея, что и в renderTrainMarkers ниже (первое отправление соседней
-  // станции после текущего времени), вынесено в отдельную функцию, чтобы
-  // не дублировать. estimated:true — если пришлось оценивать через
-  // medianSegmentTravelMin (конечная станция), а не взяли точное время.
+  // Сопоставляет один и тот же поезд между соседними станциями (первое отправление соседней
+  // станции после текущего времени); та же идея в renderTrainMarkers. estimated:true — время
+  // оценено через medianSegmentTravelMin (конечная станция), а не взято из расписания.
   function matchNextArrival(depTime, curSlug, nextSlug, direction, serviceStart) {
     var nextTimeline = buildTimeline(nextSlug, direction, serviceStart);
     if (nextTimeline.length) {
@@ -2534,12 +2218,10 @@
     return est != null ? { minutes: depTime + est, estimated: true } : null;
   }
 
-  // Зеркало matchNextArrival — не "когда доедет ДО следующей", а "когда
-  // отправился С предыдущей", чтобы восстановить время на станциях, которые
-  // поезд уже проехал (см. openTrainModal/estimateFullPath ниже, 2026-09-09).
-  // prevSlug — та же ЛИНИЯ ВРЕМЕНИ prevSlug в ТОМ ЖЕ direction: раз поезда
-  // идут друг за другом по одному пути, последнее отправление с prevSlug ДО
-  // atTime — это отправление того же самого поезда.
+  // Зеркало matchNextArrival: не «когда доедет до следующей», а «когда отправился с предыдущей» —
+  // восстанавливает время на станциях, которые поезд уже проехал (estimateFullPath). Поезда идут
+  // по одному пути друг за другом, поэтому последнее отправление с prevSlug до atTime — это
+  // отправление того же поезда.
   function matchPrevDeparture(atTime, curSlug, prevSlug, direction, serviceStart) {
     var prevTimeline = buildTimeline(prevSlug, direction, serviceStart);
     if (prevTimeline.length) {
@@ -2557,8 +2239,8 @@
     return est != null ? { minutes: atTime - est, estimated: true } : null;
   }
 
-  // Цепочкой матчим через все промежуточные станции от origin до dest.
-  // path — время на каждой станции по пути (для списка станций под результатом).
+  // Цепочкой через все промежуточные станции от origin до dest. path — время на каждой станции
+  // по пути (для списка станций под результатом).
   function estimateArrival(originIdx, destIdx, direction, departureMinutes, serviceStart) {
     var step = direction === 'forward' ? 1 : -1;
     var i = originIdx, t = departureMinutes, estimated = false;
@@ -2577,18 +2259,11 @@
     return { minutes: t, estimated: estimated, path: path };
   }
 
-  // Время на КАЖДОЙ станции линии для одного конкретного поезда — не только
-  // от originIdx до конечной (как estimateArrival), а во ВСЕ стороны сразу:
-  // и вперёд по ходу поезда, и назад (станции, которые он уже проехал до
-  // originIdx) — см. модалку "расписание поезда", 2026-09-09, пользователь
-  // явно попросил видеть все станции, а не только оставшиеся, "потому что
-  // часто поезд ещё не подъехал к выбранной станции". Возвращает {idx:
-  // minutes} — карту, не обязательно на все 11 станций: у краёв расписания
-  // (первый/последний поезд дня) сматчить дальше может быть не с чем,
-  // тогда просто останавливаемся — лучше неполная, но честная карта, чем
-  // вообще ничего (тот же принцип, что уже был у старого fallback'а с
-  // "откатиться на более близкую станцию", только теперь применён к обеим
-  // сторонам сразу и без отдельного цикла retry).
+  // Время на каждой станции линии для одного поезда: не только от originIdx до конечной (как
+  // estimateArrival), а в обе стороны — вперёд по ходу и назад (станции, уже пройденные до
+  // originIdx), для модалки «расписание поезда». Возвращает {idx: minutes} — не обязательно на все
+  // 11 станций: у краёв расписания (первый/последний поезд дня) сопоставлять дальше не с чем, и
+  // поиск останавливается — карта неполная, но честная.
   function estimateFullPath(originIdx, direction, departureMinutes, serviceStart) {
     var step = direction === 'forward' ? 1 : -1;
     var times = {};
@@ -2605,7 +2280,7 @@
       times[i] = t;
     }
 
-    // Назад — станции, которые поезд уже проехал до прибытия на origin.
+    // Назад — станции, которые поезд проехал до прибытия на origin.
     var nearEnd = direction === 'forward' ? 0 : STATIONS.length - 1;
     var j = originIdx, u = departureMinutes;
     while (j !== nearEnd) {
@@ -2620,18 +2295,11 @@
     return times;
   }
 
-  // "Докуда реально доезжает" конкретное отправление — идёт вперёд по
-  // цепочке от origin, пока матчится, и сообщает, докатилась ли она до
-  // настоящего конца линии в эту сторону, или обрывается раньше. Не любая
-  // "дырка" в сопоставлении — ошибка данных: расписание Алматы метро,
-  // похоже, реально предполагает отстой/оборот части составов не на самих
-  // конечных, а на промежуточных станциях (подтверждено численно на
-  // вечерних/утренних рейсах — см. CLAUDE.md), так что часть поездов
-  // объективно НЕ идёт до конечной. Используется и countdown-карточкой
-  // ("Ближайший поезд"), и "Когда выезжать" — обоим нужно только "докуда",
-  // без полной карты по всем станциям (та тяжелее и нужна только модалке
-  // расписания, см. estimateFullPath выше — которая по факту делает то же
-  // самое в форвард-сторону, просто попутно записывая каждый шаг). 2026-09-12.
+  // «Докуда реально доезжает» конкретное отправление: идёт вперёд по цепочке от origin, пока
+  // сопоставляется, и сообщает, дошло ли оно до настоящего конца линии. Часть составов
+  // оборачивается на промежуточных станциях и до конечной не идёт — это не ошибка данных.
+  // Используется карточкой «Ближайший поезд»; нужен только факт «докуда», без полной карты
+  // по всем станциям (её строит estimateFullPath для модалки поезда).
   function trainFarReach(originIdx, direction, departureMinutes, serviceStart) {
     var step = direction === 'forward' ? 1 : -1;
     var farEnd = direction === 'forward' ? STATIONS.length - 1 : 0;
@@ -2643,18 +2311,15 @@
       i += step;
     }
     var reachesFarEnd = i === farEnd;
-    // ИСПРАВЛЕНО 2026-09-12 (было неверно): станция i — это та, у которой
-    // есть ПОДТВЕРЖДЁННОЕ отправление, а значит поезд с неё УЖЕ уехал —
-    // высаживает он не там, а на следующей станции по ходу (i + step),
-    // раз именно у НЕЁ отправления дальше нет. Раньше ошибочно помечали
-    // конечной саму i. См. CLAUDE.md, "какую станцию помечаем конечной".
+    // Станция i имеет подтверждённое отправление — поезд с неё уже уехал. Конечная — следующая
+    // по ходу (i + step): именно у неё отправления дальше нет.
     var actualIdx = reachesFarEnd ? i : i + step;
     return { idx: actualIdx, minutes: t, reachesFarEnd: reachesFarEnd };
   }
 
-  // Ищет ночной перерыв (закрытие метро) в таймлайне одной станции — самый
-  // большой промежуток между соседними отправлениями (обычные интервалы —
-  // единицы минут, ночной перерыв — часы, порог 90 минут отличает надёжно).
+  // Ищет ночной перерыв (закрытие метро) в таймлайне станции — самый большой промежуток между
+  // соседними отправлениями (обычные интервалы — единицы минут, ночной перерыв — часы;
+  // порог 90 минут отличает их надёжно).
   var CLOSED_GAP_THRESHOLD_MIN = 90;
   function findClosedWindow(timeline) {
     for (var i = 0; i < timeline.length - 1; i++) {
@@ -2666,18 +2331,11 @@
     return null;
   }
 
-  // Точки-стрелочки "где сейчас едут поезда" — чисто визуальная фишка, не GPS.
-  // Идея: у нас есть время отправления с каждой станции в обе стороны. Берём последнее
-  // отправление со станции i, которое уже наступило ("dep"), и ищем ближайшее по времени
-  // отправление со станции i+1, которое ПОЗЖЕ dep — это и есть время прибытия того же
-  // поезда на соседнюю станцию (поезда идут друг за другом по одному пути, не обгоняя,
-  // так что первое время после dep — всегда тот же самый поезд).
-  //
-  // Раньше матчили по номеру в списке (k-е отправление со станции i = k-е со станции i+1),
-  // как в estimate_weekend_via_neighbor в update_schedule.py — но там счётчики отправлений
-  // на соседних станциях иногда отличаются на 1 (лишний/недостающий рейс где-то в списке),
-  // и матч по индексу от этого "съезжает" на весь остаток дня, точка привязывается не к
-  // тому поезду. Матч по времени ("первое отправление после dep") устойчив к этому.
+  // Маркеры «где сейчас едут поезда» — визуализация по расписанию, не GPS. Берём последнее
+  // наступившее отправление со станции i ("dep") и первое отправление со станции i+1 позже dep —
+  // это время прибытия того же поезда (поезда идут друг за другом по одному пути без обгона).
+  // Матч по времени, а не по номеру в списке: счётчики отправлений на соседних станциях иногда
+  // различаются на 1, и матч по индексу «съезжал» бы на весь остаток дня.
   function renderTrainMarkers(nowMinutes, serviceStart) {
     var track = document.getElementById('lineTrack');
     if (!track) return;
@@ -2703,17 +2361,10 @@
             }
           }
           if (!matchedFwd) {
-            // Либо у станции i+1 вообще нет своего "вперёд" списка (настоящая
-            // конечная), либо список есть, но именно этому (короткому/
-            // ночному) рейсу в нём соответствия не нашлось — станция просто
-            // не публикует, что едет ДАЛЬШЕ него, а не "поезда здесь нет"
-            // (см. CLAUDE.md, "какую станцию помечаем конечной" — та же
-            // путаница уже была исправлена в trainFarReach/модалке
-            // расписания, тут тот же принцип). Оба случая — оцениваем время
-            // перегона по обратному направлению той же пары станций и
-            // продлим стоянку на конечной, раз передать эстафету дальше
-            // некому. Без этой ветки маркер обрывался на одну станцию
-            // раньше настоящей временной конечной рейса. 2026-09-12.
+            // Либо у станции i+1 нет списка «вперёд» (настоящая конечная), либо в нём нет соответствия
+            // этому короткому/ночному рейсу — станция просто не публикует продолжение. В обоих случаях
+            // время перегона оценивается по обратному направлению той же пары станций, а стоянка
+            // продлевается на конечной: иначе маркер обрывался бы на станцию раньше конечной рейса.
             var estFwd = medianSegmentTravelMin(bwdTimelines[i + 1], bwdTimelines[i]);
             if (estFwd != null) { a1 = d1 + estFwd; extraDwell1 = DWELL_MIN; }
           }
@@ -2736,7 +2387,7 @@
             }
           }
           if (!matchedBwd) {
-            // Тот же принцип, что и у forward-ветки выше — см. её комментарий.
+            // То же, что в ветке «вперёд» выше.
             var estBwd = medianSegmentTravelMin(fwdTimelines[i], fwdTimelines[i + 1]);
             if (estBwd != null) { a2 = d2 + estBwd; extraDwell2 = DWELL_MIN; }
           }
@@ -2747,20 +2398,16 @@
       }
     }
 
-    // "Поезд на станции" — подсветка активной (выбранной) точки чуть сильнее,
-    // пока поезд там реально стоит (см. CLAUDE.md, обсуждали платформы/обводку
-    // поезда — остановились на самом простом варианте: силуэт и размер точки
-    // не меняются, только усиливается свечение). dwellFrac() возвращает РОВНО
-    // 0/1 (не просто "близко") только во время самой стоянки — значит pos
-    // совпадает с целым индексом станции пиксель-в-пиксель, сравнение через
-    // === безопасно, без эпсилон-допуска.
+    // «Поезд на станции»: свечение активной платформы усиливается, пока поезд на ней стоит.
+    // dwellFrac() возвращает ровно 0/1 только во время стоянки, поэтому pos совпадает с целым
+    // индексом станции и сравнение через === безопасно.
     var activeIdx = selectedSlug ? STATIONS.findIndex(function (s) { return s.slug === selectedSlug; }) : -1;
     var docked = activeIdx >= 0 && wanted.some(function (w) { return w.pos === activeIdx; });
     var activeDot = track.querySelector('.line-dot.active');
     if (activeDot) activeDot.classList.toggle('docked', docked);
 
-    // Переиспользуем DOM-элементы по ключу (станция+индекс рейса), чтобы CSS-transition
-    // плавно сдвигал уже существующую точку, а не пересоздавал её каждую секунду.
+    // DOM-элементы переиспользуются по ключу (станция + индекс рейса), чтобы CSS-transition плавно
+    // сдвигал существующий маркер, а не пересоздавал его каждую секунду.
     var existing = {};
     track.querySelectorAll('.train-marker').forEach(function (el) { existing[el.dataset.key] = el; });
     var seen = {};
@@ -2791,12 +2438,9 @@
     return m + ':' + String(s).padStart(2,'0');
   }
 
-  // Русское склонение "остановка/остановки/остановок" по числу — нужно для
-  // wtgArrivalMsg (см. CLAUDE.md, "N мин, M остановок"). Стандартное правило:
-  // 1, 21, 31... — "остановка"; 2-4, 22-24... — "остановки"; остальное,
-  // включая 11-14 — "остановок". Казахскому и английскому такое склонение
-  // не нужно (в казахском числительное+существительное не меняет форму,
-  // в английском — просто stop/stops, см. wtgArrivalMsg ниже).
+  // Русское склонение «остановка/остановки/остановок»: 1, 21, 31… — «остановка»; 2–4, 22–24… —
+  // «остановки»; остальное, включая 11–14, — «остановок». Казахскому и английскому не нужно
+  // (в казахском числительное не меняет форму существительного; в английском stop/stops).
   function ruStopsWord(n) {
     var n10 = n % 10, n100 = n % 100;
     if (n10 === 1 && n100 !== 11) return 'остановка';
@@ -2816,10 +2460,9 @@
 
   var selectedSlug = null;
 
-  // Маскот в строке геолокации: подбадривает на моментах, где человеку нужно
-  // подождать или самому что-то выбрать (идёт определение / геолокация не
-  // сработала / далеко от Алматы) — как только станция найдена по геолокации
-  // рядом ("ok"), прячем его обратно, не мешает дальнейшему чистому виду.
+  // Маскот в строке геолокации показывается, пока человеку нужно подождать или что-то выбрать
+  // (идёт определение / геолокация не сработала / далеко от Алматы); когда станция рядом найдена
+  // ("ok"), скрывается.
   function setLocateStatusDOM(kind, html) {
     locateSpinner.style.display = kind === 'loading' ? '' : 'none';
     locateDot.style.display = kind === 'loading' ? 'none' : '';
@@ -2839,9 +2482,8 @@
     }
   }
 
-  // Состояние строки геолокации хранится отдельно от DOM, чтобы при смене языка
-  // (renderLocateStatus) можно было перерисовать тот же статус на другом языке,
-  // а не терять его (станцию/расстояние/причину ошибки) при переключении.
+  // Состояние строки геолокации хранится отдельно от DOM: при смене языка (renderLocateStatus)
+  // тот же статус перерисовывается на другом языке без потери станции/расстояния/причины ошибки.
   var locateState = { kind: 'loading' };
 
   function renderLocateStatus() {
@@ -2862,22 +2504,14 @@
     }
     renderLocateHint(st.kind === 'ok' ? st.ambiguous : null);
   }
-  // Подсказка "вы также недалеко от станции X" — см. isAmbiguous()/CLAUDE.md.
-  // Отдельная функция (не часть setLocateStatusDOM), т.к. пересчитывается
-  // и при смене языка (renderLocateStatus), без повторного похода в geo.
-  // Разовая: клик переключает станцию и просто прячет подсказку — строка
-  // "Ближайшая станция" наверху при этом не меняется (осталась как до
-  // всей этой доработки, см. CLAUDE.md — так проще и понятнее).
+  // Подсказка «вы также недалеко от станции X» (см. isAmbiguous()). Отдельная функция:
+  // пересчитывается и при смене языка без нового запроса геолокации. Клик переключает станцию
+  // и прячет подсказку; строка «Ближайшая станция» наверху не меняется.
   function renderLocateHint(second) {
     var hint = document.getElementById('locateHint');
     if (!second) { hint.style.display = 'none'; hint.dataset.altSlug = ''; return; }
-    // display:'flex', не '' — у класса .locate-hint базовое display:none
-    // прямо в CSS-правиле (вместе с align-items/gap, рассчитанными на
-    // flex-показ), так что очистка инлайн-стиля просто откатывала бы к
-    // тому же display:none из класса и подсказка не появлялась бы вообще —
-    // это и обнаружилось при живой проверке по жалобе пользователя,
-    // 2026-09-04: посчитанный текст был верный, элемент оставался
-    // невидимым. См. CLAUDE.md.
+    // display:'flex', а не '': у .locate-hint в CSS базовое display:none, и сброс инлайн-стиля
+    // оставил бы элемент скрытым.
     hint.style.display = 'flex';
     hint.dataset.altSlug = second.station.slug;
     hint.dataset.altDist = second.distance;
@@ -2892,12 +2526,8 @@
     STATIONS.forEach(function (s, i) {
       var dot = document.createElement('div');
       dot.className = 'line-dot' + (s.slug === slug ? ' active' : '');
-      // Та же формула, что и у train-marker (см. renderTrainMarkers) — раньше
-      // станции стояли через flex (justify-content:space-between), а поезд
-      // через проценты; пока точки были крошечные, расхождение было незаметно,
-      // на платформах (16-20px) оно стало реальным сдвигом в несколько
-      // пикселей. Общая формула гарантирует, что центр платформы и центр
-      // "припаркованного" поезда совпадают всегда, а не только на глаз.
+      // Та же формула положения, что у train-marker (см. renderTrainMarkers), поэтому центр платформы
+      // и центр «припаркованного» поезда совпадают.
       dot.style.left = 'calc(6px + (100% - 12px) * ' + (i / (n - 1)) + ')';
       dot.title = stationName(s);
       dot.setAttribute('role', 'button');
@@ -2911,45 +2541,34 @@
   }
 
   /* ---------- Плашка-реплика маскота (шапка, #appSubtitle) ----------
-     Полное описание категорий/приоритетов/формата — CLAUDE.md, раздел
-     "Плашка-реплика маскота в шапке". Коротко: HERO_LINE_STRICT_CATEGORIES —
-     состояния и праздники, первая подходящая по порядку побеждает целиком;
-     HERO_LINE_POOL_CATEGORIES — всё остальное, собираются ключи со ВСЕХ
-     подходящих сейчас категорий в один список и берётся случайный (см.
-     recomputeHeroLine). Тексты — обычные ключи I18N (ru/kk/en, см. выше),
-     сами структуры их не хранят — только перечисляют, какие ключи
-     относятся к какой категории. Существующую логику расписания не
-     трогает — только читает её результаты (almatyNow/serviceDayStart/
-     dayTypeOf/STATIONS_BY_SLUG/SCHEDULE/locateState/dataFromOfflineCache). */
+     HERO_LINE_STRICT_CATEGORIES — состояния и праздники: первая подходящая по порядку побеждает
+     целиком. HERO_LINE_POOL_CATEGORIES — всё остальное: ключи всех подходящих сейчас категорий
+     собираются в один список и выбирается случайный (см. recomputeHeroLine). Тексты — ключи I18N;
+     структуры только перечисляют, какие ключи относятся к категории. Расписание не меняют —
+     только читают (almatyNow/serviceDayStart/dayTypeOf/STATIONS_BY_SLUG/SCHEDULE/locateState/
+     dataFromOfflineCache). */
   var HERO_LINE_HISTORY_LEN = 3;
   var HERO_LINE_RECOMPUTE_MIN = 15;
-  var WEATHER_ENABLED = false; // включатель погодной категории — см. CLAUDE.md
+  var WEATHER_ENABLED = false; // включатель погодной категории плашки (виджет в шапке от него не зависит)
   var WEATHER_CACHE_MIN = 45;
   var WEATHER_FETCH_TIMEOUT_MS = 4000;
-  var ALMATY_LAT = 43.238949, ALMATY_LON = 76.889709; // центр города — координата фиксированная, не геолокация пользователя
+  var ALMATY_LAT = 43.238949, ALMATY_LON = 76.889709; // центр города, фиксированная координата (не геолокация пользователя)
   var DESCENT_INFO = {}; // заглушка под будущее — "до платформы N минут" по slug станции, пока пусто везде
-  // Конкретные календарные даты (не по правилу вроде "первое воскресенье
-  // сентября" — такие праздники каждый год объявляются заново, и уже
-  // прошлогодняя дата в этом году может быть неверной) → список ключей
-  // I18N с поздравлением. Ключ словаря — тот же формат, что у dateKey()
-  // (см. выше, рядом с HOLIDAYS), сверяется с serviceDayStart(), не с
-  // календарным "сейчас". Добавить новый праздник — одна запись здесь +
-  // ключи в I18N, логику категории трогать не нужно.
+  // Конкретные календарные даты (не правила вроде «первое воскресенье сентября»: такие праздники
+  // объявляются заново каждый год) → список ключей I18N с поздравлением. Ключ — формат dateKey(),
+  // сверяется с serviceDayStart(), а не с календарным «сейчас». Новый праздник — запись здесь
+  // плюс ключи в I18N; логику категории менять не нужно.
   var SPECIAL_DAYS = {
     '2026-09-20': ['heroCityDay1', 'heroCityDay2', 'heroCityDay3'] // День города Алматы
   };
   var metroClosedNow = false; // отражает то же условие, что уже решает видимость #closedBanner в tickCountdowns()
   var weatherHeroKeys = null; // ключи, подходящие текущей погоде; null = не знаем/выключено/ошибка
 
-  // Два уровня — не один общий список (2026-09-21, по отзыву пользователя:
-  // "почти никогда одно и то же сообщение не должно быть единственным",
-  // исключение только настоящие сервисные состояния). СТРОГИЙ уровень:
-  // первая подходящая категория по порядку побеждает целиком (как было
-  // раньше) — только для офлайн/гео/закрыто и праздничных дат: тут важна
-  // надёжность и приоритет ("праздник — сначала, потом остальное" —
-  // прямая просьба пользователя), не разнообразие. ПУЛ: если ни одна
-  // строгая категория не подошла — собираем ключи со ВСЕХ подходящих
-  // категорий пула в один список и берём случайный (см. recomputeHeroLine).
+  // Два уровня. Строгий: первая подходящая категория по порядку побеждает целиком — для
+  // офлайна/геолокации/«метро закрыто» и праздничных дат, где важны надёжность и приоритет.
+  // Пул: если строгие не подошли, ключи всех подходящих категорий пула собираются в один
+  // список и выбирается случайный (см. recomputeHeroLine), чтобы одно и то же сообщение
+  // не было единственным.
   var HERO_LINE_STRICT_CATEGORIES = [
     { id: 'offline', keys: ['heroOffline1', 'heroOffline2', 'heroOffline3'],
       test: function (ctx) { return ctx.offline; } },
@@ -2969,24 +2588,16 @@
   var HERO_LINE_POOL_CATEGORIES = [
     { id: 'stationDescent', keys: [], // заполнится, когда появятся данные в DESCENT_INFO
       test: function (ctx) { return !!(ctx.station && DESCENT_INFO[ctx.station.slug]); } },
-    // stationTerminus убрана по отзыву пользователя (2026-09-21): "лишний критерий —
-    // если человек постоянно с конечной едет, он одно и то же будет видеть" — у
-    // конечных станций (RMBK/BM) фраза никогда бы не менялась при частом
-    // использовании, что прямо противоречит принципу "почти никогда одно и то же
-    // сообщение не должно быть единственным". Ключи heroTerminus1/2 удалены из I18N.
     { id: 'stationWeekendEst', keys: ['heroWeekendEst1', 'heroWeekendEst2'],
       test: function (ctx) { return !!ctx.station && ctx.stationWeekendEstimated; } },
-    // Пасхалка про будущую станцию — только пока едем от/через Б. Момышулы,
-    // в общем пуле (не единственное сообщение для станции, см. CLAUDE.md).
+    // Пасхалка про будущую станцию Калкаман — только для станции Б. Момышулы, в общем пуле.
     { id: 'stationKalkaman', keys: ['heroKalkaman1'],
       test: function (ctx) { return !!ctx.station && ctx.station.slug === 'BM'; } },
     { id: 'morningRush', keys: ['heroMorningRush1', 'heroMorningRush2', 'heroMorningRush3'],
       test: function (ctx) { return !ctx.metroClosed && ctx.isMorningRush; } },
     { id: 'eveningRush', keys: ['heroEveningRush1', 'heroEveningRush2', 'heroEveningRush3'],
       test: function (ctx) { return !ctx.metroClosed && ctx.isEveningRush; } },
-    // Понедельник — раньше одна фраза на весь день; по отзыву пользователя
-    // ("про кофе странно говорить ближе к вечеру") разделён на утро/вечер
-    // по полудню, а не только по узкому окну часа пик.
+    // Понедельник делится на утро и вечер по полудню (а не только по узкому окну часа пик).
     { id: 'dayMondayMorning', keys: ['heroMonday1'],
       test: function (ctx) { return ctx.weekday === 1 && ctx.isMorningHalf; } },
     { id: 'dayMondayEvening', keys: ['heroMondayEvening1'],
@@ -3044,25 +2655,21 @@
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  // Выбирает категорию/фразу заново — вызывается ТОЛЬКО в точках, где
-  // контекст реально мог измениться (см. список мест ниже по файлу),
-  // никогда на каждый секундный тик отсчёта. Рендерит сразу, но только
-  // если сейчас активна вкладка "Ближайший поезд" — см. updateAppSubtitle(),
-  // чтобы не затирать текст "Полного расписания"/скрытую подпись "О метро".
+  // Выбирает категорию/фразу заново — только в точках, где контекст мог измениться, а не на
+  // каждый секундный тик. Рендерит сразу, но лишь если активна вкладка «Ближайший поезд»
+  // (см. updateAppSubtitle()), чтобы не затирать текст других вкладок.
   function recomputeHeroLine() {
     var ctx = buildHeroLineContext();
     var chosenKey = null;
-    // 1) Строгий приоритет — состояния, потом праздник/рабочая суббота/разовая
-    // дата (в этом порядке, первая подходящая побеждает целиком).
+    // 1) Строгий приоритет: состояния, затем праздник/рабочая суббота/разовая дата; побеждает первая подходящая.
     for (var i = 0; i < HERO_LINE_STRICT_CATEGORIES.length; i++) {
       var cat = HERO_LINE_STRICT_CATEGORIES[i];
       var keys = cat.dynamicKeys ? cat.dynamicKeys(ctx) : cat.keys;
       if (keys.length && cat.test(ctx)) { chosenKey = pickHeroLineKey(keys); break; }
     }
-    // 2) Общий пул — если ни одна строгая категория не подошла, собираем
-    // ключи со ВСЕХ подходящих сейчас категорий пула и берём случайный
-    // (тем же анти-повтором, что и раньше) — так час пик/день недели/погода/
-    // афоризмы не перебивают друг друга молча, а честно перемешиваются.
+    // 2) Общий пул: если строгие категории не подошли, ключи всех подходящих категорий пула
+    // собираются в один список, берётся случайный (с анти-повтором) — час пик, день недели,
+    // погода и афоризмы перемешиваются, а не перебивают друг друга.
     if (!chosenKey) {
       var pool = [];
       for (var j = 0; j < HERO_LINE_POOL_CATEGORIES.length; j++) {
@@ -3081,37 +2688,22 @@
     if (!activeTabBtn || activeTabBtn.dataset.tab === 'nearest') renderHeroLine();
   }
 
-  // Только рендер уже выбранного ключа (без пересчёта категории) — вызывается
-  // из updateAppSubtitle() при каждом заходе на вкладку "Ближайший поезд" и
-  // при смене языка: фраза должна остаться той же по смыслу, просто на другом
-  // языке, а не перевыбираться заново (иначе "мигало" бы при простом клике
-  // между вкладками). До первого recomputeHeroLine() (самый первый кадр)
-  // heroLineCurrentKey ещё пуст — честно показываем прежний статичный текст
-  // ('appSubtitle'), а не пустоту.
+  // Только рендер уже выбранного ключа (без пересчёта категории): вызывается из updateAppSubtitle()
+  // при заходе на вкладку и при смене языка — фраза остаётся той же по смыслу. До первого
+  // recomputeHeroLine() ключ пуст, и показывается статичный текст appSubtitle.
   function renderHeroLine() {
     var el = document.getElementById('appSubtitle');
     if (!el) return;
     el.textContent = t(heroLineCurrentKey || 'appSubtitle');
   }
 
-  // Погода — open-meteo, без ключа/регистрации, координаты фиксированные
-  // (центр города, не геолокация пользователя — под погоду отдельно её не
-  // запрашиваем). Кеш в localStorage на WEATHER_CACHE_MIN минут. Один общий
-  // запрос питает ДВЕ независимые вещи:
-  //  1) погодную категорию плашки-реплики (classifyWeather → weatherHeroKeys) —
-  //     опционально, выключена по умолчанию через WEATHER_ENABLED (см. выше);
-  //     ошибка/таймаут — категория просто не матчится, никакого "не удалось
-  //     загрузить погоду" пользователю не показываем, а уже показанная фраза
-  //     не подменяется мгновенно — подхватится на следующем плановом
-  //     пересчёте (смена станции / 15-минутный таймер).
-  //  2) погодный виджет в шапке (renderWeatherWidget, #weatherWidget,
-  //     2026-09-28) — НЕ зависит от WEATHER_ENABLED (это отдельная, всегда
-  //     включённая фича): иконка + текущая температура, молчаливо скрыт,
-  //     пока нет данных (тот же принцип, что и офлайн-маскот выше — без
-  //     собственного сообщения об ошибке).
-  // Раньше функция называлась fetchWeatherForHeroLine() и была no-op целиком
-  // при WEATHER_ENABLED=false — переименована, т.к. теперь её ответственность
-  // шире одной только плашки.
+  // Погода — open-meteo (без ключа), координаты фиксированные (центр города, геолокация не
+  // используется). Кеш в localStorage на WEATHER_CACHE_MIN минут. Один запрос питает две вещи:
+  // 1) погодную категорию плашки-реплики (classifyWeather → weatherHeroKeys) — выключена через
+  //    WEATHER_ENABLED; при ошибке/таймауте категория просто не матчится, уже показанная фраза
+  //    не подменяется — новая подхватится на следующем плановом пересчёте;
+  // 2) погодный виджет в шапке (renderWeatherWidget, #weatherWidget) — от WEATHER_ENABLED не
+  //    зависит: иконка и текущая температура; пока данных нет, скрыт без сообщения об ошибке.
   function classifyWeather(tempC, weatherCode) {
     var keys = [];
     if (tempC <= -5) keys.push('heroWeatherCold1');
@@ -3120,10 +2712,9 @@
     else if (weatherCode >= 51 && weatherCode <= 82) keys.push('heroWeatherRain1');
     return keys;
   }
-  // Коды погоды — по таблице WMO, которую отдаёт open-meteo (см. их
-  // документацию weather_code). Сгруппированы в 6 узнаваемых пиктограмм —
-  // тот же список опасностей, что уже разбирает classifyWeather() выше
-  // (туман/снег/дождь/гроза отдельно от простой облачности).
+  // Коды погоды — по таблице WMO из open-meteo (weather_code), сгруппированы в 6 пиктограмм;
+  // те же опасные явления, что разбирает classifyWeather() (туман/снег/дождь/гроза отдельно
+  // от простой облачности).
   function weatherIcon(code) {
     if (code === 0) return '☀️';
     if (code >= 1 && code <= 3) return '⛅';
@@ -3134,10 +2725,8 @@
     if (code >= 95 && code <= 99) return '⛈️';
     return '🌡️';
   }
-  // tempMin/tempMax — дневной диапазон (см. daily= в URL ниже), необязательные
-  // параметры: если сервер не прислал daily-часть (частичный ответ, старая
-  // localStorage-запись до этой правки) — просто не показываем строку
-  // диапазона, а не пустографку "undefined / undefined".
+  // tempMin/tempMax — дневной диапазон (daily= в URL ниже), необязательные: если сервер не прислал
+  // daily-часть (частичный ответ, старая запись в localStorage), строка диапазона не показывается.
   function renderWeatherWidget(tempC, weatherCode, tempMin, tempMax) {
     var el = document.getElementById('weatherWidget');
     if (!el || tempC == null || weatherCode == null) return;
@@ -3165,12 +2754,9 @@
         }
       }
     } catch (e) { /* приватный режим и т.п. */ }
-    // daily=temperature_2m_max,min — дневной диапазон для того же самого
-    // запроса, что уже нужен под "сейчас" (current=...), один fetch на
-    // обе цифры. timezone=Asia/Almaty — явно, не 'auto': сутки для
-    // daily-агрегации должны считаться по алматинскому времени, а не по
-    // UTC/GMT по умолчанию (иначе диапазон мог бы захватить кусок другого
-    // дня). forecast_days=1 — нужен только сегодняшний день, не неделя.
+    // daily=temperature_2m_max,min — диапазон дня в том же запросе, что и current=... (один fetch
+    // на обе цифры). timezone=Asia/Almaty задан явно, не 'auto': сутки для daily считаются по
+    // алматинскому времени, а не по UTC. forecast_days=1 — нужен только сегодняшний день.
     var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + ALMATY_LAT + '&longitude=' + ALMATY_LON +
       '&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min' +
       '&timezone=' + encodeURIComponent('Asia/Almaty') + '&forecast_days=1';
@@ -3197,13 +2783,11 @@
       weatherHeroKeys = null;
     });
   }
-  // Фоновый пересчёт раз в HERO_LINE_RECOMPUTE_MIN минут — ловит переходы,
-  // которые сами по себе нигде не считаются "событием" (начался час пик,
-  // до закрытия остался час) и не покрыты точечными вызовами ниже по файлу.
+  // Фоновый пересчёт раз в HERO_LINE_RECOMPUTE_MIN минут — ловит переходы, которые не являются
+  // событиями (начался час пик, до закрытия остался час).
   setInterval(recomputeHeroLine, HERO_LINE_RECOMPUTE_MIN * 60000);
-  // Отдельный, более редкий таймер под погоду (WEATHER_CACHE_MIN, обычно
-  // шире HERO_LINE_RECOMPUTE_MIN) — держит виджет в шапке свежим и после
-  // истечения localStorage-кеша, не дожидаясь смены станции/вкладки.
+  // Отдельный более редкий таймер под погоду (WEATHER_CACHE_MIN): держит виджет в шапке свежим
+  // после истечения localStorage-кеша.
   setInterval(fetchWeatherData, WEATHER_CACHE_MIN * 60000);
 
   function selectStation(slug, viaGeo, distanceMeters, method) {
@@ -3220,27 +2804,22 @@
     document.getElementById('wtgTeaserToggle').style.display = '';
     renderLineStrip(slug);
     renderDirections();
-    // Блок "Когда выезжать" всегда считает от этой же станции (см.
-    // wtgCalculate() — берёт selectedSlug напрямую, отдельного поля "От
-    // станции" у него больше нет, см. CLAUDE.md). Если станция сменилась,
-    // а расчёт уже был показан — он относится к прежней станции, прячем,
-    // чтобы не вводить в заблуждение, пока не нажали "Посчитать" заново.
+    // Блок «Когда выезжать» считает от selectedSlug (wtgCalculate()). Если станция сменилась, а
+    // расчёт уже показан, он относится к прежней станции — прячем до нового «Посчитать».
     if (prevSlug !== slug && wtgResultCard.className.indexOf('show') !== -1) {
       wtgResultCard.className = 'card result';
       wtgStopCountdown();
     }
-    // method: 'geo' — по геолокации, 'manual' — выбрал сам (список/точка на линии),
-    // 'default' — авто-фолбэк на первую станцию (геолокация недоступна/далеко), это
-    // не осознанный выбор пользователя, но полезно отличать в статистике.
+    // method: 'geo' — по геолокации, 'manual' — выбрал сам (список или точка на линии), 'default' —
+    // авто-фолбэк на первую станцию (геолокация недоступна/далеко), не осознанный выбор.
     trackEvent('select_station', { station: slug, method: method || (viaGeo ? 'geo' : 'manual') });
     recomputeHeroLine(); // контекст плашки-реплики (станция/её факты) реально сменился
   }
 
   var FAR_FROM_ALMATY_METERS = 30000; // за пределами города и ближних пригородов — точно не Алматы
 
-  // Общая точка входа и для настоящей геолокации, и для повторного
-  // пересчёта после клика по подсказке (см. #locateHint ниже) — чтобы не
-  // дублировать логику "кто сейчас основной / кто в подсказке".
+  // Общая точка входа и для настоящей геолокации, и для пересчёта после клика по подсказке
+  // (#locateHint): логика «кто основной / кто в подсказке» не дублируется.
   function onGeoSuccess(lat, lon) {
     lastKnownGeo = { lat: lat, lon: lon };
     var res = nearestStation(lat, lon, STATIONS);
@@ -3248,11 +2827,7 @@
       locateState = { kind: 'far', station: res.station, distance: res.distance };
       renderLocateStatus();
       trackEvent('geo_result', { result: 'far' });
-      // Раньше тут прятали "Выбрать станцию" и сразу показывали нативный
-      // список (какой смысл в лишней кнопке, если сразу нужно выбирать
-      // вручную). Теперь список — модалка, а не постоянно видимый
-      // элемент, так что открывающая её кнопка нужна всегда, в т.ч. и
-      // здесь — иначе просто не с чего было бы открыть выбор станции.
+      // Кнопка «Выбрать станцию» нужна всегда, в том числе здесь: список станций открывается модалкой.
       locateBtn.style.display = '';
       if (!selectedSlug) selectStation(STATIONS[0].slug, false, null, 'default');
       else recomputeHeroLine(); // если станция уже была выбрана — selectStation тут не вызывается, пересчёт нужен отдельно
@@ -3280,9 +2855,8 @@
   function tryTelegramLocation() {
     if (tg && tg.LocationManager && typeof tg.LocationManager.init === 'function') {
       var settled = false;
-      // Вне настоящего Telegram-клиента (или в старых версиях) LocationManager —
-      // безмолвная заглушка: init/getLocation могут никогда не вызвать колбэк.
-      // Подстраховываемся таймером и уходим на браузерную геолокацию.
+      // Вне настоящего Telegram-клиента (или в старых версиях) LocationManager — молчаливая заглушка:
+      // init/getLocation могут не вызвать колбэк. Страхуемся таймером и переходим на браузерную геолокацию.
       var fallbackTimer = setTimeout(function () {
         if (!settled) { settled = true; tryBrowserGeolocation(); }
       }, 2500);
@@ -3323,10 +2897,8 @@
     );
   }
 
-  // Раньше — toggle видимости нативного <select> (+ showPicker()), теперь
-  // просто открываем общую модалку выбора станции (см. openStationModal
-  // ниже) — сам stationSelect остаётся навсегда скрытым, служит только
-  // хранилищем значения для остального кода (selectStation и т.п.).
+  // Открываем общую модалку выбора станции (openStationModal); stationSelect остаётся скрытым и
+  // служит хранилищем значения для остального кода (selectStation и т.п.).
   locateBtn.addEventListener('click', function () {
     openStationModal(stationSelect, t('stationModalTitle'));
   });
@@ -3340,11 +2912,9 @@
     trackEvent('geo_ambiguous_switch', { station: slug });
     this.style.display = 'none';
   });
-  // Название станции в "Ближайшая станция: X" — тоже кликабельно (см.
-  // .locate-station-btn), возвращает к честно ближайшей, если сейчас
-  // выбрана другая. Делегирование на #locateText, а не прямой обработчик
-  // на кнопке — её innerHTML целиком перестраивается при каждом рендере
-  // (setLocateStatusDOM), прямой listener слетал бы каждый раз.
+  // Название станции в «Ближайшая станция: X» кликабельно (.locate-station-btn): возвращает к
+  // ближайшей по GPS, если выбрана другая. Делегирование на #locateText, а не обработчик на кнопке:
+  // innerHTML перестраивается при каждом рендере (setLocateStatusDOM).
   document.getElementById('locateText').addEventListener('click', function (e) {
     var btn = e.target.closest('.locate-station-btn');
     if (!btn) return;
@@ -3361,11 +2931,10 @@
     container.innerHTML = '';
     container.style.display = '';
     document.getElementById('closedBanner').style.display = 'none';
-    // Если была открыта модалка "расписание поезда" от прежней станции —
-    // закрываем: её путь/время относятся к уже неактуальной станции.
+    // Открытая модалка «расписание поезда» относится к прежней станции — закрываем.
     closeTrainModal();
-    // Карточки пересоздаются с нуля — прошлые "first"-значения относятся к другой
-    // станции, сравнивать их дальше нельзя (иначе ложно сыграет doors-fx).
+    // Карточки пересоздаются с нуля: прошлые значения "first" относятся к другой станции и не
+    // должны сравниваться (иначе ложно сыграет doors-fx).
     lastFirstMinutes.forward = null;
     lastFirstMinutes.backward = null;
     lastFarReach.forward = null;
@@ -3391,8 +2960,8 @@
         '<span class="dir-name">' + d.name + '</span>' +
         '</div>';
       var wrap = document.createElement('div');
-      // dir-card-forward/backward — чтобы прогресс-полоска росла в ту же сторону,
-      // что и стрелка над ней (вправо для "→", влево для "←"): буквально "поезд едет".
+      // dir-card-forward/backward: прогресс-полоска растёт в ту же сторону, что стрелка (вправо для "→",
+      // влево для "←").
       wrap.className = 'dir-card dir-card-' + d.key;
       var hasAny = (st.weekday[d.key] && st.weekday[d.key].length) || (st.weekend[d.key] && st.weekend[d.key].length);
       if (!hasAny) {
@@ -3406,9 +2975,8 @@
         '<div class="countdown" data-dir="' + d.key + '">—</div>' +
         '<div class="next-after" data-dir-after="' + d.key + '"></div>' +
         '<div class="short-turn-note" data-dir-shortturn="' + d.key + '" style="display:none"></div>';
-      // Тап по всей карточке — открывает расписание именно того поезда,
-      // до которого идёт отсчёт (см. openTrainModal). Не значок на линии —
-      // тот слишком мелкий и вдобавок движется, ненадёжная цель для тапа.
+      // Тап по карточке открывает расписание того поезда, до которого идёт отсчёт (openTrainModal).
+      // Значок на линии для этого не годится: он мелкий и движется.
       wrap.classList.add('tappable');
       wrap.setAttribute('role', 'button');
       wrap.setAttribute('aria-label', t('trainModalAriaLabel'));
@@ -3427,19 +2995,15 @@
     tickCountdowns();
   }
 
-  // "Долго" считаем не в абсолютных минутах, а относительно текущего интервала между
-  // поездами в этом направлении: если из оставшегося времени ожидания ещё не прошло
-  // больше WAIT_LONG_FRACTION интервала — значит, ждать ещё "долгую" часть пути до
-  // следующего поезда. WAIT_LONG_FALLBACK_MIN — на случай, если интервал посчитать не
-  // от чего (например, самый первый рейс после открытия метро, предыдущего ещё не было).
+  // «Долго» считается не в минутах, а относительно текущего интервала между поездами в этом
+  // направлении: если не прошло больше WAIT_LONG_FRACTION интервала, ждать ещё долго.
+  // WAIT_LONG_FALLBACK_MIN — на случай, когда интервал не посчитать (первый рейс после открытия).
   var WAIT_LONG_FRACTION = 0.5;
   var WAIT_LONG_FALLBACK_MIN = 5;
   var WAIT_PULSE_SEC = 15; // последние секунды перед приходом — лёгкая пульсация
 
-  // За PRE_OPEN_COUNTDOWN_MIN минут до самого первого поезда дня уже показываем
-  // обычный вид с отсчётом (а не статичную заглушку "метро закрыто, откроется в…") —
-  // человеку, который открыл приложение почти к открытию метро, интереснее видеть
-  // живой отсчёт до первого поезда, чем неизменную надпись до последней секунды.
+  // За PRE_OPEN_COUNTDOWN_MIN минут до первого поезда дня показывается обычный отсчёт вместо
+  // статичного «метро закрыто, откроется в…».
   var PRE_OPEN_COUNTDOWN_MIN = 15;
 
   function setWaitTier(cardEl, tier) {
@@ -3448,10 +3012,8 @@
     cardEl.style.removeProperty('--progress');
   }
 
-  // Интервал (в минутах) между предыдущим и следующим ("first") поездом в этом
-  // направлении — основа и для порога "долго", и для прогресс-бара в полоске.
-  // null, если предыдущего рейса нет в пределах текущей временной шкалы (самый
-  // первый поезд дня).
+  // Интервал (в минутах) между предыдущим и следующим ("first") поездом в этом направлении —
+  // основа порога «долго» и прогресс-бара. null, если предыдущего рейса нет (первый поезд дня).
   function currentHeadwayMin(slug, direction, serviceStart, firstMinutes) {
     var timeline = buildTimeline(slug, direction, serviceStart);
     var prevIdx = lastTimelineIndexAtOrBefore(timeline, firstMinutes - 0.001);
@@ -3460,32 +3022,25 @@
     return span > 0 ? span : null;
   }
 
-  // Пасхалка "двери закрываются": срабатывает в момент, когда "first" (поезд, до
-  // которого шёл отсчёт) сменился на следующий — то есть только что домигало
-  // зелёное "скоро" и поезд отправился. Запоминаем время последнего "first" по
-  // каждому направлению; как только оно меняется — на карточке на мгновение
-  // появляется декоративный оверлей со "смыкающимися дверями" (см. .doors-fx в CSS).
-  // Сбрасывается при смене станции (selectStation) и при закрытии метро, чтобы не
-  // сработать ложно на неродственных значениях.
+  // Анимация «двери закрываются»: срабатывает, когда "first" (поезд, до которого шёл отсчёт)
+  // сменился на следующий — то есть поезд отправился. Время последнего "first" хранится по
+  // каждому направлению; сбрасывается при смене станции и закрытии метро, чтобы не сработать
+  // ложно. Оверлей — .doors-fx в CSS.
   var lastFirstMinutes = { forward: null, backward: null };
-  // Кэш "докуда реально едет" текущий отсчитываемый поезд (см.
-  // trainFarReach) — считаем не каждый тик, а только когда first.minutes
-  // меняется (новый поезд стал "ближайшим"), тем же принципом, что и
-  // lastFirstMinutes выше. {forMinutes, reachesFarEnd, farName}. 2026-09-12.
+  // Кэш «докуда реально едет» текущий отсчитываемый поезд (trainFarReach): считается только
+  // когда first.minutes меняется. {forMinutes, reachesFarEnd, farName}.
   var lastFarReach = { forward: null, backward: null };
-  // Секунд до отправления, начиная с которых маскот выезжает с края карточки
-  // (см. .peek-mascot-wait в CSS и вызов ниже в tickCountdowns).
+  // Секунд до отправления, с которых маскот выезжает с края карточки (.peek-mascot-wait в CSS,
+  // вызов ниже в tickCountdowns).
   var PEEK_ARRIVE_SEC = 5;
-  // Не каждое отправление — иначе не сюрприз, а рутина. Решение "покажется ли
-  // маскот" принимается один раз на каждый новый ожидаемый поезд (когда он
-  // становится "first"), а не каждый тик — иначе он мог бы то появиться, то
-  // исчезнуть посреди тех же пяти секунд из-за перебрасывания монетки заново.
+  // Маскот выезжает не при каждом отправлении. Решение принимается один раз на каждый новый
+  // ожидаемый поезд (когда он становится "first"), а не каждый тик — иначе маскот мог бы
+  // появляться и пропадать посреди одних и тех же секунд.
   var PEEK_MASCOT_CHANCE = 0.2;
   var peekChance = { forward: { forMinutes: null, show: false }, backward: { forMinutes: null, show: false } };
   function playDoorsFx(cardEl) {
-    // Маскот, если успел выехать в последние секунды ожидания — убираем в тот же
-    // момент, когда начинают закрываться двери: визуально дверь "закрывается
-    // поверх него", а к моменту, когда сама дверь исчезнет, его уже не будет.
+    // Маскот, если успел выехать, убирается в момент начала закрытия дверей: дверь визуально
+    // закрывается поверх него, а когда она исчезнет, маскота уже нет.
     var waitingPeek = cardEl.querySelector('.peek-mascot-wait');
     if (waitingPeek) waitingPeek.remove();
 
@@ -3505,14 +3060,11 @@
       var serviceStartForMarkers = serviceDayStart(nowForMarkers);
       renderTrainMarkers((nowForMarkers - serviceStartForMarkers) / 60000, serviceStartForMarkers);
     }
-    // Живой маркер и "проехавшие" станции в модалке "расписание поезда" —
-    // тот же тик, что и у горизонтальной линии выше; сам себя не запускает
-    // отдельным таймером.
+    // Живой маркер и «проехавшие» станции в модалке «расписание поезда» обновляются тем же тиком,
+    // что и горизонтальная линия.
     if (trainModalState) { updateTrainModalMarker(); updateTrainModalPassedStates(); }
-    // Считаем, сколько реально существующих направлений (не "конечная станция,
-    // поездов нет") сейчас закрыты — если закрыты все до одного, ночью вместо двух
-    // одинаковых "метро закрыто" в тесных карточках показываем один общий баннер
-    // со спящим маскотом (см. ниже, после forEach) вместо самих карточек.
+    // Считаем, сколько существующих направлений (кроме «конечная станция, поездов нет») закрыто.
+    // Если закрыты все — вместо карточек показывается один общий баннер со спящим маскотом.
     var closedDirsCount = 0;
     var totalDirsCount = 0;
     var closedArrivals = [];
@@ -3531,9 +3083,8 @@
       var mins = first.minutes - res.nowMinutes;
       var cardEl = el.closest('.dir-card');
       if ((first.dayOffset === 1 || mins > 6 * 60) && mins > PRE_OPEN_COUNTDOWN_MIN) {
-        // метро закрыто — следующий поезд относится к следующему дню (или очень нескоро),
-        // и до него ещё больше PRE_OPEN_COUNTDOWN_MIN минут (иначе ниже уже пошёл бы
-        // обычный отсчёт, см. комментарий у константы)
+        // метро закрыто — следующий поезд относится к следующему дню (или очень нескоро), и до него
+        // ещё больше PRE_OPEN_COUNTDOWN_MIN минут (иначе уже идёт обычный отсчёт)
         var arrivalClock = new Date(res.serviceStart.getTime() + first.minutes * 60000);
         el.innerHTML = '<small>' + t('metroClosed', fmtHHMM(arrivalClock)) + '</small>';
         if (cardEl) setWaitTier(cardEl, null);
@@ -3544,12 +3095,9 @@
         closedDirsCount++;
         closedArrivals.push(arrivalClock);
       } else if (cardEl && lastFirstMinutes[dirKey] != null && lastFirstMinutes[dirKey] !== first.minutes) {
-        // Тот самый поезд, до которого шёл отсчёт, только что отправился — двери ещё
-        // только начинают закрываться, ничего толком не прикрывая. Поэтому в этот тик
-        // специально НЕ показываем уже наступившие новые "8:56" и т.п. — оставляем на
-        // экране прежний кадр (обнулившийся отсчёт) ещё на секунду, пока створки не
-        // сомкнутся, и только следующий тик покажет актуальные цифры под закрытыми
-        // дверями, а не поверх открывающегося зазора.
+        // Поезд, до которого шёл отсчёт, только что отправился: двери ещё начинают закрываться.
+        // В этот тик новые цифры не показываем — на экране остаётся прежний кадр (обнулившийся
+        // отсчёт), пока створки не сомкнутся; актуальные цифры появятся в следующий тик.
         playDoorsFx(cardEl);
         lastFirstMinutes[dirKey] = first.minutes;
         return; // ничего больше в этот тик не трогаем, включая "затем через…" ниже
@@ -3557,11 +3105,9 @@
         el.textContent = fmtCountdown(mins);
         if (cardEl) {
           lastFirstMinutes[dirKey] = first.minutes;
-          // "Этот поезд — только до X" — считаем не каждый тик, а только когда
-          // first.minutes реально сменился (см. lastFarReach выше). Настоящий
-          // конец линии в эту сторону — toBM/toRMBK (уже посчитаны выше в
-          // renderDirections), сравниваем именно с их индексом, не с STATIONS
-          // напрямую, чтобы не дублировать поиск. 2026-09-12.
+          // «Этот поезд — только до X»: считается только когда first.minutes сменился (см. lastFarReach).
+          // Настоящий конец линии в эту сторону — toBM/toRMBK (посчитаны в renderDirections),
+          // сравниваем с их индексом.
           var shortTurnEl = document.querySelector('[data-dir-shortturn="' + dirKey + '"]');
           if (shortTurnEl) {
             if (lastFarReach[dirKey] == null || lastFarReach[dirKey].forMinutes !== first.minutes) {
@@ -3580,23 +3126,20 @@
           var longThreshold = headway != null ? headway * WAIT_LONG_FRACTION : WAIT_LONG_FALLBACK_MIN;
           var tier = mins < 1 ? 'soon' : mins > longThreshold ? 'long' : 'normal';
           setWaitTier(cardEl, tier);
-          // Полоска-прогресс: доля УЖЕ прошедшего времени интервала — 0 сразу после
-          // отправления предыдущего поезда, 1 в момент прихода следующего (наполняется,
-          // а не убывает — так понятнее читать на глаз).
+          // Полоска-прогресс: доля прошедшего времени интервала — 0 сразу после отправления предыдущего
+          // поезда, 1 в момент прихода следующего (наполняется, а не убывает).
           var remainingFraction = headway != null
             ? Math.max(0, Math.min(1, mins / headway))
             : Math.max(0, Math.min(1, mins / (longThreshold * 2)));
           cardEl.style.setProperty('--progress', 1 - remainingFraction);
           cardEl.classList.toggle('wait-pulse', tier === 'soon' && mins < WAIT_PULSE_SEC / 60);
 
-          // Решаем (один раз на этот конкретный поезд), выпадет ли в этот раз маскот.
+          // Решаем (один раз на этот поезд), выпадет ли маскот.
           if (peekChance[dirKey].forMinutes !== first.minutes) {
             peekChance[dirKey] = { forMinutes: first.minutes, show: Math.random() < PEEK_MASCOT_CHANCE };
           }
-          // Маскот выезжает с края в последние PEEK_ARRIVE_SEC секунд ожидания —
-          // только если выпало (см. выше), создаём один раз (проверяем, что его
-          // там ещё нет) и оставляем стоять, playDoorsFx уберёт его сам в момент
-          // отправления.
+          // Маскот выезжает с края в последние PEEK_ARRIVE_SEC секунд, если выпал шанс: создаётся один
+          // раз (проверяем, что его ещё нет) и стоит, пока playDoorsFx не уберёт его при отправлении.
           if (peekChance[dirKey].show && mins * 60 <= PEEK_ARRIVE_SEC && !cardEl.querySelector('.peek-mascot-wait')) {
             var peekWait = document.createElement('img');
             peekWait.className = 'peek-mascot-wait';
@@ -3628,25 +3171,18 @@
       closedBanner.style.display = 'none';
       directionsEl.style.display = '';
     }
-    // Пересчёт плашки-реплики — только на самой смене состояния "метро
-    // закрыто/открылось", не каждую секунду (тик идёт раз в секунду, см. ниже).
+    // Плашка-реплика пересчитывается только при смене состояния «метро закрыто/открыто»,
+    // а не каждую секунду.
     if (metroClosedNow !== wasMetroClosedNow) recomputeHeroLine();
-    // Мини-отсчёт внутри игры "Маскот-раннер" — тот же тик, что и вся
-    // остальная live-логика на экране; сама функция ничего не делает, если
-    // модалка игры сейчас закрыта.
+    // Мини-отсчёт внутри игры «Маскот-раннер» — тот же тик; без эффекта, если модалка игры закрыта.
     if (typeof updateRunnerCountdown === 'function') updateRunnerCountdown();
     tickTimer = setTimeout(tickCountdowns, 1000);
   }
 
   /* ---------- Вкладки ---------- */
-  // Подпись под шапкой (#appSubtitle) — своя на каждую вкладку, т.к. они
-  // делают разное. На "О метро" подписи нет вовсе — это справочный раздел,
-  // не про ожидание. На "Всё расписание" — статичная строка, как и раньше.
-  // На "Ближайший поезд" — с 2026-09-20 не статичная строка, а плашка-
-  // реплика маскота (см. HERO_LINE_STRICT/POOL_CATEGORIES/renderHeroLine() выше и
-  // CLAUDE.md) — сюда её не встраивал напрямую, чтобы не дублировать
-  // логику показа/скрытия элемента, только зову renderHeroLine() вместо
-  // прежнего t('appSubtitle').
+  // Подпись под шапкой (#appSubtitle) — своя на каждой вкладке. «О метро»: подписи нет
+  // (справочный раздел). «Всё расписание»: статичная строка. «Ближайший поезд»: плашка-реплика
+  // маскота — вызывается renderHeroLine() (см. HERO_LINE_STRICT/POOL_CATEGORIES).
   function updateAppSubtitle(tab) {
     var el = document.getElementById('appSubtitle');
     if (tab === 'about') { el.style.display = 'none'; return; }
@@ -3663,19 +3199,16 @@
       updateAppSubtitle(btn.dataset.tab);
       trackEvent('switch_tab', { tab: btn.dataset.tab });
       if (btn.dataset.tab === 'full') {
-        // по умолчанию открываем ту же станцию, что выбрана на вкладке "Ближайший поезд" —
-        // выбор всё равно можно поменять вручную через select ниже
+        // по умолчанию та же станция, что на «Ближайшем поезде»; выбор можно поменять вручную
         if (selectedSlug) fullStationSelect.value = selectedSlug;
         renderFullSchedule();
       }
     });
   });
 
-  /* ---------- "Когда выезжать" ----------
-     С 2026-09-01 это не отдельная вкладка, а свёрнутый по умолчанию блок
-     внизу "Ближайшего поезда" (см. CLAUDE.md, раздел объединения) — своей
-     станции отправления у него больше нет, всегда используется общий
-     selectedSlug сверху. */
+  /* ---------- «Когда выезжать» ----------
+     Свёрнутый по умолчанию блок внизу «Ближайшего поезда». Своей станции отправления у него нет:
+     всегда используется selectedSlug. */
   var wtgTeaserToggle = document.getElementById('wtgTeaserToggle');
   var wtgTeaserBody = document.getElementById('wtgTeaserBody');
   wtgTeaserToggle.addEventListener('click', function () {
@@ -3687,9 +3220,8 @@
       document.getElementById('wtgNewBadge').style.display = 'none';
     }
   });
-  // NEW-бейдж — скрываем сразу при загрузке, если человек уже разворачивал
-  // блок раньше (не только по клику, см. выше) — иначе бейдж мелькнёт на
-  // долю секунды при каждом заходе, пока обработчик клика не сработает.
+  // NEW-бейдж скрывается сразу при загрузке, если блок уже разворачивали, иначе он мелькал бы
+  // до срабатывания обработчика клика.
   try {
     if (localStorage.getItem('whentogoSeen') === '1') {
       document.getElementById('wtgNewBadge').style.display = 'none';
@@ -3752,15 +3284,11 @@
     wtgRouteToggleText.textContent = open ? t('wtgHideStations') : t('wtgShowAllStations');
   });
 
-  /* ---------- "Добавить в календарь" (.ics) ----------
-     Одна кнопка на оба случая сразу: обычный фикс-тайм алерт получают все
-     (VALARM за 15 минут), а те, у кого в календаре включено "время в
-     пути" (Apple Calendar/Google Calendar — считают маршрут от текущей
-     геопозиции до места события сами, точнее, чем могли бы мы), получают
-     ещё и его бонусом — просто за счёт того, что у события заполнено
-     поле места (LOCATION/GEO). Показываем кнопку только в успешном
-     сценарии и только если до отправления больше 30 минут — меньше уже
-     не до планирования. См. CLAUDE.md. */
+  /* ---------- «Добавить в календарь» (.ics) ----------
+     Одна кнопка на все случаи: фиксированный алерт (VALARM за 15 минут) получают все; у кого
+     в календаре включено «время в пути» (Apple/Google Calendar считают маршрут от текущей
+     геопозиции сами), оно работает за счёт заполненного места события (LOCATION/GEO).
+     Кнопка показывается только в успешном сценарии и только если до отправления больше 30 минут. */
   var wtgCalendarData = null; // {depAbsoluteMs, originSlug, destName} — заполнено только когда кнопка показана
   function showWtgCalendarBtn(depAbsoluteMs, originSlug, destName) {
     wtgCalendarData = { depAbsoluteMs: depAbsoluteMs, originSlug: originSlug, destName: destName };
@@ -3783,8 +3311,8 @@
     var st = STATIONS_BY_SLUG[originSlug];
     var stPoint = bestStationPoint(st);
     var originName = stationName(st);
-    // depAbsoluteMs — во "псевдо-UTC" (см. almatyNow()), для реального
-    // момента времени нужно вычесть тот же сдвиг +5ч, что и в almatyNow().
+    // depAbsoluteMs — в «псевдо-UTC» (см. almatyNow()); для реального момента времени вычитается
+    // тот же сдвиг +5ч.
     var realDepUtcMs = depAbsoluteMs - ALMATY_OFFSET_MS;
     var depClock = fmtHHMM(new Date(depAbsoluteMs));
     var uid = 'metro-' + Date.now() + '-' + Math.random().toString(36).slice(2) + '@ala-metro.org';
@@ -3813,15 +3341,10 @@
     return lines.join('\r\n');
   }
   function downloadIcs(content) {
-    // Внутри Telegram Mini App свой WebView без поддержки скачивания файлов —
-    // клик по blob-ссылке там просто ничего не делает (подтверждено на
-    // реальном устройстве). Первая попытка — tg.openLink() с data: URI —
-    // тоже не сработала: Telegram открыл СВОЙ внутренний просмотрщик и
-    // показал содержимое .ics как обычный текст (data: не считается
-    // "настоящей страницей"). Вместо этого передаём в openLink() реальную
-    // https-ссылку на отдельную страницу cal.html (см. файл рядом) — она
-    // уже пытается скачать .ics сама, но открывается в более полноценном
-    // браузере, а не в ограниченном WebView Mini App.
+    // Внутри Telegram Mini App WebView не умеет скачивать файлы: клик по blob-ссылке ничего не
+    // делает, а data: URI в tg.openLink() открывается во внутреннем просмотрщике Telegram как
+    // текст. Поэтому в openLink() передаётся https-ссылка на отдельную страницу cal.html, которая
+    // сама скачивает .ics и открывается в полноценном браузере.
     if (insideTelegram && tg.openLink) {
       var calUrl = new URL('cal.html', location.href);
       calUrl.searchParams.set('data', content);
@@ -3908,14 +3431,8 @@
 
     var best = null;
     var firstEstimate = null;
-    // Короткие/ночные рейсы (не доезжают до destIdx, см. trainFarReach/
-    // CLAUDE.md) просто пропускаем — estimateArrival вернёт null, и мы
-    // никогда их не порекомендуем. Раньше здесь ещё явно объясняли
-    // пользователю, что более ранний поезд пропущен именно поэтому —
-    // убрано по отзыву пользователя 2026-09-12: раз результат и так
-    // всегда корректный (никогда не отправит на "не туда" поезде),
-    // отдельное объяснение техники отбора — лишний шум для того, кто
-    // просто хочет знать, когда выезжать.
+    // Короткие/ночные рейсы (не доезжают до destIdx, см. trainFarReach) пропускаются:
+    // estimateArrival вернёт null, и такой рейс никогда не будет рекомендован.
     for (var k = 0; k < upcoming.length; k++) {
       var dep = upcoming[k];
       var arr = estimateArrival(originIdx, destIdx, direction, dep.minutes, serviceStart);
@@ -3941,9 +3458,7 @@
       wtgResultSub.innerHTML = t('wtgArrivalMsg', best.arrival.estimated, destName, arrClock, durationMin, stopsCount);
       wtgStartCountdown(depAbsoluteMs, t('wtgDepartsIn'));
       wtgRenderRoute(best.arrival.path, serviceStart);
-      // "Добавить в календарь" — только если реально есть время им
-      // воспользоваться (меньше получаса до отправления — уже не до
-      // планирования, надо просто сразу выходить).
+      // «Добавить в календарь» — только если до отправления больше получаса; меньше — пора выходить.
       if ((depAbsoluteMs - now.getTime()) / 60000 > 30) {
         showWtgCalendarBtn(depAbsoluteMs, selectedSlug, destName);
       }
@@ -3968,14 +3483,10 @@
   }
   wtgCalcBtn.addEventListener('click', wtgCalculate);
 
-  /* ---------- Мини-игра "Маскот-раннер" (только beta.html, 2026-09-29) ----------
-     Сначала обкатана отдельным HTML-артефактом (макет с новыми кадрами бега,
-     вектороно нарисованные препятствия вместо AI-картинок — см. CLAUDE.md),
-     здесь подключена к реальным данным: бейдж показывается только когда
-     выбрана станция (см. selectStation()), а мини-отсчёт внутри модалки не
-     пересчитывает расписание заново, а просто копирует уже отрисованный
-     текст из карточек направлений (.countdown[data-dir]) — один источник
-     правды, обновляется тем же общим тиком (tickCountdowns()). */
+  /* ---------- Мини-игра «Маскот-раннер» ----------
+     Бейдж показывается, когда выбрана станция (см. selectStation()). Мини-отсчёт внутри модалки
+     не пересчитывает расписание, а копирует текст из карточек направлений (.countdown[data-dir]) —
+     один источник правды, обновляется общим тиком (tickCountdowns()). */
   var runnerModal = document.getElementById('runnerModal');
   var runnerCanvasWrap = document.getElementById('runnerCanvasWrap');
   var runnerCanvas = document.getElementById('runnerCanvas');
@@ -3985,9 +3496,7 @@
   var RUNNER_GRAVITY = 0.62;
   var RUNNER_JUMP_V = -12.4;
   var RUNNER_CHAR_X = 80, RUNNER_CHAR_H = 58;
-  // 149x200 — реальный размер mascot/run1.png/run2.png (см. CLAUDE.md, раздел
-  // про мини-игру) — оба кадра приведены к одному холсту заранее, так что
-  // соотношение сторон у них одинаковое.
+  // 149x200 — размер mascot/run1.png и run2.png; оба кадра на одном холсте, соотношение сторон одинаковое.
   var RUNNER_CHAR_ASPECT = 149 / 200;
   var RUNNER_CHAR_W = Math.round(RUNNER_CHAR_H * RUNNER_CHAR_ASPECT);
 
@@ -4005,8 +3514,7 @@
   var runnerT = 0, runnerSpeed = 6.2;
   var runnerObstacles = [];
   var runnerNextSpawnIn = 0;
-  // Монеты (2026-09-29) — отдельный от препятствий массив/таймер спавна,
-  // чтобы частота одних не зависела от частоты других.
+  // Монеты: отдельный от препятствий массив и таймер спавна — частоты не зависят друг от друга.
   var runnerCoins = [];
   var runnerCoinNextSpawnIn = 0;
   var runnerCoinsCount = 0;
@@ -4043,9 +3551,7 @@
   }
 
   var RUNNER_OBSTACLE_TYPES = ['turnstile', 'suitcase', 'bin'];
-  // Цвет каждого препятствия — случайный из палитры, независимо от формы
-  // (турникет/чемодан/урна) — для визуального разнообразия по прямой
-  // просьбе пользователя ("препятствия разного цвета"), не завязан на тип.
+  // Цвет препятствия — случайный из палитры, независимо от формы (турникет/чемодан/урна).
   var RUNNER_OBSTACLE_COLORS = ['--obs-turnstile', '--obs-suitcase', '--obs-bin', '--obs-purple', '--obs-teal'];
   function runnerSpawnObstacle() {
     var type = RUNNER_OBSTACLE_TYPES[Math.floor(Math.random() * RUNNER_OBSTACLE_TYPES.length)];
@@ -4059,12 +3565,10 @@
   }
 
   var RUNNER_COIN_R = 7;
-  // Стоя, хитбокс персонажа накрывает 6-48px над землёй (см. charTop/charH в
-  // runnerUpdate) — прыжок (RUNNER_JUMP_V/RUNNER_GRAVITY) даёт пик ~124px.
-  // "Низкие" монеты — внутри стоячего хитбокса, собираются на бегу без
-  // прыжка; "высокие" — специально выше 48px, чтобы их нельзя было взять
-  // не прыгая, но заметно ниже пика прыжка — прыжок не обязан быть
-  // идеально точным по времени.
+  // Стоя, хитбокс персонажа накрывает 6–48px над землёй (charTop/charH в runnerUpdate); прыжок
+  // (RUNNER_JUMP_V/RUNNER_GRAVITY) даёт пик ~124px. «Низкие» монеты лежат внутри стоячего
+  // хитбокса и берутся на бегу; «высокие» — выше 48px (без прыжка не взять), но заметно ниже
+  // пика, поэтому точное время прыжка не требуется.
   function runnerSpawnCoin() {
     var high = Math.random() < 0.5;
     var baseY = high ? (65 + Math.random() * 35) : (10 + Math.random() * 10);
@@ -4087,11 +3591,8 @@
     }
     if (runnerState === 'playing' && runnerY === 0) { runnerVy = RUNNER_JUMP_V; }
   }
-  // Слушатель — на всей обёртке (canvas + оверлеи start/game-over), не только
-  // на самом canvas: оверлеи лежат поверх него (z-index:4) и раньше глушили
-  // тап полностью на экране "старта" (пользователь: "тапаешь и ничего не
-  // происходит") — у них нет своего обработчика, а до canvas событие не
-  // доходило вообще. 2026-09-29.
+  // Слушатель — на всей обёртке (canvas + оверлеи start/game-over), а не на canvas: оверлеи
+  // лежат поверх него (z-index:4) и сами тап не обрабатывают.
   runnerCanvasWrap.addEventListener('pointerdown', function (e) { e.preventDefault(); runnerJump(); });
   document.addEventListener('keydown', function (e) {
     if (runnerModal.style.display === 'none') return;
@@ -4217,9 +3718,8 @@
     runnerRR(ctx, topX, groundY - h, topW, Math.max(2, h * 0.08), 2); ctx.fill();
   }
   function runnerDrawCoin(ctx, x, y, r, color, spin) {
-    // "Монетка" — простой двухцветный диск с бликом + лёгкое сплющивание
-    // по X через `spin` (0..1, из runnerT), имитирует вращение без
-    // отдельных кадров/картинки.
+    // Монетка — двухцветный диск с бликом; сплющивание по X через `spin` (0..1, из runnerT)
+    // имитирует вращение без отдельных кадров.
     var squish = Math.max(0.35, Math.abs(Math.cos(spin)));
     ctx.save();
     ctx.translate(x, y);
@@ -4278,13 +3778,10 @@
     runnerRafId = requestAnimationFrame(runnerLoop);
   }
 
-  // Мини-отсчёт внутри модалки — просто копирует уже отрисованный текст из
-  // карточек направлений на главном экране (обновляются каждую секунду в
-  // tickCountdowns()), а не пересчитывает расписание заново — один источник
-  // правды. Дёргается из tickCountdowns() только пока модалка открыта, и
-  // один раз сразу при открытии (см. openRunnerModal()). Название станции
-  // направления (.dir-name) добавлено 2026-09-29 по отзыву — без него было
-  // не видно, в сторону какой станции идёт отсчёт.
+  // Мини-отсчёт внутри модалки копирует текст из карточек направлений на главном экране
+  // (они обновляются каждую секунду в tickCountdowns()). Вызывается из tickCountdowns() только
+  // пока модалка открыта и один раз при открытии (openRunnerModal()). Название станции
+  // направления (.dir-name) показывает, в какую сторону идёт отсчёт.
   function updateRunnerCountdown() {
     if (!runnerModal || runnerModal.style.display === 'none') return;
     ['forward', 'backward'].forEach(function (dirKey) {
@@ -4327,12 +3824,10 @@
   });
 
   /* ---------- Форма обратной связи ----------
-     Без бэкенда — POST через AJAX-эндпоинт FormSubmit.co прямо на почту
-     a-dima-v@yandex.kz. Важно: первое сообщение с нового FormSubmit-адреса
-     требует одного подтверждения по ссылке из письма-активации — иначе
-     дальнейшие отправки молча не будут доходить. Скрытое поле _honey —
-     простая защита от ботов (FormSubmit сам отбрасывает отправки, где оно
-     заполнено, настоящий пользователь его никогда не видит). */
+     Без бэкенда: AJAX-запрос на FormSubmit.co, сообщения приходят на a-dima-v@yandex.kz.
+     Первое сообщение с нового адреса требует подтверждения по ссылке из письма-активации —
+     до этого отправки молча не доходят. Скрытое поле _honey — защита от ботов (FormSubmit
+     отбрасывает отправки с заполненным полем). */
   var FEEDBACK_ENDPOINT = 'https://formsubmit.co/ajax/a-dima-v@yandex.kz';
   var feedbackModal = document.getElementById('feedbackModal');
   var feedbackForm = document.getElementById('feedbackForm');
@@ -4407,28 +3902,24 @@
   });
 
   /* ---------- Маршрут до станции (карты) ----------
-     Не пытаемся определить одну "правильную" карту — просто даём выбор:
-     Google/Apple открываются и без установленного приложения (просто в
-     вебе), а 2ГИС/Яндекс — через свою схему (dgis://, yandexmaps://),
-     без веб-запасного варианта: если приложения нет, ссылка просто не
-     сработает. Формат ссылок — см. CLAUDE.md. */
+     Где открыть маршрут — выбирает пользователь: Google/Apple открываются и без приложения (в вебе),
+     2ГИС/Яндекс — через свою схему (dgis://, yandexmaps://) без веб-запасного варианта: без
+     установленного приложения ссылка не сработает. */
   var routeModal = document.getElementById('routeModal');
   function buildRouteLinks(lat, lon) {
     document.getElementById('routeLinkGoogle').href =
       'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lon + '&travelmode=walking';
     document.getElementById('routeLinkApple').href =
       'https://maps.apple.com/?daddr=' + lat + ',' + lon + '&dirflg=w';
-    // 2ГИС и Яндекс — координаты в формате lon,lat (долгота первой), не lat,lon!
+    // 2ГИС и Яндекс — координаты в формате lon,lat (долгота первой), не lat,lon.
     document.getElementById('routeLink2gis').href =
       'dgis://2gis.ru/routeSearch/rsType/pedestrian/to/' + lon + ',' + lat;
     document.getElementById('routeLinkYandex').href =
       'yandexmaps://maps.yandex.ru/?rtext=~' + lat + ',' + lon + '&rtt=pd';
-    // Веб-версии на случай Telegram Mini App (см. комментарий ниже, у
-    // обработчика клика) — у 2ГИС путь совсем другой, чем у dgis://
-    // (не просто замена схемы: /routeSearch/... на вебе просто редиректит
-    // на главную Алматы, а рабочий путь — /directions/points/...).
-    // Принудительно включить пешеходный режим в URL 2ГИС не получилось
-    // (пробовали суффиксы /tab/pedestrian и ,pedestrian — оба игнорируются).
+    // Веб-версии для Telegram Mini App (см. комментарий у обработчика клика). Путь 2ГИС отличается
+    // от dgis://: /routeSearch/... на вебе редиректит на главную Алматы, рабочий путь —
+    // /directions/points/.... Пешеходный режим в URL 2ГИС включить нельзя (суффиксы
+    // /tab/pedestrian и ,pedestrian игнорируются).
     document.getElementById('routeLink2gis').setAttribute('data-tg-href',
       'https://2gis.kz/almaty/directions/points/%7C' + lon + ',' + lat);
     document.getElementById('routeLinkYandex').setAttribute('data-tg-href',
@@ -4442,17 +3933,11 @@
     routeModal.style.display = '';
     trackEvent('route_open', { station: slug });
   }
-  // Собственный WebView Telegram Mini App не умеет открывать чужие
-  // URL-схемы (dgis://, yandexmaps://) — обычный клик по ссылке там просто
-  // ничего не делает (подтверждено на реальном устройстве, как и со
-  // скачиванием .ics). Внутри Telegram передаём ссылку через tg.openLink()
-  // в системный браузер — у него, в отличие от WebView, уже есть обычный
-  // для мобильных ОС механизм "открыть в установленном приложении".
-  // Google/Apple (https-ссылки) вне Telegram работают и так, но заодно
-  // проводим и их через openLink() для единообразия — лишним не будет.
-  // У 2ГИС и Яндекса внутри Telegram берём НЕ this.href (там схема
-  // dgis:/yandexmaps: — сама по себе не откроется и в системном браузере),
-  // а заранее заготовленную веб-ссылку из data-tg-href (см. buildRouteLinks).
+  // WebView Telegram Mini App не открывает чужие URL-схемы (dgis://, yandexmaps://): клик по
+  // такой ссылке ничего не делает. Внутри Telegram ссылка передаётся через tg.openLink() в
+  // системный браузер, который умеет открывать установленные приложения. Google/Apple (https)
+  // проходят через openLink() для единообразия. У 2ГИС и Яндекса вместо this.href (схема
+  // приложения) берётся веб-ссылка из data-tg-href (см. buildRouteLinks).
   ['routeLinkGoogle', 'routeLinkApple', 'routeLink2gis', 'routeLinkYandex'].forEach(function (id) {
     document.getElementById(id).addEventListener('click', function (e) {
       if (!insideTelegram) return; // обычный браузер — обычный переход по ссылке
@@ -4477,18 +3962,14 @@
   });
 
   /* ---------- Модалка выбора станции ----------
-     Один общий компонент вместо трёх нативных <select> (ручной выбор
-     станции, "До станции" в "Когда выезжать", станция на "Всё
-     расписание"). Сами <select> остаются в DOM — просто скрытые,
-     служат хранилищем значения. Модалка при выборе ставит значение в
-     нужный <select> и диспатчит 'change' — вся существующая логика
-     (wtgCalculate, renderFullSchedule, selectStation и т.п.) реагирует
-     как и раньше, ничего в ней менять не пришлось. См. CLAUDE.md. */
+     Общий компонент вместо трёх нативных <select> (ручной выбор, «До станции», «Всё расписание»).
+     <select> остаются в DOM скрытыми и хранят значение; модалка при выборе ставит значение в
+     нужный <select> и диспатчит 'change', так что остальная логика (wtgCalculate,
+     renderFullSchedule, selectStation) работает без изменений. */
   var stationModal = document.getElementById('stationModal');
   var stationModalTarget = null; // какой именно <select> сейчас редактируем
-  // Геоближайшая станция для метки в модалке — переиспользуем то, что уже
-  // вычислено геолокацией (onGeoSuccess → locateState), новый запрос не
-  // нужен. null, если геолокация не определилась/запрещена/ещё грузится.
+  // Геоближайшая станция для метки в модалке — берётся из уже вычисленного locateState
+  // (onGeoSuccess), нового запроса нет. null, если геолокация не определилась/запрещена/грузится.
   function geoNearestSlug() {
     if (locateState.kind === 'ok' || locateState.kind === 'far') return locateState.station.slug;
     return null;
@@ -4549,51 +4030,31 @@
     if (e.key === 'Escape' && stationModal.style.display !== 'none') closeStationModal();
   });
 
-  /* ---------- "Расписание конкретного поезда" (2026-09-08, переработана
-     2026-09-09) ----------
-     Тап по карточке направления на "Ближайшем поезде" — открывает
-     вертикальную схему (тот же визуальный язык, что у stationModal) с
-     живым положением ИМЕННО того поезда, до которого шёл отсчёт на этой
-     карточке. По отзыву пользователя список ВСЕГДА в одном и том же
-     порядке (Райымбек батыра → Б. Момышулы), независимо от того, по какой
-     карточке тапнули, и показывает ВСЕ станции сразу — не только
-     оставшиеся впереди, но и уже пройденные (тусклее, .passed): "часто
-     поезд ещё не подъехал к выбранной станции", и раньше в такой ситуации
-     список начинался с выбранной станции, хотя поезд физически ещё где-то
-     позади неё. См. CLAUDE.md. */
+  /* ---------- «Расписание конкретного поезда» ----------
+     Тап по карточке направления открывает вертикальную схему (стиль stationModal) с положением
+     именно того поезда, до которого шёл отсчёт. Список всегда в одном порядке (Райымбек батыра →
+     Б. Момышулы) и включает все станции: пройденные тусклее (.passed), ведь поезд может быть
+     ещё позади выбранной станции. */
   var trainModal = document.getElementById('trainModal');
   var trainModalLine = document.getElementById('trainModalLine');
-  // {times, serviceStart, originIdx} текущего показанного поезда — times
-  // это {idx: minutes} из estimateFullPath (не обязательно все 11 станций,
-  // см. её комментарий). null — модалка закрыта (проверяется и в
-  // tickCountdowns, чтобы не считать лишнее, когда она не открыта).
+  // {times, serviceStart, originIdx} показанного поезда; times — {idx: minutes} из estimateFullPath
+  // (не обязательно все 11 станций). null — модалка закрыта (проверяется и в tickCountdowns).
   var trainModalState = null;
-  // Какое направление сейчас открыто и который по счёту поезд в нём (0 —
-  // ближайший) — нужно для кнопки "Показать следующий поезд".
+  // Открытое направление и номер поезда в нём (0 — ближайший); нужны кнопкам «Предыдущий»/«Следующий».
   var trainModalDirKey = null;
   var trainModalTrainIndex = 0;
 
-  // Пиксельные центры точек-станций относительно .train-modal-line —
-  // намеренно НЕ проценты от общей высоты контейнера: имена станций разной
-  // длины дают разную высоту строки (перенос на 2 строки на казахском/
-  // английском для длинных названий), так что равномерный процент "поплыл"
-  // бы точно так же, как раньше плыли платформы на горизонтальной линии
-  // (см. .line-track/renderLineStrip выше и CLAUDE.md, "координаты
-  // станций/поезда разошлись") — тут этот баг заранее не повторяем,
-  // меряем реальный offsetTop каждой строки после рендера. Индекс в
-  // массиве centers СОВПАДАЕТ с индексом станции в STATIONS — список
-  // рендерится строго в порядке STATIONS (см. renderTrainModalList).
+  // Пиксельные центры точек-станций относительно .train-modal-line — не проценты высоты контейнера:
+  // названия станций переносятся на 2 строки (kk/en), и высота строк разная, поэтому меряется
+  // реальный offsetTop каждой строки после рендера. Индекс в centers совпадает с индексом
+  // станции в STATIONS: список рендерится строго в порядке STATIONS (renderTrainModalList).
   function getRowCenters() {
     var rows = trainModalLine.querySelectorAll('.train-modal-row');
     var centers = [];
     rows.forEach(function (row) {
-      // .station-modal-dotwrap САМА имеет position:relative (см. её CSS выше) —
-      // значит её offsetParent это СВОЙ ряд, а не .train-modal-line, и её
-      // offsetTop — это смещение ВНУТРИ ряда (одинаковое почти у всех рядов),
-      // а не позиция на всей линии. Настоящая позиция — offsetTop ряда
-      // (offsetParent которого уже правильно .train-modal-line) ПЛЮС
-      // смещение точки внутри него. Поймал не на глаз — увидел, что все
-      // центры получались одинаковыми, когда должны были расти. 2026-09-08.
+      // .station-modal-dotwrap сама position:relative, поэтому её offsetParent — свой ряд, а не
+      // .train-modal-line, и её offsetTop — смещение внутри ряда. Позиция на линии = offsetTop ряда
+      // плюс смещение точки внутри него.
       var dot = row.querySelector('.station-modal-dotwrap');
       centers.push(row.offsetTop + dot.offsetTop + dot.offsetHeight / 2);
     });
@@ -4602,10 +4063,8 @@
 
   function renderTrainModalList(times, serviceStart, originIdx, direction) {
     trainModalLine.innerHTML = '';
-    // Реальные "докуда назад/вперёд" для ЭТОГО конкретного поезда — не
-    // обязательно совпадают с концами линии, см. trainFarReach/CLAUDE.md
-    // ("поезда, которые не идут до конечной"). Считаем по факту того, что
-    // уже собрал estimateFullPath в times, а не пересчитываем заново.
+    // Реальные «докуда назад/вперёд» для этого поезда — не обязательно концы линии (см. trainFarReach).
+    // Считаются по уже собранным estimateFullPath times, без пересчёта.
     var step = direction === 'forward' ? 1 : -1;
     var farEnd = direction === 'forward' ? STATIONS.length - 1 : 0;
     var nearEnd = direction === 'forward' ? 0 : STATIONS.length - 1;
@@ -4615,14 +4074,9 @@
     while (times[firstKnownIdx - step] != null) firstKnownIdx -= step;
     var endsEarly = lastKnownIdx !== farEnd;
     var startsLate = firstKnownIdx !== nearEnd;
-    // ИСПРАВЛЕНО 2026-09-12: у lastKnownIdx есть ПОДТВЕРЖДЁННОЕ отправление
-    // (times[lastKnownIdx] известно) — значит поезд С НЕЁ уже уехал, и
-    // высаживает не там, а на следующей станции по ходу (endActualIdx),
-    // раз именно её собственного отправления дальше нет. Раньше ошибочно
-    // подписывали lastKnownIdx. Для startsLate коррекция НЕ нужна: там
-    // наоборот, firstKnownIdx — это самая ранняя станция, у которой само
-    // отправление подтверждено, то есть именно она и есть начало (см.
-    // подробный разбор в CLAUDE.md, "какую станцию помечаем конечной").
+    // У lastKnownIdx подтверждено отправление — поезд с неё уже уехал, а конечная — следующая по
+    // ходу (endActualIdx): именно у неё отправления дальше нет. Для startsLate сдвиг не нужен:
+    // firstKnownIdx — самая ранняя станция с подтверждённым отправлением, то есть и есть начало.
     var endActualIdx = endsEarly ? lastKnownIdx + step : lastKnownIdx;
 
     STATIONS.forEach(function (s, idx) {
@@ -4639,18 +4093,15 @@
       name.textContent = stationName(s);
       var clock = document.createElement('span');
       clock.className = 'train-modal-time';
-      // "—" — станция за пределами того, что смогли восстановить в обе
-      // стороны (редкий край расписания, см. estimateFullPath) — не
-      // выдумываем время, честно показываем, что не знаем.
+      // «—»: станция за пределами восстановленного в обе стороны (край расписания, см.
+      // estimateFullPath) — время не выдумываем.
       clock.textContent = times[idx] != null ? fmtHHMM(new Date(serviceStart.getTime() + times[idx] * 60000)) : '—';
       row.appendChild(dotwrap);
       row.appendChild(name);
       row.appendChild(clock);
       trainModalLine.appendChild(row);
-      // Метки "поезд дальше не идёт"/"начинает движение отсюда" — только
-      // если этот конкретный рейс реально не доезжает до конца линии
-      // (короткий/ночной рейс, см. trainFarReach выше), не для обычных
-      // полнорейсовых поездов. 2026-09-12.
+      // Метки «поезд дальше не идёт»/«начинает движение отсюда» — только для коротких/ночных рейсов
+      // (см. trainFarReach), не для обычных полнорейсовых.
       if (endsEarly && idx === endActualIdx) {
         var endNote = document.createElement('div');
         endNote.className = 'train-modal-endpoint-note';
@@ -4670,15 +4121,9 @@
     trainModalLine.appendChild(marker);
   }
 
-  // "Проехал ли поезд эту станцию" — просто "известное время на ней уже в
-  // прошлом", не зависит от направления (см. CLAUDE.md): time — это
-  // реальный момент, когда поезд БЫЛ на этой станции, независимо от того,
-  // едет он к началу линии или к концу. Станции с "—" вместо времени (этот
-  // рейс их вообще не касается — короткий/ночной, не доезжает/не начинается
-  // с концов линии, см. endActualIdx/firstKnownIdx выше) — тоже тусклые,
-  // тем же способом: пользователь попросил не выделять их визуально как
-  // обычные "ещё впереди" станции, раз к этому конкретному поезду они не
-  // относятся вовсе. 2026-09-12.
+  // «Проехал ли поезд станцию»: известное время на ней уже в прошлом — не зависит от направления.
+  // Станции с «—» (рейс их не касается: короткий/ночной, см. endActualIdx/firstKnownIdx)
+  // тоже тусклые, чтобы не выглядели как обычные «ещё впереди».
   function updateTrainModalPassedStates() {
     if (!trainModalState) return;
     var nowMinutes = (almatyNow() - trainModalState.serviceStart) / 60000;
@@ -4689,14 +4134,11 @@
     });
   }
 
-  // Позиция маркера — та же идея, что и wanted.push({pos: i + dwellFrac(...)})
-  // в renderTrainMarkers() для горизонтальной линии, но для ОДНОГО заранее
-  // известного поезда. Список теперь в ФИКСИРОВАННОМ порядке (индекс
-  // станции), а не в порядке движения поезда — значит время по мере роста
-  // индекса может как расти (поезд едет к Б. Момышулы), так и убывать
-  // (едет к Райымбек батыра). Поэтому ищем сегмент через min/max на каждой
-  // паре, а не полагаемся на возрастание — работает для обоих направлений
-  // одной и той же веткой кода. 2026-09-09.
+  // Позиция маркера — та же идея, что wanted.push({pos: i + dwellFrac(...)}) в
+  // renderTrainMarkers(), но для одного известного поезда. Список в фиксированном порядке
+  // индекса станции, а время с ростом индекса может расти (поезд к Б. Момышулы) или убывать
+  // (к Райымбек батыра), поэтому сегмент ищется через min/max на каждой паре — одна ветка кода
+  // для обоих направлений.
   function updateTrainModalMarker() {
     if (!trainModalState) return;
     var marker = document.getElementById('trainModalMarker');
@@ -4711,14 +4153,10 @@
 
     var nowMinutes = (almatyNow() - trainModalState.serviceStart) / 60000;
 
-    // Поезд ещё не отправился со своей КОНЕЧНОЙ (начальной для этого рейса)
-    // станции — рейс физически ещё не начался, вагончик прятать целиком, а
-    // не рисовать его "ждущим" где-то на линии. Начальная станция — не
-    // originIdx (это станция, которую выбрал пользователь), а терминус,
-    // противоположный направлению движения (0 для поезда к Б. Момышулы,
-    // последняя — для поезда к Райымбек батыра). По просьбе пользователя,
-    // 2026-09-09: пролистывая "Показать следующий поезд" вперёд, легко
-    // долистать до рейса, который вот-вот начнётся, но ещё не начался.
+    // Поезд ещё не отправился со своей начальной станции — рейс не начался, маркер скрывается.
+    // Начальная станция — не originIdx (выбранная пользователем), а терминус, противоположный
+    // направлению (0 для поезда к Б. Момышулы, последняя — для поезда к Райымбек батыра).
+    // Актуально при листании «Следующий» к рейсу, который ещё не начался.
     var startIdx = trainModalState.direction === 'forward' ? 0 : STATIONS.length - 1;
     var startTime = times[startIdx];
     if (startTime != null && startTime > nowMinutes) {
@@ -4740,9 +4178,8 @@
       }
     }
     if (top == null) {
-      // За пределами всех известных времён — прижимаем к хронологически
-      // первой/последней станции (не обязательно STATIONS[0]/[last] — это
-      // зависит от направления, см. known[0] vs known[last]).
+      // За пределами известных времён маркер прижимается к хронологически первой/последней станции
+      // (зависит от направления: known[0] или known[last]).
       var first = known[0], last = known[known.length - 1];
       var firstIsEarlier = first.minutes <= last.minutes;
       var earlierEnd = firstIsEarlier ? first : last;
@@ -4752,29 +4189,18 @@
     marker.style.top = top + 'px';
   }
 
-  // Тот же критерий "метро сейчас закрыто", что и в tickCountdowns/
-  // loadTrainForModal ниже — вынесен отдельно, чтобы использовать ЗАРАНЕЕ,
-  // при решении, disable-ить ли кнопку, а не только постфактум внутри
-  // loadTrainForModal. Без этого "Следующий" оставался кликабельным даже
-  // когда следующий кандидат — это уже поезд из-за ночного перерыва, и клик
-  // молча ничего не делал (see CLAUDE.md, баг "кнопка перестаёт работать
-  // вечером"). 2026-09-12.
+  // Тот же критерий «метро сейчас закрыто», что в tickCountdowns/loadTrainForModal. Вынесен
+  // отдельно, чтобы решать, гасить ли кнопку «Следующий», заранее: иначе она оставалась бы
+  // кликабельной, когда следующий кандидат — поезд после ночного перерыва, и клик ничего не делал.
   function trainCandidateShowable(train, nowMinutes) {
     var mins = train.minutes - nowMinutes;
     return !((train.dayOffset === 1 || mins > 6 * 60) && mins > PRE_OPEN_COUNTDOWN_MIN);
   }
 
-  // Доступна ли следующая/предыдущая кнопка — просто заглядываем на
-  // соседнее смещение, не сдвигая само состояние. Дёргается после каждой
-  // успешной загрузки, чтобы кнопки на границе расписания были disabled,
-  // а не молча ничего не делали по клику. "Предыдущий" — граница это просто
-  // "данных больше нет" (trainAtOffset вернул null, в timeline ничего
-  // раньше нет — у него нет понятия "метро закрыто", это только для
-  // будущего). "Следующий" — граница ещё и "данные есть, но это уже
-  // ночной перерыв" (trainCandidateShowable), иначе не работало бы именно
-  // то, что описал пользователь. При disabled — показываем сообщение,
-  // почему дальше листать некуда, а не просто гасим кнопку молча.
-  // 2026-09-12.
+  // Доступность «Предыдущий»/«Следующий»: заглядываем на соседнее смещение, не сдвигая состояние;
+  // вызывается после каждой успешной загрузки. «Предыдущий» упирается в отсутствие данных
+  // (trainAtOffset вернул null). «Следующий» — ещё и в ночной перерыв (trainCandidateShowable).
+  // При disabled показывается сообщение, почему листать дальше нельзя.
   function updateTrainModalNavButtons() {
     var prevBtn = document.getElementById('trainModalPrevBtn');
     var nextBtn = document.getElementById('trainModalNextBtn');
@@ -4795,17 +4221,15 @@
     msgEl.style.display = msgs.length ? '' : 'none';
   }
 
-  // Общая точка входа и для первого открытия (openTrainModal), и для кнопок
-  // "Предыдущий"/"Следующий" (trainModalTrainIndex ± 1) — вся разница
-  // только в смещении, которое просим у trainAtOffset.
+  // Общая точка входа для первого открытия (openTrainModal) и кнопок «Предыдущий»/«Следующий»
+  // (trainModalTrainIndex ± 1): разница только в смещении, которое берётся у trainAtOffset.
   function loadTrainForModal() {
     if (!selectedSlug || !trainModalDirKey) return;
     var res = trainAtOffset(selectedSlug, trainModalDirKey, trainModalTrainIndex);
     if (!res) return; // защитный случай — кнопки и так disabled на границе, сюда попасть не должны
     var first = res.train;
     var mins = first.minutes - res.nowMinutes;
-    // Метро закрыто (следующий поезд только завтра/очень нескоро) — как и в
-    // tickCountdowns, тут отдельного поезда, чтобы показать, попросту нет.
+    // Метро закрыто (следующий поезд только завтра/очень нескоро) — показывать нечего, как и в tickCountdowns.
     if ((first.dayOffset === 1 || mins > 6 * 60) && mins > PRE_OPEN_COUNTDOWN_MIN) return;
 
     var originIdx = STATIONS.findIndex(function (s) { return s.slug === selectedSlug; });
@@ -4821,16 +4245,10 @@
     renderTrainModalList(times, res.serviceStart, originIdx, direction);
     var marker = document.getElementById('trainModalMarker');
     marker.classList.add('dir-' + direction);
-    // Первое появление — сразу на нужное место, БЕЗ анимации "сползания":
-    // .train-modal-marker сам по себе новый элемент (top:0 по умолчанию),
-    // и если сразу включить transition, он проедет весь путь от верха
-    // списка до настоящей позиции — включая ложное "сверху вниз" даже для
-    // поезда, который на самом деле едет к Райымбек батыра (снизу вверх).
-    // Отключаем transition на этот единственный кадр, выставляем top,
-    // потом возвращаем transition обратно для последующих живых тиков —
-    // двойной rAF, чтобы браузер успел применить "без анимации" до того,
-    // как transition снова появится (иначе тот же кадр подхватит оба
-    // изменения разом и анимация всё равно проскочит). 2026-09-09.
+    // Первое появление — сразу на нужное место, без анимации: .train-modal-marker — новый элемент
+    // (top:0), и с включённым transition он проехал бы весь путь от верха списка, показывая ложное
+    // направление. Transition отключается на один кадр, потом возвращается для живых тиков; двойной
+    // rAF нужен, чтобы браузер успел применить «без анимации» до возврата transition.
     marker.style.transition = 'none';
     trainModal.style.display = '';
     updateTrainModalMarker(); // сразу, не дожидаясь следующего тика
@@ -4847,15 +4265,9 @@
     loadTrainForModal();
     trackEvent('train_modal_open', { direction: dirKey });
   }
-  // "Предыдущий"/"Следующий" — просто сдвиг trainModalTrainIndex на ±1 и
-  // перезагрузка тем же loadTrainForModal(). offset<0 — уже отправившиеся
-  // сегодня поезда ("что я пропустил"), offset>0 — более поздние, чем
-  // ближайший (было раньше под названием "Показать следующий поезд",
-  // объединено в пару с "Предыдущий" по отзыву пользователя, 2026-09-12,
-  // вместо отдельной полноширинной кнопки). Сам disabled-статус на
-  // границах расписания выставляет updateTrainModalNavButtons() — кнопка
-  // не должна успеть отправить click, если уже disabled, поэтому здесь
-  // никакой доп. проверки на "а вдруг за краем" нет.
+  // «Предыдущий»/«Следующий»: сдвиг trainModalTrainIndex на ±1 и перезагрузка через
+  // loadTrainForModal(). offset<0 — уже отправившиеся сегодня поезда, offset>0 — более поздние.
+  // Disabled на границах выставляет updateTrainModalNavButtons(), поэтому проверок «за краем» здесь нет.
   document.getElementById('trainModalPrevBtn').addEventListener('click', function () {
     trainModalTrainIndex--;
     loadTrainForModal();
@@ -4886,10 +4298,9 @@
   document.getElementById('fullStationTrigger').addEventListener('click', function () {
     openStationModal(fullStationSelect, t('stationModalTitle'));
   });
-  // Текст на самих кнопках-триггерах ("До станции"/"Всё расписание") — не
-  // сам select, а его текущее значение станции, поэтому обновляется не
-  // только при выборе, но и при первичном заполнении/смене языка (см.
-  // populateStationSelects() и applyLanguage() — вызывается там же).
+  // Текст кнопок-триггеров («До станции»/«Всё расписание») — текущая станция соответствующего
+  // select; обновляется при выборе, первичном заполнении и смене языка (populateStationSelects(),
+  // applyLanguage()).
   function syncStationTriggers() {
     if (STATIONS_BY_SLUG[wtgDestSelect.value]) {
       document.getElementById('wtgDestTriggerText').textContent = stationName(STATIONS_BY_SLUG[wtgDestSelect.value]);
@@ -4900,25 +4311,11 @@
   }
 
   /* ---------- Оплата ONAY ----------
-     Раньше вели на страницу приложения в сторе (apps.apple.com/
-     play.google.com) в расчёте, что ОС сама откроет установленное
-     приложение вместо страницы стора — это оказалось неверно: ссылка
-     на СТОР не переоткрывает установленное приложение ни на одной
-     платформе, так не работает ни iOS, ни Android. Так делают только
-     Universal Links (iOS) / App Links (Android) — ссылка именно на
-     домен самого приложения, не на его страницу в сторе.
-     Проверили 2026-09-05: на onay.kz реально есть
-     .well-known/apple-app-site-association (Universal Links, весь
-     домен → kz.onay.Onay) и .well-known/assetlinks.json (Android App
-     Links, весь домен → kz.onay, тот же package, что был в старой
-     ссылке на Google Play) — значит ссылка на сам домен должна
-     открывать установленное приложение напрямую на обеих платформах,
-     а не просто показывать его страницу в сторе. Ведём на корень
-     домена (шаблон в apple-app-site-association — "*", то есть весь
-     сайт, а не отдельный путь) — глубже, сразу на экран QR внутри
-     ONAY, задокументированного способа попасть всё равно нет.
-     Собственная кастомная URL-схема (onay://) для этого и не нужна —
-     Universal/App Links работают через обычный https-адрес. */
+     Ведём на корень https://onay.kz/, а не на страницу приложения в сторе: ссылка на стор не
+     открывает установленное приложение. На onay.kz настроены Universal Links
+     (.well-known/apple-app-site-association, весь домен → kz.onay.Onay) и Android App Links
+     (.well-known/assetlinks.json, весь домен → kz), так что ОС сама открывает приложение;
+     без приложения откроется сайт. Ссылки сразу на экран QR внутри ONAY нет. */
   var ONAY_LINK = 'https://onay.kz/';
   document.getElementById('onayBtn').addEventListener('click', function () {
     var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -4930,9 +4327,8 @@
   /* ---------- Полное расписание ---------- */
   var fullStationSelect = document.getElementById('fullStationSelect');
   var fullDayType = null; // выставится после загрузки данных
-  // Состояние "свёрнуто/развёрнуто" по направлению — хранится отдельно от DOM
-  // (который renderFullSchedule() полностью перестраивает при каждой смене
-  // станции/дня), чтобы выбор пользователя не сбрасывался при переключении.
+  // Состояние «свёрнуто/развёрнуто» по направлению хранится отдельно от DOM (renderFullSchedule()
+  // перестраивает его при каждой смене станции/дня), чтобы выбор не сбрасывался.
   var collapsedDirections = { forward: false, backward: false };
 
   document.getElementById('fullScheduleCols').addEventListener('click', function (e) {
@@ -5048,11 +4444,9 @@
         return block;
       }
 
-      // Схлопываем полностью прошедшие часы под тумблер "Показать более
-      // ранние" — чтобы вечером сразу было видно расписание с текущего
-      // часа, а не пролистывать вниз мимо десятка тусклых прошедших. Только
-      // для реально сегодняшнего дня недели (viewingCurrentDayType) — у
-      // просмотра "не сегодняшнего" дня нет понятия "прошедшее".
+      // Полностью прошедшие часы схлопываются под тумблер «Показать более ранние», чтобы вечером
+      // расписание начиналось с текущего часа. Только для сегодняшнего дня недели
+      // (viewingCurrentDayType): у другого дня «прошедшего» нет.
       var splitIdx = -1;
       if (viewingCurrentDayType) {
         splitIdx = sortedHours.findIndex(function (hour) {
@@ -5105,24 +4499,18 @@
       });
       if (prevValue) sel.value = prevValue;
     });
-    // stationSelect — не независимый выбор (в отличие от
-    // fullStationSelect/wtgDestSelect, где можно смотреть расписание любой
-    // станции без смены "домашней"): должен всегда совпадать с
-    // selectedSlug, куда бы его ни поменяли. У блока "Когда выезжать"
-    // своего поля "От станции" больше нет — он и так всегда берёт
-    // selectedSlug напрямую (см. wtgCalculate()).
+    // stationSelect, в отличие от fullStationSelect/wtgDestSelect, не независимый выбор: он всегда
+    // совпадает с selectedSlug, а «Когда выезжать» считает от selectedSlug (wtgCalculate()).
     if (selectedSlug) {
       stationSelect.value = selectedSlug;
     }
   }
 
   function fmtDateTime(almatyDate) {
-    // Не полагаемся на Intl/toLocaleDateString: в некоторых WebView (в т.ч. внутри
-    // Telegram) нет полных данных локали "kk", и дата откатывается к ISO-виду
-    // ("2026-08-01") вместо человеческого формата. Форматируем вручную.
-    // Ожидает "псевдо-UTC" дату времени Алматы (как almatyNow()) — читаем через
-    // getUTC*, а не обычные геттеры, иначе у зрителя из другого часового пояса
-    // подставится время его браузера, а не Алматы.
+    // Не используем Intl/toLocaleDateString: в части WebView (в том числе в Telegram) нет данных
+    // локали "kk", и дата выводится в ISO-виде. Форматируем вручную. Принимает «псевдо-UTC»
+    // дату времени Алматы (как almatyNow()) и читает через getUTC*, чтобы не подставилось время
+    // браузера зрителя.
     var d = String(almatyDate.getUTCDate()).padStart(2, '0');
     var m = String(almatyDate.getUTCMonth() + 1).padStart(2, '0');
     var h = String(almatyDate.getUTCHours()).padStart(2, '0');
@@ -5132,10 +4520,8 @@
 
   function renderFooter() {
     if (!SCHEDULE) return;
-    // SCHEDULE.generated_at — ISO-строка с явным смещением (пишет update_schedule.py),
-    // поэтому new Date(...) даёт верный момент времени; переводим его в ту же
-    // "псевдо-UTC" форму времени Алматы, что и almatyNow(), чтобы fmtDateTime
-    // прочитала его теми же getUTC*-геттерами.
+    // SCHEDULE.generated_at — ISO-строка со смещением (пишет update_schedule.py); переводим в ту же
+    // «псевдо-UTC» форму времени Алматы, что almatyNow(), чтобы fmtDateTime читала её через getUTC*.
     var genDate = new Date(SCHEDULE.generated_at);
     var genDateAlmaty = new Date(genDate.getTime() + ALMATY_OFFSET_MS);
     document.getElementById('metaFooter').innerHTML =
@@ -5230,8 +4616,8 @@
       if (document.getElementById('view-full').classList.contains('active')) {
         renderFullSchedule();
       }
-      // если результат "Когда выезжать" уже показан — пересчитываем на новом
-      // языке (вход тот же: селекты/время не сбрасываются сменой языка)
+      // если результат «Когда выезжать» уже показан — пересчитываем на новом языке (селекты и время
+      // сменой языка не сбрасываются)
       if (wtgResultCard.classList.contains('show')) {
         wtgCalculate();
       }
@@ -5249,37 +4635,23 @@
     });
   });
 
-  // Применяем язык сразу (ещё до загрузки данных), чтобы статичный текст интерфейса
-  // был на нужном языке с первого кадра, а не только после ответа сети.
+  // Язык применяется сразу, до загрузки данных: статичный текст на нужном языке с первого кадра.
   applyLanguage(currentLang);
-  // Первый выбор фразы для плашки-реплики — ещё до данных с сервера: категории,
-  // не зависящие от станции/расписания (день недели, время суток), уже доступны
-  // через almatyNow()/dayTypeOf(), плашка не пустует с первого кадра.
+  // Первый выбор фразы плашки-реплики — до данных с сервера: категории, не зависящие от
+  // станции/расписания (день недели, время суток), доступны через almatyNow()/dayTypeOf().
   recomputeHeroLine();
 
   /* ---------- Загрузка данных ---------- */
-  // Если Service Worker (sw.js) не смог достучаться до сети и отдал JSON из
-  // офлайн-кеша — он помечает ответ заголовком X-From-SW-Cache. Отличаем это
-  // от обычного "давно не обновлялось" (когда сеть есть, просто джоба давно
-  // не запускалась) — там заголовка не будет, а generated_at всё равно может
-  // быть старым, это два разных, независимых случая.
+  // Если Service Worker (sw.js) отдал JSON из офлайн-кеша, он помечает ответ заголовком
+  // X-From-SW-Cache. Это отличается от «расписание давно не обновлялось» (сеть есть, но
+  // generated_at старый): там заголовка нет.
   var dataFromOfflineCache = false;
 
-  // Таймаут + резервная копия в localStorage — независимая от sw.js защита
-  // (2026-09-28). До этого единственным щитом от "зависшей" загрузки был
-  // networkFirst() в sw.js (таймаут 5с) — но он спасает, только когда сам
-  // Service Worker реально перехватывает запрос. Внутри Telegram Mini App
-  // поддержка SW не гарантирована (см. "Ограничение по Telegram" выше в этом
-  // файле) — а именно там нередко и сидят с плохим сигналом (рядом со входом
-  // в метро). Без SW plain fetch() ничем не ограничен: если интернет
-  // технически есть, но не отвечает, fetch() не падает с ошибкой — он просто
-  // висит, и Promise.all ниже никогда не резолвится — белый экран без конца,
-  // а не "нет сети" (тот случай уже был прикрыт — см. .catch() ниже).
-  //
-  // Резерв — именно localStorage, не Cache Storage (caches.match()): тот
-  // заполняется только самим Service Worker'ом, и как раз там, где SW не
-  // работает, будет так же пуст. localStorage не зависит от SW вообще,
-  // пишется/читается напрямую из скрипта страницы.
+  // Таймаут + резервная копия в localStorage — защита, не зависящая от sw.js. Внутри Telegram
+  // Mini App поддержка Service Worker не гарантирована, а обычный fetch() при «живой, но не
+  // отвечающей» сети не падает, а висит — Promise.all ниже не резолвился бы (белый экран).
+  // Резерв — именно localStorage, а не Cache Storage: тот заполняет только Service Worker,
+  // и там, где он не работает, пуст.
   var DATA_FETCH_TIMEOUT_MS = 5000;
   var DATA_CACHE_KEYS = { stations: 'metroCacheStations', schedule: 'metroCacheSchedule', holidays: 'metroCacheHolidays' };
   function saveDataCacheEntry(name, data) {
@@ -5295,10 +4667,8 @@
   function fetchJSON(url, cacheName) {
     return new Promise(function (resolve, reject) {
       var settled = false;
-      // Если сеть не ответила за DATA_FETCH_TIMEOUT_MS — не ждём дальше,
-      // сразу берём резервную копию (если она есть) и отдаём её. Настоящий
-      // fetch() при этом не отменяется — он донашивается в фоне и, если всё
-      // же ответит, просто освежит резервную копию на будущее (ниже).
+      // Если сеть не ответила за DATA_FETCH_TIMEOUT_MS — отдаём резервную копию (если есть). Сам fetch()
+      // не отменяется: если ответит позже, освежит резерв на будущее.
       var timer = setTimeout(function () {
         if (settled) return;
         var cached = readDataCacheEntry(cacheName);
@@ -5307,8 +4677,7 @@
           dataFromOfflineCache = true;
           resolve(cached);
         }
-        // Резерва нет (самый первый визит без сети) — показать всё равно
-        // нечего, ждём настоящий ответ сети дальше, таймер просто гаснет.
+        // Резерва нет (первый визит без сети) — показывать нечего, ждём настоящий ответ, таймер гаснет.
       }, DATA_FETCH_TIMEOUT_MS);
 
       fetch(url).then(function (r) {
@@ -5365,8 +4734,8 @@
 
     renderFooter();
     document.getElementById('offlineNote').style.display = dataFromOfflineCache ? '' : 'none';
-    // Праздники/расписание только что стали известны — пересчитываем плашку-
-    // реплику (holiday/stationFacts-категории раньше не могли сработать).
+    // Праздники и расписание стали известны — пересчитываем плашку-реплику (праздничные и
+    // станционные категории зависят от этих данных).
     recomputeHeroLine();
     fetchWeatherData(); // погодная категория плашки (no-op при WEATHER_ENABLED=false) + виджет в шапке — см. выше
 

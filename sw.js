@@ -1,54 +1,43 @@
 /*
- * Service Worker — офлайн-доступ (см. CLAUDE.md, "Офлайн-доступ").
+ * Service Worker — офлайн-доступ.
  *
- * Написан в том же стиле, что и index.html (var/function, без стрелочных
- * функций и async/await) — сознательно, ради совместимости со старыми
- * WebView, где вообще может запуститься этот файл.
+ * Стиль тот же, что у index.html (var/function, без стрелочных функций и async/await) —
+ * для совместимости со старыми WebView.
  *
- * Две разные стратегии кеша:
- *  - Сама страница и статичные ассеты (иконки/маскот) — stale-while-revalidate:
- *    мгновенно отдаём то, что есть в кеше, а свежую версию в фоне подтягиваем
- *    на будущее. Код меняется редко (руками, через git push), лишняя секунда
+ * Две стратегии кеша:
+ *  - Страница и статичные ассеты (иконки, маскоты, шрифты) — stale-while-revalidate:
+ *    сразу отдаётся кеш, свежая версия подтягивается в фоне. Код меняется редко, секунда
  *    устаревания не страшна ради мгновенной загрузки.
- *  - data/*.json (расписание/станции/праздники) — network-first с таймаутом:
- *    сначала всегда пробуем сеть (свежесть важнее), и только если сеть не
- *    ответила за NETWORK_TIMEOUT_MS (или явно недоступна) — берём кеш. Так
- *    честнее: если человек стоит у входа в метро с плохим сигналом, незачем
- *    ждать полминуты зависшего запроса ради вопроса "успею ли на поезд".
+ *  - data/*.json (расписание, станции, праздники) — network-first с таймаутом:
+ *    сначала сеть (важна свежесть), и только если она не ответила за NETWORK_TIMEOUT_MS
+ *    или недоступна — кеш. Так у входа в метро при слабом сигнале не приходится ждать
+ *    зависший запрос.
  *
- * Версию CACHE_NAME нужно поднимать при заметных изменениях набора
- * закешированных файлов (activate удаляет все кеши с другим именем).
+ * CACHE_NAME поднимается при заметных изменениях набора закешированных файлов
+ * (activate удаляет все кеши с другим именем).
  *
- * Шрифты (fonts/*.woff2) — свои файлы, не Google Fonts CDN (см. <head>
- * index.html) — поэтому отдельная логика на кросс-доменные шрифты тут не
- * нужна: это обычные same-origin статичные файлы, precache/stale-while-
- * revalidate уже их покрывает наравне с иконками. Раньше пытались кешировать
- * Google Fonts налету через отдельный кеш и mode:'no-cors' — оказалось
- * ненадёжно (гонка между регистрацией SW и самым первым запросом шрифта из
- * <head> — то срабатывало, то нет), поэтому отказались от этого подхода
- * целиком в пользу самостоятельного размещения файлов.
+ * Шрифты (fonts/*.woff2) — same-origin файлы, отдельная логика для них не нужна:
+ * их покрывают precache и stale-while-revalidate наравне с иконками.
  */
 
-var CACHE_NAME = 'almaty-metro-v1';
+var CACHE_NAME = 'almaty-metro-v2';
 var NETWORK_TIMEOUT_MS = 5000;
 
-// Пути, которые SW считает "данными" — для них network-first вместо
-// stale-while-revalidate. Матчим по concat, а не по точному equals — рабочий
-// URL приходит абсолютным (со схемой и хостом).
+// Пути «данных» — для них network-first вместо stale-while-revalidate. Сравнение по
+// вхождению в pathname, потому что URL запроса абсолютный.
 var DATA_FILES = ['data/stations.json', 'data/schedule.json', 'data/holidays.json'];
 
-// Версии favicon/apple-touch-icon (?v=N) должны совпадать с текущими ссылками
-// в index.html <head> — при следующей смене иконок поднять и тут, и там.
+// Версии favicon/apple-touch-icon (?v=N) должны совпадать со ссылками в <head> index.html.
 var PRECACHE_URLS = [
   './',
   'index.html',
   'data/stations.json',
   'data/schedule.json',
   'data/holidays.json',
-  'favicon-16x16.png?v=4',
-  'favicon-32x32.png?v=4',
-  'favicon.ico?v=4',
-  'apple-touch-icon.png?v=4',
+  'favicon-16x16.png?v=5',
+  'favicon-32x32.png?v=5',
+  'favicon.ico?v=5',
+  'apple-touch-icon.png?v=5',
   'site.webmanifest',
   'android-chrome-192x192.png',
   'android-chrome-512x512.png',
@@ -71,10 +60,8 @@ var PRECACHE_URLS = [
 self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
-      // Promise.allSettled, а не cache.addAll() — addAll() атомарный: одна
-      // упавшая ссылка (опечатка в пути, временный сбой сети на установке)
-      // обрушила бы весь precache. allSettled просто пропускает то, что не
-      // получилось, остальное всё равно закешируется.
+      // Promise.allSettled, а не cache.addAll(): addAll атомарный, и одна упавшая ссылка
+      // сорвала бы весь precache; allSettled пропускает неудачные файлы, остальные кешируются.
       return Promise.allSettled(
         PRECACHE_URLS.map(function (url) { return cache.add(url); })
       );
@@ -98,10 +85,8 @@ function isDataRequest(url) {
   return DATA_FILES.some(function (f) { return url.pathname.indexOf(f) !== -1; });
 }
 
-// Помечает ответ из офлайн-кеша заголовком X-From-SW-Cache, чтобы страница
-// (см. fetchJSON в index.html) могла отличить "реально нет сети прямо
-// сейчас" от "джоба обновления давно не запускалась, но сеть есть" — это
-// два разных, независимых случая, и подменять одно другим нечестно.
+// Помечает ответ из офлайн-кеша заголовком X-From-SW-Cache, чтобы страница (fetchJSON в
+// index.html) отличала «сети сейчас нет» от «расписание давно не обновлялось, но сеть есть».
 function markAsFromCache(response) {
   return response.blob().then(function (body) {
     var headers = new Headers(response.headers);
@@ -115,12 +100,9 @@ function markAsFromCache(response) {
 }
 
 function networkFirst(request) {
-  // cache:'no-store' — принципиально не даём браузеру тихо подсунуть свой
-  // собственный HTTP-кеш вместо реальной попытки сети (Python-сервер в
-  // scripts/update_schedule.py не шлёт Cache-Control, так что по умолчанию
-  // браузер иногда решает, что файл ещё "не протух", и вовсе не пытается
-  // достучаться до сети — а нам для расписания нужна гарантированно свежая
-  // попытка, а не эвристика браузера).
+  // cache:'no-store': JSON отдаётся без Cache-Control, и без этого браузер по эвристике
+  // может не ходить в сеть вовсе, подставив свой HTTP-кеш; для расписания нужна реальная
+  // попытка достучаться до сервера.
   return new Promise(function (resolve) {
     var settled = false;
     var timer = setTimeout(function () {

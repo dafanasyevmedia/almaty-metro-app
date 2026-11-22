@@ -4,8 +4,9 @@
 и сохраняет его в data/schedule.json в компактном формате для приложения.
 
 Источник: https://metroalmaty.kz/ru/schedule (использует api.metroalmaty.kz)
-Запускается вручную (`python3 scripts/update_schedule.py`) или раз в неделю
-через GitHub Actions (.github/workflows/update-schedule.yml).
+Запускается вручную (`python3 scripts/update_schedule.py`) или через GitHub Actions
+(.github/workflows/update-schedule.yml): почасово по запросу внешнего планировщика
+(workflow_dispatch) плюс запасной встроенный cron.
 """
 
 from __future__ import annotations
@@ -124,7 +125,7 @@ def diff_schedules(old_stations: dict, new_stations: dict) -> list[dict]:
     """Сравнивает предыдущий и только что скачанный schedule.json (по станциям/
     дню недели/направлению) — диагностика для отслеживания того, насколько часто
     и насколько сильно сам metroalmaty.kz меняет расписание на ещё не наступившие
-    часы дня (см. CLAUDE.md, п. 6). Возвращает список найденных расхождений;
+    часы дня (metroalmaty.kz пересчитывает ещё не наступившую часть дня). Возвращает список найденных расхождений;
     пустой список — ничего не изменилось с прошлого запуска."""
     changes = []
     for slug, new_entry in new_stations.items():
@@ -156,11 +157,9 @@ def diff_schedules(old_stations: dict, new_stations: dict) -> list[dict]:
 
 def log_drift(changes: list[dict]) -> None:
     """Дописывает одну строку JSON (JSONL) за запуск — есть расхождения или нет.
-    Специально одна строка на весь прогон, а не на каждую станцию/направление —
-    иначе лог раздувается (11 станций × 2 дня недели × 2 направления = 44
-    проверки в час), а по одной строке в час видно и сам факт "проверяли,
-    расхождений не было" (важно для оценки частоты — иначе непонятно, пропуск в
-    логе значит "не менялось" или "джоба не запустилась")."""
+    Одна строка на весь прогон, а не на каждую станцию/направление (11 станций × 2 дня
+    недели × 2 направления = 44 проверки). Запись есть и без расхождений — иначе пропуск
+    в логе нельзя отличить от незапустившейся джобы."""
     entry = {
         "checked_at": datetime.now(tz=ALMATY_TZ).isoformat(),
         "changed_count": len(changes),
@@ -249,7 +248,7 @@ def main() -> int:
 
     # Проход 2: заполняем недостающие выходные расписания оценкой по соседям
     # (см. estimate_weekend_via_neighbor), а если соседа с реальными выходными
-    # данными нет — откатываемся на старый способ (будни как оценка).
+    # данными нет — используем будни как оценку.
     for slug, data in raw.items():
         if not data["weekend_missing"]:
             continue
@@ -299,7 +298,7 @@ def main() -> int:
         result["stations"][slug] = entry
 
     # Сравниваем с тем, что лежало в schedule.json ДО перезаписи (то есть с прошлым
-    # запуском скрипта, час назад) — диагностика дрейфа расписания, см. diff_schedules().
+    # запуском скрипта) — диагностика дрейфа расписания, см. diff_schedules().
     if OUTPUT_FILE.exists():
         try:
             old_result = json.loads(OUTPUT_FILE.read_text(encoding="utf-8"))
