@@ -32,6 +32,11 @@ MAX_ATTEMPTS = 5
 # глюки источника давали скачки от −34% до +87%, а реальное изменение графика — около 3%.
 ANOMALY_THRESHOLD = 0.15
 
+# Сколько станций может не ответить за один прогон: для них остаётся прежнее расписание,
+# остальные обновляются. Если не ответило больше — это сбой источника в целом: прогон
+# завершается ошибкой и ничего не записывает.
+MAX_FAILED_STATIONS = 2
+
 # API не отдаёт английские названия станций (только ru/kk через current_station_locales),
 # поэтому держим их здесь вручную. Источник — англоязычная Википедия
 # (https://en.wikipedia.org/wiki/Almaty_Metro), написания скопированы как есть.
@@ -47,10 +52,9 @@ EN_NAMES = {
     "MSK": "Moskva",
     "SA": "Saryarqa",
     "BM": "Bauyrjan Momyshuly",
-    # Калкаман — ещё не открыта (pending:true в data/stations.json); slug "KLKM"
-    # условный, реальный код в API метро подтверждается при открытии. Романизация —
-    # с казахской Википедии.
-    "KLKM": "Kalkaman",
+    # Калкаман — ещё не открыта (pending:true в data/stations.json); slug "KLM" — из
+    # списка станций API метро. Романизация — с казахской Википедии.
+    "KLM": "Kalkaman",
 }
 
 
@@ -211,7 +215,7 @@ def diff_schedules(old_stations: dict, new_stations: dict) -> list[dict]:
     return changes
 
 
-def log_drift(changes: list[dict], anomalies: list[dict] | None = None) -> None:
+def log_drift(changes: list[dict], anomalies: list[dict] | None = None, failed: list[str] | None = None) -> None:
     """Дописывает одну строку JSON (JSONL) за запуск — есть расхождения или нет.
     Одна строка на весь прогон, а не на каждую станцию/направление (11 станций × 2 дня
     недели × 2 направления = 44 проверки). Запись есть и без расхождений — иначе пропуск
@@ -219,12 +223,15 @@ def log_drift(changes: list[dict], anomalies: list[dict] | None = None) -> None:
 
     `anomalies` (см. reject_anomalies()) — отдельное поле, не часть `changes`: то, что
     было отклонено этим прогоном (откат делает новый снимок равным старому, поэтому в
-    `changes` оно не попадает) и ждёт ручной проверки."""
+    `changes` оно не попадает) и ждёт ручной проверки.
+
+    `failed` — станции, не ответившие в этом прогоне: для них оставлено прежнее расписание."""
     entry = {
         "checked_at": datetime.now(tz=ALMATY_TZ).isoformat(),
         "changed_count": len(changes),
         "changes": changes,
         "anomalies": anomalies or [],
+        "failed": failed or [],
     }
     with DRIFT_LOG_FILE.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -254,6 +261,14 @@ def main() -> int:
 
     max_order = max(s["order"] for s in active_stations)
 
+    # Прошлый снимок: источник прежних данных для не ответивших станций и база для сравнения.
+    old_stations: dict = {}
+    if OUTPUT_FILE.exists():
+        try:
+            old_stations = json.loads(OUTPUT_FILE.read_text(encoding="utf-8")).get("stations", {})
+        except (json.JSONDecodeError, OSError) as exc:
+            print(f"  (не удалось прочитать предыдущий снимок: {exc})", file=sys.stderr)
+
     for st in stations:
         if st.get("pending"):
             print(f"  {st['slug']:6s} -> пропускаем (pending: станция ещё не открыта)", file=sys.stderr)
@@ -263,6 +278,7 @@ def main() -> int:
     # станция, которая по порядку в списке идёт позже текущей (напр. для Абая
     # нужен Байконыр, а он в списке станций идёт после).
     raw = {}
+    failed: list[str] = []
     for st in sorted(active_stations, key=lambda s: s["order"]):
         slug = st["slug"]
         print(f"  {slug:6s} -> {API_BASE}/schedule/{slug}", file=sys.stderr)
@@ -270,7 +286,16 @@ def main() -> int:
             payload = fetch_station_payload(slug)
         except Exception as exc:  # noqa: BLE001
             print(f"ОШИБКА при загрузке {slug}: {exc}", file=sys.stderr)
-            return 1
+            failed.append(slug)
+            if slug not in old_stations:
+                print(f"Для {slug} нет прежнего расписания — прогон прерван", file=sys.stderr)
+                return 1
+            if len(failed) > MAX_FAILED_STATIONS:
+                print(f"Не ответили станции: {', '.join(failed)} — больше {MAX_FAILED_STATIONS}, прогон прерван", file=sys.stderr)
+                return 1
+            # ::warning:: — предупреждение в интерфейсе GitHub Actions без падения прогона.
+            print(f"::warning::{slug}: станция не ответила, оставлено прежнее расписание")
+            continue
 
         def times(day_key: str, dir_key: str) -> list[str]:
             day = payload.get(day_key) or {}
@@ -321,7 +346,8 @@ def main() -> int:
 
     # Проход 2: заполняем недостающие выходные расписания оценкой по соседям
     # (см. estimate_weekend_via_neighbor), а если соседа с реальными выходными
-    # данными нет — используем будни как оценку.
+    # данными нет — используем будни как оценку. Если сосед не ответил в этом прогоне,
+    # оставляем прежнюю оценку выходных.
     for slug, data in raw.items():
         if not data["weekend_missing"]:
             continue
@@ -331,7 +357,7 @@ def main() -> int:
         bwd_neighbor = stations_by_order.get(order + 1)
 
         estimated_forward = None
-        if fwd_neighbor and not raw[fwd_neighbor["slug"]]["weekend_missing"]:
+        if fwd_neighbor and fwd_neighbor["slug"] in raw and not raw[fwd_neighbor["slug"]]["weekend_missing"]:
             estimated_forward = estimate_weekend_via_neighbor(
                 data["weekday_forward"],
                 raw[fwd_neighbor["slug"]]["weekday_forward"],
@@ -339,7 +365,7 @@ def main() -> int:
             )
 
         estimated_backward = None
-        if bwd_neighbor and not raw[bwd_neighbor["slug"]]["weekend_missing"]:
+        if bwd_neighbor and bwd_neighbor["slug"] in raw and not raw[bwd_neighbor["slug"]]["weekend_missing"]:
             estimated_backward = estimate_weekend_via_neighbor(
                 data["weekday_backward"],
                 raw[bwd_neighbor["slug"]]["weekday_backward"],
@@ -350,6 +376,14 @@ def main() -> int:
             print(f"    -> {slug}: выходные оценены по соседям ({fwd_neighbor['slug']} / {bwd_neighbor['slug']})", file=sys.stderr)
             data["weekend_forward"] = estimated_forward
             data["weekend_backward"] = estimated_backward
+            continue
+
+        old_weekend = (old_stations.get(slug) or {}).get("weekend")
+        neighbor_failed = any(n and n["slug"] in failed for n in (fwd_neighbor, bwd_neighbor))
+        if neighbor_failed and old_weekend:
+            print(f"    -> {slug}: сосед не ответил, оставлена прежняя оценка выходных", file=sys.stderr)
+            data["weekend_forward"] = old_weekend["forward"]
+            data["weekend_backward"] = old_weekend["backward"]
         else:
             print(f"    -> {slug}: соседи тоже без выходных данных, используем будни как оценку", file=sys.stderr)
             data["weekend_forward"] = data["weekday_forward"]
@@ -370,18 +404,24 @@ def main() -> int:
             entry["weekend_estimated"] = True
         result["stations"][slug] = entry
 
+    for slug in failed:
+        result["stations"][slug] = old_stations[slug]
+    # Станции пишутся в порядке линии независимо от того, кто из них ответил.
+    result["stations"] = {
+        s["slug"]: result["stations"][s["slug"]]
+        for s in sorted(active_stations, key=lambda s: s["order"])
+    }
+
     # Сравниваем с тем, что лежало в schedule.json ДО перезаписи (то есть с прошлым
     # запуском скрипта): сначала откатываем подозрительные скачки (reject_anomalies — прямо
     # в result["stations"]), потом считаем обычный дрейф для лога (diff_schedules()). Порядок
     # важен: неоткатанная аномалия попала бы в файл как обычное изменение.
-    if OUTPUT_FILE.exists():
+    if old_stations:
         try:
-            old_result = json.loads(OUTPUT_FILE.read_text(encoding="utf-8"))
-            old_stations = old_result.get("stations", {})
             anomalies = reject_anomalies(result["stations"], old_stations)
-            log_drift(diff_schedules(old_stations, result["stations"]), anomalies)
-        except (json.JSONDecodeError, OSError) as exc:
-            print(f"  (не удалось сравнить с предыдущим снимком: {exc})", file=sys.stderr)
+            log_drift(diff_schedules(old_stations, result["stations"]), anomalies, failed)
+        except OSError as exc:
+            print(f"  (не удалось записать лог расхождений: {exc})", file=sys.stderr)
 
     OUTPUT_FILE.write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
