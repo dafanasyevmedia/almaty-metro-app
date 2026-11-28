@@ -1046,6 +1046,7 @@
       </button>
       <div class="note holiday" id="holidayNote" style="display:none"></div>
       <div class="note holiday" id="workdayNote" style="display:none"></div>
+      <div class="note warn" id="neighborNote" style="display:none"></div>
       <div class="note warn" id="estimatedNote" style="display:none">
         ⚠️ Для этой станции на сервере метро нет расписания на выходные — показаны будние интервалы как оценка.
       </div>
@@ -1132,6 +1133,7 @@
       </div>
       <div class="note holiday" id="fullHolidayNote" style="display:none"></div>
       <div class="note holiday" id="fullWorkdayNote" style="display:none"></div>
+      <div class="note warn" id="fullNeighborNote" style="display:none"></div>
       <div class="note" id="fullEstimatedNote" style="display:none">
         ⚠️ Данные на выходные для этой станции недоступны на сервере метро — показаны будние интервалы.
       </div>
@@ -1547,6 +1549,7 @@
       noData: 'нет данных',
       metroClosed: function (hhmm) { return 'метро закрыто<br>первый поезд в ' + hhmm; },
       thenIn: function (t) { return 'затем через ' + t; },
+      neighborNote: '⚠️ Расписание этой станции рассчитано по соседней: сервер метро его сейчас не отдаёт.',
       estimatedNote: '⚠️ Сервер метро не отдаёт расписание на выходные для этой станции — интервалы рассчитаны по соседним станциям.',
       fullEstimatedNote: '⚠️ Данные на выходные для этой станции недоступны на сервере метро — интервалы рассчитаны по соседним станциям.',
       weekday: 'Будни',
@@ -1718,6 +1721,7 @@
       noData: 'деректер жоқ',
       metroClosed: function (hhmm) { return 'метро жабық<br>бірінші пойыз: ' + hhmm; },
       thenIn: function (t) { return 'келесі пойыз: ' + t; },
+      neighborNote: '⚠️ Бұл бекеттің кестесі көрші бекет бойынша есептелген: метро сервері оны қазір бермейді.',
       estimatedNote: '⚠️ Метро сервері бұл бекет үшін демалыс күндерінің кестесін бермейді — аралықтар көрші бекеттер бойынша есептелген.',
       fullEstimatedNote: '⚠️ Бұл бекет үшін демалыс күндерінің деректері метро серверінде жоқ — аралықтар көрші бекеттер бойынша есептелген.',
       weekday: 'Жұмыс күндері',
@@ -1886,6 +1890,7 @@
       noData: 'no data',
       metroClosed: function (hhmm) { return 'metro closed<br>first train at ' + hhmm; },
       thenIn: function (t) { return 'then in ' + t; },
+      neighborNote: '⚠️ This timetable is estimated from a neighboring station: the metro server is not providing it right now.',
       estimatedNote: '⚠️ The metro server has no weekend schedule for this station — intervals are estimated from neighboring stations.',
       fullEstimatedNote: '⚠️ Weekend data for this station is unavailable on the metro server — intervals are estimated from neighboring stations.',
       weekday: 'Weekdays',
@@ -3001,6 +3006,7 @@
     var todayStart = serviceDayStart(now);
     var isWeekendNow = dayTypeOf(todayStart) === 'weekend';
     document.getElementById('estimatedNote').style.display = (estimated && isWeekendNow) ? '' : 'none';
+    document.getElementById('neighborNote').style.display = isNeighborEstimated(st, dayTypeOf(todayStart)) ? '' : 'none';
     document.getElementById('holidayNote').style.display = isHolidayForcedWeekend(todayStart) ? '' : 'none';
     document.getElementById('workdayNote').style.display = isWeekendForcedWorkday(todayStart) ? '' : 'none';
 
@@ -4371,6 +4377,12 @@
     return groups;
   }
 
+  // Расписание станции на этот тип дня рассчитано скриптом обновления по соседней станции
+  // (сервер метро его не отдал).
+  function isNeighborEstimated(st, dayType) {
+    return !!st.neighbor_estimated && st.neighbor_estimated.indexOf(dayType) !== -1;
+  }
+
   function renderFullSchedule() {
     if (!SCHEDULE) return;
     var slug = fullStationSelect.value;
@@ -4379,6 +4391,7 @@
 
     var estimated = !!st.weekend_estimated;
     document.getElementById('fullEstimatedNote').style.display = (estimated && fullDayType === 'weekend') ? '' : 'none';
+    document.getElementById('fullNeighborNote').style.display = isNeighborEstimated(st, fullDayType) ? '' : 'none';
 
     var cols = document.getElementById('fullScheduleCols');
     cols.innerHTML = '';
@@ -4583,6 +4596,8 @@
     locateBtn.textContent = t('manualStationBtn');
     document.querySelector('[data-daytype="weekday"]').textContent = t('weekday');
     document.querySelector('[data-daytype="weekend"]').textContent = t('weekend');
+    document.getElementById('neighborNote').textContent = t('neighborNote');
+    document.getElementById('fullNeighborNote').textContent = t('neighborNote');
     document.getElementById('estimatedNote').textContent = t('estimatedNote');
     document.getElementById('fullEstimatedNote').textContent = t('fullEstimatedNote');
     document.getElementById('holidayNote').textContent = t('holidayNote');

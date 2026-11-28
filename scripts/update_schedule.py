@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+import bisect
+import copy
 import json
 import sys
 import time
@@ -32,10 +34,13 @@ MAX_ATTEMPTS = 5
 # глюки источника давали скачки от −34% до +87%, а реальное изменение графика — около 3%.
 ANOMALY_THRESHOLD = 0.15
 
-# Сколько станций может не ответить за один прогон: для них остаётся прежнее расписание,
-# остальные обновляются. Если не ответило больше — это сбой источника в целом: прогон
+# Сколько станций может не ответить за один прогон: для них остаётся прежнее расписание
+# (или рассчитанное по соседней, см. fill_failed_station), остальные обновляются. Если не ответило больше — это сбой источника в целом: прогон
 # завершается ошибкой и ничего не записывает.
 MAX_FAILED_STATIONS = 2
+
+# Потолок времени в пути между соседними станциями (минуты) при сопоставлении рейсов.
+MAX_SEGMENT_MIN = 8
 
 # API не отдаёт английские названия станций (только ru/kk через current_station_locales),
 # поэтому держим их здесь вручную. Источник — англоязычная Википедия
@@ -111,6 +116,62 @@ def estimate_weekend_via_neighbor(own_weekday: list[str], neighbor_weekday: list
     estimated = [minutes_to_time_str(time_to_minutes(t) + median_offset) for t in neighbor_weekend]
     estimated.sort(key=time_to_minutes)
     return estimated
+
+
+def estimate_from_neighbor(own_old: list[str], neighbor_old: list[str], neighbor_new: list[str], own_departs_later: bool) -> list[str] | None:
+    """Переносит новое расписание соседней станции на станцию, которая не ответила.
+
+    Время в пути берётся из прежнего снимка: для каждого рейса соседа ищется ближайшее
+    отправление этой станции после него (own_departs_later) или до него, и берётся медиана
+    разницы. Рейсы сопоставляются по времени, а не по порядковому номеру: число рейсов у
+    соседних станций может различаться на один-два."""
+    own = sorted(time_to_minutes(t) for t in own_old)
+    offsets = []
+    for t in (time_to_minutes(x) for x in neighbor_old):
+        i = bisect.bisect_right(own, t) if own_departs_later else bisect.bisect_left(own, t) - 1
+        if 0 <= i < len(own) and abs(own[i] - t) <= MAX_SEGMENT_MIN:
+            offsets.append(own[i] - t)
+    if not offsets:
+        return None
+    offset = sorted(offsets)[len(offsets) // 2]
+    estimated = [minutes_to_time_str(time_to_minutes(t) + offset) for t in neighbor_new]
+    return sorted(estimated, key=time_to_minutes)
+
+
+def fill_failed_station(station: dict, old_stations: dict, new_stations: dict, stations_by_order: dict) -> dict:
+    """Расписание станции, не ответившей в этом прогоне.
+
+    Пока соседняя станция не изменилась, остаётся прежнее расписание — оно точнее расчёта.
+    Если у соседа оно изменилось, список этой станции пересчитывается по нему; такие типы
+    дней перечисляются в "neighbor_estimated" (приложение показывает пометку). Сосед,
+    с которого отправляется тот же поезд раньше, имеет приоритет. new_stations содержит
+    только ответившие станции."""
+    entry = copy.deepcopy(old_stations[station["slug"]])
+    recalculated = set()
+    for daytype in ("weekday", "weekend"):
+        for direction in ("forward", "backward"):
+            own_old = (entry.get(daytype) or {}).get(direction) or []
+            if not own_old:
+                continue
+            upstream_step = -1 if direction == "forward" else 1
+            for step in (upstream_step, -upstream_step):
+                neighbor = stations_by_order.get(station["order"] + step)
+                if not neighbor:
+                    continue
+                slug = neighbor["slug"]
+                neighbor_old = ((old_stations.get(slug) or {}).get(daytype) or {}).get(direction) or []
+                neighbor_new = ((new_stations.get(slug) or {}).get(daytype) or {}).get(direction) or []
+                if not neighbor_old or not neighbor_new:
+                    continue
+                if neighbor_new != neighbor_old:
+                    estimated = estimate_from_neighbor(own_old, neighbor_old, neighbor_new, step == upstream_step)
+                    if estimated:
+                        entry[daytype][direction] = estimated
+                        recalculated.add(daytype)
+                break  # решает первый сосед, по которому есть данные
+    if recalculated:
+        entry["neighbor_estimated"] = sorted(recalculated | set(entry.get("neighbor_estimated", [])))
+    return entry
 
 
 def fetch_json(url: str) -> dict:
@@ -225,7 +286,8 @@ def log_drift(changes: list[dict], anomalies: list[dict] | None = None, failed: 
     было отклонено этим прогоном (откат делает новый снимок равным старому, поэтому в
     `changes` оно не попадает) и ждёт ручной проверки.
 
-    `failed` — станции, не ответившие в этом прогоне: для них оставлено прежнее расписание."""
+    `failed` — станции, не ответившие в этом прогоне: их расписание прежнее или рассчитано
+    по соседней станции."""
     entry = {
         "checked_at": datetime.now(tz=ALMATY_TZ).isoformat(),
         "changed_count": len(changes),
@@ -294,7 +356,7 @@ def main() -> int:
                 print(f"Не ответили станции: {', '.join(failed)} — больше {MAX_FAILED_STATIONS}, прогон прерван", file=sys.stderr)
                 return 1
             # ::warning:: — предупреждение в интерфейсе GitHub Actions без падения прогона.
-            print(f"::warning::{slug}: станция не ответила, оставлено прежнее расписание")
+            print(f"::warning::{slug}: станция не ответила, расписание прежнее или рассчитано по соседней")
             continue
 
         def times(day_key: str, dir_key: str) -> list[str]:
@@ -404,21 +466,25 @@ def main() -> int:
             entry["weekend_estimated"] = True
         result["stations"][slug] = entry
 
-    for slug in failed:
-        result["stations"][slug] = old_stations[slug]
+    # Подозрительные скачки откатываются до расчёта не ответивших станций, чтобы расчёт
+    # не опирался на них, и до diff_schedules(): неоткатанная аномалия попала бы в файл как
+    # обычное изменение.
+    anomalies = reject_anomalies(result["stations"], old_stations)
+
+    failed_entries = {
+        slug: fill_failed_station(stations_by_slug[slug], old_stations, result["stations"], stations_by_order)
+        for slug in failed
+    }
+    result["stations"].update(failed_entries)
     # Станции пишутся в порядке линии независимо от того, кто из них ответил.
     result["stations"] = {
         s["slug"]: result["stations"][s["slug"]]
         for s in sorted(active_stations, key=lambda s: s["order"])
     }
 
-    # Сравниваем с тем, что лежало в schedule.json ДО перезаписи (то есть с прошлым
-    # запуском скрипта): сначала откатываем подозрительные скачки (reject_anomalies — прямо
-    # в result["stations"]), потом считаем обычный дрейф для лога (diff_schedules()). Порядок
-    # важен: неоткатанная аномалия попала бы в файл как обычное изменение.
+    # Дрейф относительно того, что лежало в schedule.json до перезаписи, пишется в лог.
     if old_stations:
         try:
-            anomalies = reject_anomalies(result["stations"], old_stations)
             log_drift(diff_schedules(old_stations, result["stations"]), anomalies, failed)
         except OSError as exc:
             print(f"  (не удалось записать лог расхождений: {exc})", file=sys.stderr)
