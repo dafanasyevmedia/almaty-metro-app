@@ -1549,6 +1549,8 @@
       noData: 'нет данных',
       metroClosed: function (hhmm) { return 'метро закрыто<br>первый поезд в ' + hhmm; },
       thenIn: function (t) { return 'затем через ' + t; },
+      heroNeutral2Kalkaman: '12 станций, одна линия, никаких сюрпризов',
+      unpublishedNote: 'Метро ещё не опубликовало расписание в эту сторону',
       neighborNote: '⚠️ Расписание этой станции рассчитано по соседней: сервер метро его сейчас не отдаёт.',
       estimatedNote: '⚠️ Сервер метро не отдаёт расписание на выходные для этой станции — интервалы рассчитаны по соседним станциям.',
       fullEstimatedNote: '⚠️ Данные на выходные для этой станции недоступны на сервере метро — интервалы рассчитаны по соседним станциям.',
@@ -1575,6 +1577,7 @@
       aboutTab: 'О метро',
       aboutHistoryTitle: 'История',
       aboutHistoryText: 'Метро в Алматы работает с декабря 2011 года — первую очередь линии (7 станций) открыли после многолетней паузы, вызванной распадом СССР. Сеть расширяли постепенно: в 2015 году добавили «Сайран» и «Москву», в 2022-м — «Сарыарку» и «Б. Момышулы». Сейчас в системе 11 станций на одной линии, строительство продолжается в сторону будущей станции «Калкаман».',
+      aboutHistoryTextKalkaman: 'Метро в Алматы работает с декабря 2011 года — первую очередь линии (7 станций) открыли после многолетней паузы, вызванной распадом СССР. Сеть расширяли постепенно: в 2015 году добавили «Сайран» и «Москву», в 2022-м — «Сарыарку» и «Б. Момышулы». 1 декабря 2026 года открылась станция «Калкаман»: сейчас на одной линии 12 станций.',
       aboutPaymentTitle: 'Способы оплаты',
       aboutPaymentItems: [
         'Смарт-жетон — разовая поездка: 120 ₸ (взрослый), 60 ₸ (ребёнок 7–15 лет, нужен документ)',
@@ -1721,6 +1724,8 @@
       noData: 'деректер жоқ',
       metroClosed: function (hhmm) { return 'метро жабық<br>бірінші пойыз: ' + hhmm; },
       thenIn: function (t) { return 'келесі пойыз: ' + t; },
+      heroNeutral2Kalkaman: '12 бекет, бір желі, күтпеген жайт жоқ',
+      unpublishedNote: 'Метро бұл бағыттың кестесін әлі жарияламаған',
       neighborNote: '⚠️ Бұл бекеттің кестесі көрші бекет бойынша есептелген: метро сервері оны қазір бермейді.',
       estimatedNote: '⚠️ Метро сервері бұл бекет үшін демалыс күндерінің кестесін бермейді — аралықтар көрші бекеттер бойынша есептелген.',
       fullEstimatedNote: '⚠️ Бұл бекет үшін демалыс күндерінің деректері метро серверінде жоқ — аралықтар көрші бекеттер бойынша есептелген.',
@@ -1747,6 +1752,7 @@
       aboutTab: 'Метро туралы',
       aboutHistoryTitle: 'Тарихы',
       aboutHistoryText: 'Алматы метросы 2011 жылдың желтоқсанынан бері жұмыс істейді — желінің бірінші кезегі (7 бекет) КСРО ыдырауынан кейінгі көпжылдық үзілістен соң ашылды. Желі бірте-бірте кеңейтілді: 2015 жылы «Сайран» мен «Мәскеу» қосылды, 2022 жылы — «Сарыарқа» мен «Б. Момышұлы». Қазір жүйеде бір желіде 11 бекет бар, құрылыс болашақтағы «Қалқаман» бекетіне қарай жалғасуда.',
+      aboutHistoryTextKalkaman: 'Алматы метросы 2011 жылдың желтоқсанынан бері жұмыс істейді — желінің бірінші кезегі (7 бекет) КСРО ыдырауынан кейінгі көпжылдық үзілістен соң ашылды. Желі бірте-бірте кеңейтілді: 2015 жылы «Сайран» мен «Мәскеу» қосылды, 2022 жылы — «Сарыарқа» мен «Б. Момышұлы». 2026 жылғы 1 желтоқсанда «Қалқаман» бекеті ашылды: қазір бір желіде 12 бекет бар.',
       aboutPaymentTitle: 'Төлем түрлері',
       aboutPaymentItems: [
         'Смарт-жетон — бір жолғы сапар: 120 ₸ (ересек), 60 ₸ (7–15 жас аралығындағы бала, құжат керек)',
@@ -1890,6 +1896,8 @@
       noData: 'no data',
       metroClosed: function (hhmm) { return 'metro closed<br>first train at ' + hhmm; },
       thenIn: function (t) { return 'then in ' + t; },
+      heroNeutral2Kalkaman: '12 stations, one line, no surprises',
+      unpublishedNote: 'The metro has not published the timetable for this direction yet',
       neighborNote: '⚠️ This timetable is estimated from a neighboring station: the metro server is not providing it right now.',
       estimatedNote: '⚠️ The metro server has no weekend schedule for this station — intervals are estimated from neighboring stations.',
       fullEstimatedNote: '⚠️ Weekend data for this station is unavailable on the metro server — intervals are estimated from neighboring stations.',
@@ -1916,6 +1924,7 @@
       aboutTab: 'About',
       aboutHistoryTitle: 'History',
       aboutHistoryText: 'Almaty Metro has been running since December 2011, when the first stretch of the line (7 stations) opened after decades of delay caused by the collapse of the USSR. The network has grown gradually: Sayran and Moskva stations were added in 2015, and Saryarqa and Bauyrjan Momyshuly in 2022. The system currently has 11 stations on a single line, with construction continuing toward the future Qalqaman station.',
+      aboutHistoryTextKalkaman: 'Almaty Metro has been running since December 2011, when the first stretch of the line (7 stations) opened after decades of delay caused by the collapse of the USSR. The network has grown gradually: Sayran and Moskva stations were added in 2015, and Saryarqa and Bauyrjan Momyshuly in 2022. Kalkaman station opened on December 1, 2026: the single line now has 12 stations.',
       aboutPaymentTitle: 'Payment methods',
       aboutPaymentItems: [
         'Smart token — single ride: 120 ₸ (adult), 60 ₸ (child 7–15, ID required)',
@@ -2211,6 +2220,27 @@
     return samples[Math.floor(samples.length / 2)];
   }
 
+  // Есть ли у станции хоть какое-то расписание (у только что открытой его может ещё не быть).
+  function hasSchedule(slug) {
+    var st = SCHEDULE.stations[slug];
+    if (!st) return false;
+    return ['weekday', 'weekend'].some(function (day) {
+      return ['forward', 'backward'].some(function (dir) { return !!(st[day] && st[day][dir] && st[day][dir].length); });
+    });
+  }
+  // Ходят ли вообще поезда со станции idx в эту сторону (у конечной — только в одну).
+  function isDirectionPossible(idx, direction) {
+    return direction === 'forward' ? idx < STATIONS.length - 1 : idx > 0;
+  }
+  // Крайняя станция с расписанием по ходу direction: на неё опираются расчёты «докуда идёт поезд»,
+  // чтобы станция без расписания не выглядела местом, куда поезда не доезжают.
+  function lineEndIdx(direction) {
+    var step = direction === 'forward' ? -1 : 1;
+    var i = direction === 'forward' ? STATIONS.length - 1 : 0;
+    while (STATIONS[i + step] && !hasSchedule(STATIONS[i].slug)) i += step;
+    return i;
+  }
+
   /* ---------- "Когда выезжать" — расчёт по цепочке станций ---------- */
   // Сопоставляет один и тот же поезд между соседними станциями (первое отправление соседней
   // станции после текущего времени); та же идея в renderTrainMarkers. estimated:true — время
@@ -2284,7 +2314,7 @@
     times[originIdx] = departureMinutes;
 
     // Вперёд по ходу поезда — от origin до конца линии в эту сторону.
-    var farEnd = direction === 'forward' ? STATIONS.length - 1 : 0;
+    var farEnd = lineEndIdx(direction);
     var i = originIdx, t = departureMinutes;
     while (i !== farEnd) {
       var res = matchNextArrival(t, STATIONS[i].slug, STATIONS[i + step].slug, direction, serviceStart);
@@ -2295,7 +2325,7 @@
     }
 
     // Назад — станции, которые поезд проехал до прибытия на origin.
-    var nearEnd = direction === 'forward' ? 0 : STATIONS.length - 1;
+    var nearEnd = lineEndIdx(direction === 'forward' ? 'backward' : 'forward');
     var j = originIdx, u = departureMinutes;
     while (j !== nearEnd) {
       var prevIdx = j - step;
@@ -2316,7 +2346,7 @@
   // по всем станциям (её строит estimateFullPath для модалки поезда).
   function trainFarReach(originIdx, direction, departureMinutes, serviceStart) {
     var step = direction === 'forward' ? 1 : -1;
-    var farEnd = direction === 'forward' ? STATIONS.length - 1 : 0;
+    var farEnd = lineEndIdx(direction);
     var i = originIdx, t = departureMinutes;
     while (i !== farEnd) {
       var res = matchNextArrival(t, STATIONS[i].slug, STATIONS[i + step].slug, direction, serviceStart);
@@ -2607,7 +2637,7 @@
       test: function (ctx) { return !!ctx.station && ctx.stationWeekendEstimated; } },
     // Пасхалка про будущую станцию Калкаман — только для станции Б. Момышулы, в общем пуле.
     { id: 'stationKalkaman', keys: ['heroKalkaman1'],
-      test: function (ctx) { return !!ctx.station && ctx.station.slug === 'BM'; } },
+      test: function (ctx) { return !!ctx.station && ctx.station.slug === 'BM' && !STATIONS_BY_SLUG.KLM; } },
     { id: 'morningRush', keys: ['heroMorningRush1', 'heroMorningRush2', 'heroMorningRush3'],
       test: function (ctx) { return !ctx.metroClosed && ctx.isMorningRush; } },
     { id: 'eveningRush', keys: ['heroEveningRush1', 'heroEveningRush2', 'heroEveningRush3'],
@@ -2625,7 +2655,9 @@
       test: function () { return true; } },
     { id: 'weather', dynamicKeys: function (ctx) { return ctx.weatherKeys || []; },
       test: function (ctx) { return WEATHER_ENABLED && ctx.weatherKeys && ctx.weatherKeys.length > 0; } },
-    { id: 'neutral', keys: ['heroNeutral1', 'heroNeutral2', 'heroNeutral3'],
+    { id: 'neutral', dynamicKeys: function () { // число станций во второй фразе зависит от открытия Калкамана
+        return ['heroNeutral1', STATIONS_BY_SLUG.KLM ? 'heroNeutral2Kalkaman' : 'heroNeutral2', 'heroNeutral3'];
+      },
       test: function () { return true; } } // гарантированный фолбэк — пул никогда не бывает пустым
   ];
 
@@ -2957,7 +2989,7 @@
     peekChance.forward = { forMinutes: null, show: false };
     peekChance.backward = { forMinutes: null, show: false };
 
-    var order = STATIONS_BY_SLUG[selectedSlug].order;
+    var order = STATIONS_BY_SLUG[selectedSlug].order; // order идёт подряд с 1, order - 1 — индекс в STATIONS
     // Концы линии берутся по order, а не по slug'ам 'BM'/'RMBK': новая станция в конце линии
     // подхватывается без правок.
     var toFarEnd = STATIONS[STATIONS.length - 1];
@@ -2980,10 +3012,13 @@
       // dir-card-forward/backward: прогресс-полоска растёт в ту же сторону, что стрелка (вправо для "→",
       // влево для "←").
       wrap.className = 'dir-card dir-card-' + d.key;
+      // У конечной станции карточка «нет поездов», даже если в данных уже есть рейсы в эту сторону
+      // (расписание могут выложить до открытия следующей станции).
+      var possible = isDirectionPossible(order - 1, d.key);
       var hasAny = (st.weekday[d.key] && st.weekday[d.key].length) || (st.weekend[d.key] && st.weekend[d.key].length);
-      if (!hasAny) {
+      if (!possible || !hasAny) {
         wrap.classList.add('unavailable');
-        wrap.innerHTML = label + '<div class="closed">' + t('terminusNote') + '</div>';
+        wrap.innerHTML = label + '<div class="closed">' + t(possible ? 'unpublishedNote' : 'terminusNote') + '</div>';
         container.appendChild(wrap);
         return;
       }
@@ -3432,6 +3467,16 @@
     if (nowMinutes - targetMinutes > 60) targetMinutes += 24 * 60;
 
     var originTimeline = buildTimeline(selectedSlug, direction, serviceStart);
+
+    if (!originTimeline.length || !hasSchedule(destSlug)) {
+      wtgResultCard.className = 'card result show fail';
+      wtgResultDir.textContent = '';
+      wtgResultCountdown.textContent = '—';
+      wtgResultSub.textContent = t('unpublishedNote');
+      wtgStopCountdown();
+      wtgRenderRoute(null);
+      return;
+    }
 
     var closedWindow = findClosedWindow(originTimeline);
     if (closedWindow && targetMinutes >= closedWindow.closing + 30 && targetMinutes <= closedWindow.opening - 30) {
@@ -4085,8 +4130,8 @@
     // Реальные «докуда назад/вперёд» для этого поезда — не обязательно концы линии (см. trainFarReach).
     // Считаются по уже собранным estimateFullPath times, без пересчёта.
     var step = direction === 'forward' ? 1 : -1;
-    var farEnd = direction === 'forward' ? STATIONS.length - 1 : 0;
-    var nearEnd = direction === 'forward' ? 0 : STATIONS.length - 1;
+    var farEnd = lineEndIdx(direction);
+    var nearEnd = lineEndIdx(direction === 'forward' ? 'backward' : 'forward');
     var lastKnownIdx = originIdx;
     while (times[lastKnownIdx + step] != null) lastKnownIdx += step;
     var firstKnownIdx = originIdx;
@@ -4173,10 +4218,10 @@
     var nowMinutes = (almatyNow() - trainModalState.serviceStart) / 60000;
 
     // Поезд ещё не отправился со своей начальной станции — рейс не начался, маркер скрывается.
-    // Начальная станция — не originIdx (выбранная пользователем), а терминус, противоположный
-    // направлению (0 для поезда к Б. Момышулы, последняя — для поезда к Райымбек батыра).
+    // Начальная станция — не originIdx (выбранная пользователем), а конец линии, противоположный
+    // направлению (крайняя станция с расписанием).
     // Актуально при листании «Следующий» к рейсу, который ещё не начался.
-    var startIdx = trainModalState.direction === 'forward' ? 0 : STATIONS.length - 1;
+    var startIdx = lineEndIdx(trainModalState.direction === 'forward' ? 'backward' : 'forward');
     var startTime = times[startIdx];
     if (startTime != null && startTime > nowMinutes) {
       marker.style.display = 'none';
@@ -4383,6 +4428,11 @@
     return !!st.neighbor_estimated && st.neighbor_estimated.indexOf(dayType) !== -1;
   }
 
+  function renderAboutHistory() {
+    document.getElementById('aboutHistoryText').textContent =
+      t(STATIONS_BY_SLUG.KLM ? 'aboutHistoryTextKalkaman' : 'aboutHistoryText');
+  }
+
   function renderFullSchedule() {
     if (!SCHEDULE) return;
     var slug = fullStationSelect.value;
@@ -4414,7 +4464,8 @@
       (viewingCurrentDayType && isWeekendForcedWorkday(todayServiceStart)) ? '' : 'none';
 
     dirs.forEach(function (d) {
-      var times = (st[fullDayType] && st[fullDayType][d.key]) || [];
+      var possible = isDirectionPossible(STATIONS.findIndex(function (s) { return s.slug === slug; }), d.key);
+      var times = (possible && st[fullDayType] && st[fullDayType][d.key]) || [];
       var nextRaw = viewingCurrentDayType ? (nextTrains(slug, d.key, 1).trains[0] || {}).raw : null;
       var col = document.createElement('div');
       col.className = 'sched-col' + (collapsedDirections[d.key] ? ' collapsed' : '');
@@ -4435,7 +4486,7 @@
       if (times.length === 0) {
         var p = document.createElement('div');
         p.className = 'note';
-        p.textContent = t('noDepartures');
+        p.textContent = t(possible ? 'unpublishedNote' : 'noDepartures');
         body.appendChild(p);
         cols.appendChild(col);
         return;
@@ -4609,7 +4660,7 @@
     });
 
     document.getElementById('aboutHistoryTitle').textContent = t('aboutHistoryTitle');
-    document.getElementById('aboutHistoryText').textContent = t('aboutHistoryText');
+    renderAboutHistory();
     document.getElementById('aboutPaymentTitle').textContent = t('aboutPaymentTitle');
     var paymentList = document.getElementById('aboutPaymentList');
     paymentList.innerHTML = '';
@@ -4733,20 +4784,39 @@
       });
     });
   }
+  // Момент ближайшего ещё не наступившего открытия станции: когда он прошёл, вернувшаяся на
+  // экран страница перезагружается и показывает новую станцию.
+  var nextOpening = null;
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && nextOpening && Date.now() >= nextOpening) location.reload();
+  });
+
   Promise.all([
     fetchJSON('data/stations.json', 'stations'),
     fetchJSON('data/schedule.json', 'schedule'),
     fetchJSON('data/holidays.json', 'holidays').catch(function () { return { dates: [], workingWeekends: [] }; })
   ]).then(function (results) {
-    // pending:true — станция заведена в data/stations.json, но ещё не открыта и данных в
-    // data/schedule.json у неё нет. Скрывается целиком, чтобы не показывать выбираемую, но
-    // нерабочую станцию.
-    STATIONS = results[0].filter(function (s) { return !s.pending; })
-      .sort(function (a,b) { return a.order - b.order; });
     SCHEDULE = results[1];
+    // Станция с полем "opens" показывается с этого момента (поле важнее pending), остальные —
+    // если не pending. pending остаётся в данных, чтобы закешированные страницы, не знающие про
+    // "opens", не показывали станцию без расписания.
+    STATIONS = results[0].filter(function (s) {
+      if (!s.opens) return !s.pending;
+      var opensAt = Date.parse(s.opens);
+      if (Date.now() >= opensAt) return true;
+      if (!nextOpening || opensAt < nextOpening) nextOpening = opensAt;
+      return false;
+    }).sort(function (a,b) { return a.order - b.order; });
+    // У открытой станции расписания может ещё не быть — подставляем пустое.
+    STATIONS.forEach(function (s) {
+      if (!SCHEDULE.stations[s.slug]) {
+        SCHEDULE.stations[s.slug] = { weekday: { forward: [], backward: [] }, weekend: { forward: [], backward: [] } };
+      }
+    });
     HOLIDAYS = (results[2] && results[2].dates) || [];
     WORKING_WEEKENDS = (results[2] && results[2].workingWeekends) || [];
     STATIONS.forEach(function (s) { STATIONS_BY_SLUG[s.slug] = s; });
+    renderAboutHistory();
 
     populateStationSelects();
 

@@ -34,6 +34,10 @@ MAX_ATTEMPTS = 5
 # глюки источника давали скачки от −34% до +87%, а реальное изменение графика — около 3%.
 ANOMALY_THRESHOLD = 0.15
 
+# За столько дней до и после открытия новой станции расписание линии может законно
+# измениться сильнее порога: отклоняется только полное исчезновение рейсов.
+OPENING_WINDOW = timedelta(days=3)
+
 # Сколько станций может не ответить за один прогон: для них остаётся прежнее расписание
 # (или рассчитанное по соседней, см. fill_failed_station), остальные обновляются. Если не ответило больше — это сбой источника в целом: прогон
 # завершается ошибкой и ничего не записывает.
@@ -57,8 +61,7 @@ EN_NAMES = {
     "MSK": "Moskva",
     "SA": "Saryarqa",
     "BM": "Bauyrjan Momyshuly",
-    # Калкаман — ещё не открыта (pending:true в data/stations.json); slug "KLM" — из
-    # списка станций API метро. Романизация — с казахской Википедии.
+    # Калкаман: slug "KLM" — из списка станций API метро. Романизация — с казахской Википедии.
     "KLM": "Kalkaman",
 }
 
@@ -174,6 +177,78 @@ def fill_failed_station(station: dict, old_stations: dict, new_stations: dict, s
     return entry
 
 
+def travel_minutes(old_stations: dict, prev_slug: str, slug: str) -> float | None:
+    """Время в пути между станцией и предыдущей по линии по прежнему снимку: сколько проходит
+    от отправления поезда в сторону начала линии до его отправления с предыдущей станции."""
+    own = ((old_stations.get(slug) or {}).get("weekday") or {}).get("backward") or []
+    prev = sorted(time_to_minutes(t) for t in ((old_stations.get(prev_slug) or {}).get("weekday") or {}).get("backward") or [])
+    gaps = []
+    for t in (time_to_minutes(x) for x in own):
+        i = bisect.bisect_right(prev, t)
+        if i < len(prev) and prev[i] - t <= MAX_SEGMENT_MIN:
+            gaps.append(prev[i] - t)
+    return sorted(gaps)[len(gaps) // 2] if gaps else None
+
+
+def timing_fit(own: list[str], neighbor: list[str], offset: float, tolerance: float = 0.5) -> float:
+    """Доля отправлений станции, у которых есть отправление соседа со сдвигом offset минут
+    (own = neighbor + offset)."""
+    others = sorted(time_to_minutes(t) for t in neighbor)
+    hits = 0
+    for t in (time_to_minutes(x) for x in own):
+        i = bisect.bisect_left(others, t - offset - tolerance)
+        hits += i < len(others) and others[i] <= t - offset + tolerance
+    return hits / len(own) if own else 0.0
+
+
+def pick_directions(station: dict, weekday: dict, stations_by_order: dict, max_order: int, raw: dict, old_stations: dict) -> tuple[str, str]:
+    """Какой список API (direction1/direction2) идёт вперёд по линии, а какой назад.
+
+    Обычно direction1 — вперёд (в сторону конца линии), direction2 — назад. У конечной
+    станции реальные рейсы лежат в любом из двух списков, поэтому берётся тот, где они есть.
+    Станция перед открывающейся (поле "opens" у следующей) может отдавать и одно направление,
+    и два: направления проверяются по времени в пути до предыдущей станции."""
+    d1, d2 = "direction1", "direction2"
+    order = station["order"]
+    filled = [k for k in (d1, d2) if weekday[k]]
+
+    if "opens" in (stations_by_order.get(order + 1) or {}):
+        slug = (stations_by_order.get(order - 1) or {}).get("slug")
+        if slug in raw:
+            prev_forward, prev_backward = raw[slug]["weekday_forward"], raw[slug]["weekday_backward"]
+        else:
+            old = (old_stations.get(slug) or {}).get("weekday") or {}
+            prev_forward, prev_backward = old.get("forward") or [], old.get("backward") or []
+        travel = travel_minutes(old_stations, slug, station["slug"])
+
+        def forward_fit(key: str) -> float:
+            return timing_fit(weekday[key], prev_forward, travel) if travel else 0.0
+
+        def backward_fit(key: str) -> float:
+            return timing_fit(weekday[key], prev_backward, -travel) if travel else 0.0
+
+        if len(filled) == 2:
+            swapped = forward_fit(d2) + backward_fit(d1) > forward_fit(d1) + backward_fit(d2) + 0.3
+            return (d2, d1) if swapped else (d1, d2)
+        if len(filled) == 1:
+            key = filled[0]
+            other = d2 if key == d1 else d1
+            # Единственный список — обычно «назад» (станция пока работает как конечная).
+            return (key, other) if forward_fit(key) > backward_fit(key) + 0.3 else (other, key)
+        return d1, d2
+
+    if order in (1, max_order):
+        key = d1 if weekday[d1] else d2
+        other = d2 if key == d1 else d1
+        return (key, other) if order == 1 else (other, key)
+    return d1, d2
+
+
+def opening_window(stations: list[dict], now: datetime) -> bool:
+    """Идут ли дни вокруг открытия какой-либо станции (см. OPENING_WINDOW)."""
+    return any(abs(now - datetime.fromisoformat(s["opens"])) <= OPENING_WINDOW for s in stations if "opens" in s)
+
+
 def fetch_json(url: str) -> dict:
     req = urllib.request.Request(url, headers={"User-Agent": "almaty-metro-schedule-app/1.0"})
     with urllib.request.urlopen(req, timeout=20) as resp:
@@ -196,7 +271,7 @@ def fetch_station_payload(slug: str) -> dict:
     raise RuntimeError(f"API не отдал будние расписание для {slug} за {MAX_ATTEMPTS} попыток: {last_payload}")
 
 
-def reject_anomalies(new_stations: dict, old_stations: dict) -> list[dict]:
+def reject_anomalies(new_stations: dict, old_stations: dict, only_empty: bool = False) -> list[dict]:
     """Ловит подозрительные скачки ЧИСЛА рейсов (станция/день недели/направление)
     относительно прошлого часового снимка и откатывает конкретно их на старое
     значение — ПРЯМО В new_stations (мутирует), прежде чем результат уйдёт в
@@ -213,7 +288,9 @@ def reject_anomalies(new_stations: dict, old_stations: dict) -> list[dict]:
 
     Намеренно НЕ пытается быть умнее (не копит историю между запусками, не
     требует повторного подтверждения на следующий час) — простой вариант,
-    выбранный явно вместо автоподтверждения по двум похожим снимкам подряд."""
+    выбранный явно вместо автоподтверждения по двум похожим снимкам подряд.
+
+    only_empty (дни вокруг открытия станции) — откатывать только полное исчезновение рейсов."""
     anomalies = []
     for slug, new_entry in new_stations.items():
         old_entry = old_stations.get(slug)
@@ -228,7 +305,7 @@ def reject_anomalies(new_stations: dict, old_stations: dict) -> list[dict]:
                 if old_count == 0:
                     continue  # не с чем сравнивать в процентах — не её случай
                 pct_change = abs(new_count - old_count) / old_count
-                if pct_change <= ANOMALY_THRESHOLD:
+                if pct_change <= ANOMALY_THRESHOLD or (only_empty and new_count):
                     continue
                 anomalies.append({
                     "station": slug,
@@ -308,12 +385,11 @@ def log_drift(changes: list[dict], anomalies: list[dict] | None = None, failed: 
 def main() -> int:
     stations = json.loads(STATIONS_FILE.read_text(encoding="utf-8"))
     stations_by_slug = {s["slug"]: s for s in stations}
-    # pending:true — станция заведена в data/stations.json, но ещё не открыта и в API метро
-    # её нет. Такие станции исключаются отовсюду (определение конечной по max_order, поиск
-    # соседа для оценки выходных, скачивание): иначе запрос к несуществующему slug прервал бы
-    # весь прогон для всех станций, а max_order сместился бы раньше времени и сбил определение
-    # direction1/2 у текущей конечной (Б. Момышулы).
-    active_stations = [s for s in stations if not s.get("pending")]
+    # Станция с полем "opens" открывается (или открылась) в указанный момент: её расписание
+    # запрашивается всегда, а пока метро его не отдаёт, это не считается сбоем. До этого
+    # момента приложение станцию не показывает. pending:true без "opens" — заготовка, она
+    # исключается полностью.
+    active_stations = [s for s in stations if "opens" in s or not s.get("pending")]
     stations_by_order = {s["order"]: s for s in active_stations}
     result = {
         "generated_at": datetime.now(tz=ALMATY_TZ).isoformat(),
@@ -332,7 +408,7 @@ def main() -> int:
             print(f"  (не удалось прочитать предыдущий снимок: {exc})", file=sys.stderr)
 
     for st in stations:
-        if st.get("pending"):
+        if st not in active_stations:
             print(f"  {st['slug']:6s} -> пропускаем (pending: станция ещё не открыта)", file=sys.stderr)
 
     # Проход 1: скачиваем и раскладываем сырые данные по станциям. Оценку
@@ -346,13 +422,18 @@ def main() -> int:
         print(f"  {slug:6s} -> {API_BASE}/schedule/{slug}", file=sys.stderr)
         try:
             payload = fetch_station_payload(slug)
+            if not any(payload["non_weekend"].get(k) for k in ("direction1", "direction2")):
+                raise RuntimeError("в ответе нет ни одного рейса")
         except Exception as exc:  # noqa: BLE001
             print(f"ОШИБКА при загрузке {slug}: {exc}", file=sys.stderr)
+            if "opens" in st and slug not in old_stations:
+                print(f"    {slug}: расписание новой станции ещё не опубликовано", file=sys.stderr)
+                continue
             failed.append(slug)
             if slug not in old_stations:
                 print(f"Для {slug} нет прежнего расписания — прогон прерван", file=sys.stderr)
                 return 1
-            if len(failed) > MAX_FAILED_STATIONS:
+            if len([s for s in failed if "opens" not in stations_by_slug[s]]) > MAX_FAILED_STATIONS:
                 print(f"Не ответили станции: {', '.join(failed)} — больше {MAX_FAILED_STATIONS}, прогон прерван", file=sys.stderr)
                 return 1
             # ::warning:: — предупреждение в интерфейсе GitHub Actions без падения прогона.
@@ -364,22 +445,8 @@ def main() -> int:
             entries = day.get(dir_key) or []
             return [e["arrival_time"] for e in entries]
 
-        # По умолчанию API отдаёт direction1 = в сторону Б.Момышулы (forward),
-        # direction2 = в сторону Райымбек батыра (backward). Но у конечных станций
-        # физически возможно только одно направление, и на практике API иногда
-        # (подтверждено для Б.Момышулы) кладёт реальные рейсы не в тот индекс —
-        # station1/station2 говорят одно, а данные лежат в другом direction.
-        # Поэтому для конечных станций направление определяем не по номеру
-        # direction, а по тому, где реально есть рейсы.
-        fwd_key, bwd_key = "direction1", "direction2"
-        if st["order"] in (1, max_order):
-            d1_has_data = bool((payload.get("non_weekend") or {}).get("direction1"))
-            only_dir_key = "direction1" if d1_has_data else "direction2"
-            empty_dir_key = "direction2" if d1_has_data else "direction1"
-            if st["order"] == 1:
-                fwd_key, bwd_key = only_dir_key, empty_dir_key
-            else:
-                bwd_key, fwd_key = only_dir_key, empty_dir_key
+        weekday = {k: times("non_weekend", k) for k in ("direction1", "direction2")}
+        fwd_key, bwd_key = pick_directions(st, weekday, stations_by_order, max_order, raw, old_stations)
 
         weekend_missing = not isinstance(payload.get("weekend"), dict)
         if weekend_missing:
@@ -469,7 +536,7 @@ def main() -> int:
     # Подозрительные скачки откатываются до расчёта не ответивших станций, чтобы расчёт
     # не опирался на них, и до diff_schedules(): неоткатанная аномалия попала бы в файл как
     # обычное изменение.
-    anomalies = reject_anomalies(result["stations"], old_stations)
+    anomalies = reject_anomalies(result["stations"], old_stations, opening_window(stations, datetime.now(tz=ALMATY_TZ)))
 
     failed_entries = {
         slug: fill_failed_station(stations_by_slug[slug], old_stations, result["stations"], stations_by_order)
@@ -480,6 +547,7 @@ def main() -> int:
     result["stations"] = {
         s["slug"]: result["stations"][s["slug"]]
         for s in sorted(active_stations, key=lambda s: s["order"])
+        if s["slug"] in result["stations"]
     }
 
     # Дрейф относительно того, что лежало в schedule.json до перезаписи, пишется в лог.
